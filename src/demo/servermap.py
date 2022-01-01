@@ -1,0 +1,266 @@
+from engine.log import log
+import engine.geometry as geo
+import engine.servermap
+
+'''
+The objects in object layers have the following keys added for this subclass:
+dynamic keys (only in object while in use): normalSpeed, respawnX, respawnY, respawnMapName
+'''
+
+
+class ServerMap(engine.servermap.ServerMap):
+
+    ########################################################
+    # INIT
+    ########################################################
+
+    def __init__(self, tilesets, mapDir, game):
+        super().__init__(tilesets, mapDir, game)  # Note, this will call readMapJson() before returning
+
+        self.CHICKENSPEED = 10
+        self.THROWSPEED = 360
+
+        self.initBomb()
+
+    ########################################################
+    # OBJECTS
+    ########################################################
+
+    def objectInBounds(self, object, x, y):
+        # allow things that have bee thrown to go out of bounds so they can be thrown over water.
+        if "speed" in object and object["speed"] == self.THROWSPEED:
+            return True
+
+        return super().objectInBounds(object, x, y)
+
+    ############################################################
+    # STEP MAP GENERAL PROCESSING
+    ############################################################
+
+    def stepStart(self):
+        super().stepStart()
+
+        self.animateChickens()
+
+    def stepEnd(self):
+        self.delSpeedMultiplier()
+
+        super().stepEnd()
+
+    ########################################################
+    # CHICKENS
+    ########################################################
+
+    def animateChickens(self):
+        for chicken in self.findAllObjects(name="chicken"):
+            # if this is a chicken and it is not being thrown right now then set have it walk to closest player.
+            # we know something is being thrown because it's speed will be self.THROWSPEED
+            if ("speed" not in chicken or (
+                    "speed" in chicken and chicken["speed"] != self.THROWSPEED)):
+                player = False
+                playerDistance = 0
+                # find the closet player.
+                for p in self.findAllObjects(type="player"):
+                    pDis = geo.distance(chicken["anchorX"], chicken["anchorY"], p["anchorX"], p["anchorY"])
+                    if pDis < playerDistance or player == False:
+                        player = p
+                        playerDistance = pDis
+                if player and playerDistance > 50:
+                    self.setObjectDest(chicken, player["anchorX"], player["anchorY"], self.CHICKENSPEED)
+                else:
+                    self.stopObject(chicken)
+
+    ########################################################
+    # ACTION DISPATCHER
+    ########################################################
+
+    def stepAction(self, sprite):
+        # if we are holding a bomb in a bombArea then set it off.
+        if "action" in sprite and "holding" in sprite:
+            if sprite["holding"]["name"] == "bomb":
+                bombArea = self.findObject(
+                    x=sprite["anchorX"],
+                    y=sprite["anchorY"],
+                    type="bombArea",
+                    objectList=self.reference
+                    )
+                if bombArea:
+                    self.actionBomb(sprite)
+                    self.delSpriteAction(sprite)
+
+        # if we are holding anything while in a throwArea then we can throw it.
+        if "action" in sprite and "holding" in sprite:
+            throwarea = self.findObject(
+                x=sprite["anchorX"],
+                y=sprite["anchorY"],
+                type="throwArea",
+                objectList=self.reference
+                )
+            if throwarea:
+                self.actionThrow(sprite, throwarea)
+                self.delSpriteAction(sprite)
+
+        super().stepAction(sprite)
+
+    ########################################################
+    # ACTION BOMB
+    ########################################################
+
+    def initBomb(self):
+        '''
+        Bomb Mechanic init. Note, this is hard coded to the one bomb area in the game.
+        remove and store the map doors and inBounds that are covered by rocks.
+        It will get put back when the bomb is set off. see actionBomb()
+        '''
+        if self.name == "start" or self.name == "under":
+            self.ladder1MapDoor = self.findObject(name="ladder1MapDoor", objectList=self.triggers)
+            self.removeObject(self.ladder1MapDoor, objectList=self.triggers)
+            self.ladder1InBounds = self.findObject(name="ladder1InBounds", objectList=self.inBounds)
+            self.removeObject(self.ladder1InBounds, objectList=self.inBounds)
+
+    def actionBomb(self, sprite):
+        # this code not in generic and will only work with the one rock in this game for the one bomb in this game.
+        # remove bomb and delete it from game completely
+        del sprite["holding"]
+        start = engine.server.SERVER.maps["start"]
+        under = engine.server.SERVER.maps["under"]
+
+        start.setLayerVisablitybyName("rockOnStairs", False)
+        start.setLayerVisablitybyName("rockOnStairs2", False)
+        start.setLayerVisablitybyName("rockOffStairs", True)
+        start.triggers.append(start.ladder1MapDoor)
+        start.inBounds.append(start.ladder1InBounds)
+
+        under.setLayerVisablitybyName("rockOnStairs", False)
+        under.setLayerVisablitybyName("rockOffStairs", True)
+        under.triggers.append(under.ladder1MapDoor)
+        under.inBounds.append(under.ladder1InBounds)
+
+    ########################################################
+    # ACTION THROW
+    ########################################################
+
+    def actionThrow(self, sprite, throwarea):
+        throwable = sprite["holding"]
+        self.actionDrop(sprite)
+        self.setObjectDest(
+            throwable,
+            throwable["anchorX"] + throwarea["properties"]["deltaX"],
+            throwable["anchorY"] + throwarea["properties"]["deltaY"],
+            self.THROWSPEED
+            )
+
+    ########################################################
+    # ACTIONTEXT
+    ########################################################
+
+    def stepActionText(self, sprite):
+        # order of action priority is always: pickup, use, drop.
+
+        if sprite["type"] != "player":
+            return  # only players can see their action text.
+
+        if "holding" in sprite:
+            if sprite["holding"]["name"] == "bomb":
+                bombArea = self.findObject(
+                    x=sprite["anchorX"],
+                    y=sprite["anchorY"],
+                    type="bombArea",
+                    objectList=self.reference
+                    )
+                if bombArea:
+                    sprite["actionText"] = f"Available Action: Set off {sprite['holding']['name']}."
+                    return
+
+            throwarea = self.findObject(
+                x=sprite["anchorX"],
+                y=sprite["anchorY"],
+                type="throwArea",
+                objectList=self.reference
+                )
+            if throwarea:
+                sprite["actionText"] = f"Available Action: Throw {sprite['holding']['name']}"
+                return
+
+        super().stepActionText(sprite)
+
+    ########################################################
+    # TRIGGER DISPATCHER
+    ########################################################
+
+    def stepProcessTrigger(self, trigger, sprite):
+        if trigger['type'] == "lockedMapDoor":
+            self.triggerLockedMapDoor(trigger, sprite)
+        elif trigger['type'] == "saveRespawnPoint":
+            self.triggerSaveRespawnPoint(trigger, sprite)
+        elif trigger['type'] == "speedMultiplier":
+            self.triggerSpeedMultiplier(trigger, sprite)
+        else:
+            super().stepProcessTrigger(trigger, sprite)
+
+    ########################################################
+    # TRIGGER LOCKED MAPDOOR
+    ########################################################
+
+    def triggerLockedMapDoor(self, trigger, sprite):
+        # if the sprite is holding the correct thing to unlock the door.
+        if "holding" in sprite and sprite["holding"]["name"] == trigger["properties"]["unlocks"]:
+
+            # unlock door (change type to normal mapDoor)
+            trigger["type"] = "mapDoor"
+
+            # hide door layer and show unlocked door layer.
+            self.setLayerVisablitybyName("doorClosed", False)
+            self.setLayerVisablitybyName("doorOpen", True)
+        else:
+            # while the door is locked function as a popUpText trigger.
+            self.triggerPopUpText(trigger, sprite)
+
+    ########################################################
+    # TRIGGER SAVE RESPAWN POINT
+    ########################################################
+
+    def delRespawnPoint(self, object):
+        if "respawnMapName" in object:
+            del object["respawnMapName"]
+        if "respawnX" in object:
+            del object["respawnX"]
+        if "respawnY" in object:
+            del object["respawnY"]
+
+    def setSpriteLocationByRespawnPoint(self, sprite):
+        if "respawnX" in sprite:
+            destMap = self
+            if sprite["respawnMapName"] != self.name:
+                destMap = engine.server.SERVER.maps[sprite["respawnMapName"]]
+                self.removeObject(sprite)
+                destMap.addObject(sprite)
+            destMap.setObjectLocationByAnchor(sprite, sprite["respawnX"], sprite["respawnY"])
+            destMap.stopObject(sprite)
+        # else this object never went through a respawn point. Perhaps it is something the player carried into over
+        # the respan area. Let's hope it's OK to leave it where it is.
+
+    def triggerSaveRespawnPoint(self, trigger, object):
+        '''
+        Remember sprites location as the last safe point the sprite was at. In case the sprite
+        is killed then they can be respawned back to this point.
+        '''
+        object["respawnMapName"] = object["mapName"]
+        object["respawnX"] = object["anchorX"]
+        object["respawnY"] = object["anchorY"]
+
+    ########################################################
+    # TRIGGER SPEED MULTIPLIER
+    ########################################################
+
+    def delSpeedMultiplier(self):
+        for sprite in self.sprites:
+            if "normalSpeed" in sprite:
+                if "speed" in sprite:
+                    sprite["speed"] = sprite["normalSpeed"]
+                del sprite["normalSpeed"]
+
+    def triggerSpeedMultiplier(self, trigger, sprite):
+        if "speed" in sprite and sprite["type"] != "saw":
+            sprite["normalSpeed"] = sprite["speed"]
+            sprite["speed"] *= trigger["properties"]["speedMultiplier"]

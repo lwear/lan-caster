@@ -1,0 +1,19 @@
+{ "columns":9,
+ "image":"..\/images\/princess.png",
+ "imageheight":256,
+ "imagewidth":576,
+ "margin":0,
+ "name":"princess",
+ "spacing":0,
+ "tilecount":36,
+ "tiledversion":"1.7.2",
+ "tileheight":64,
+  "tileoffset":
+    {
+     "x":32,
+     "y":60
+    },
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.6"
+}

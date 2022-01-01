@@ -1,0 +1,19 @@
+{ "columns":4,
+ "image":"..\/images\/TX Player.png",
+ "imageheight":128,
+ "imagewidth":128,
+ "margin":0,
+ "name":"TX Player",
+ "spacing":0,
+ "tilecount":8,
+ "tiledversion":"1.7.2",
+ "tileheight":64,
+  "tileoffset":
+    {
+     "x":16,
+     "y":60
+    },
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.6"
+}

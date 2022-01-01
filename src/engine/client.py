@@ -1,0 +1,229 @@
+import signal
+import time
+
+import pygame
+from pygame.locals import *
+
+import engine.log
+from engine.log import log
+
+import engine.messages
+import engine.network
+import engine.loaders
+import engine.text
+
+
+class Client:
+
+    #####################################################
+    # INIT METHODS
+    #####################################################
+
+    def __init__(self, game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort):
+        global CLIENT
+        CLIENT = self
+        signal.signal(signal.SIGINT, self.quit)
+
+        self.fps = fps
+        self.serverIpport = engine.network.formatIpPort(serverIP, serverPort)
+
+        self.playerNumber = -1  # set to a real number from the joinReply msg sent from the server
+        self.step = {}  # Currently displayed step. Empty until we get first step msg from server. = {}
+        self.lastStep = False  # Previous step from the server. Can be used to determine difference between steps.
+        self.stepChanged = False  # if the current step has been changed and need to be rendered to screen.
+
+        # Note, we must init pygame before we create a client state, since client state needs to load images.
+        pygame.init()
+        pygame.mixer.quit()  # Turn all sound off.
+        pygame.display.set_caption(f"{game} - {playerDisplayName}")  # Set the title of the window
+        self.screen = pygame.display.set_mode(screenSize)  # open the window
+
+        self.tilesets = engine.loaders.loadTilesets(
+            game=game,
+            loadImages=True  # Client needs images so it can render screen.
+            )
+
+        self.maps = engine.loaders.loadMaps(
+            tilesets=self.tilesets,
+            game=game,
+            maptype="ClientMap"
+            )
+
+        log("Loading tilesets and maps was successful.")
+
+        # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
+        try:
+            self.socket = engine.network.Socket(
+                engine.messages.Messages(),
+                myIP,
+                myPort,
+                serverIP,
+                serverPort
+                )
+
+            reply = self.socket.sendRecvMessage({
+                'type': 'joinRequest',
+                'game': game,
+                'playerDisplayName': playerDisplayName
+                },
+                retries=300, delay=1, delayMultiplier=1)
+
+            if reply["type"] != "joinReply":
+                log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
+                self.quit()
+            self.playerNumber = reply["playerNumber"]
+        except engine.network.SocketException as e:
+            log("Is server running at" + serverIP + ":" + str(serverPort) + "?")
+            log(str(e), "FAILURE")
+            self.quit()
+
+        log("Join server was successful.")
+
+    def __str__(self):
+        return engine.log.objectToStr(self)
+
+    def quit(signal=None, frame=None):
+        log("Quiting", "INFO")
+        exit()
+
+    ########################################################
+    # NETWORK MESSAGE PROCESSING
+    ########################################################
+
+    def msgStep(self, msg):
+        self.lastStep = self.step  # keep the last step in case it is useful.
+        self.step = msg  # store the new step
+        self.stepChanged = True  # flag that we need to redraw the screen.
+
+    def msgGameWon(self, msg):
+        log("Game Won!!!")
+        self.quit()
+
+    def msgGameLost(self, msg):
+        log("Game Lost!!!")
+        self.quit()
+
+    def processMsg(self, ip, port, ipport, msg, callbackData):
+        if ipport != self.serverIpport:
+            # Msg recived was NOT from the server. Ignore this message.
+            log(f"Msg received but not from server! Msg from ({ipport}).", "WARNING")
+            return None
+
+        if msg['type'] == 'step':
+            self.msgStep(msg)
+        elif msg['type'] == 'gameWon':
+            self.msgGameWon(msg)
+        elif msg['type'] == 'gameLost':
+            self.msgGameLost(msg)
+
+        return None
+
+    ########################################################
+    # USER INPUT HANDLING
+    ########################################################
+
+    def processEvents(self):
+        # process input events from user.
+        for event in pygame.event.get():
+            self.processEvent(event)
+
+    def processEvent(self, event):
+        if event.type == QUIT:
+            self.quit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                self.socket.sendMessage({'type': 'playerAction'})
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            destX, destY = pygame.mouse.get_pos()
+            self.socket.sendMessage({'type': 'playerMove', 'destX': destX, 'destY': destY})
+
+    ########################################################
+    # SCREEN DRAWING
+    ########################################################
+
+    def updateScreen(self):
+        # if we got a updated state from the server then render it to the screen.
+        if self.stepChanged:
+            self.stepChanged = False
+
+            # find the map that the server wants us to render.
+            map = self.maps[self.step["mapName"]]
+
+            # update layer mask. This will cause the map's topImage and bottomImage to be updated if needed.
+            map.setLayerVisablityMask(self.step["layerVisabilityMask"])
+
+            # start with the pre-rendered image of all visable layers below the sprites.
+            self.screen.blit(map.bottomImage, (0, 0))
+
+            # blit the sprite layer from the server
+            map.blitObjectLayer(self.screen, self.step["sprites"])
+
+            # add the pre-rendered image of all visable layers above the sprites
+            self.screen.blit(map.topImage, (0, 0))
+
+            # add the overlay layer from the server
+            map.blitObjectLayer(self.screen, self.step["overlay"])
+
+            # finally add on the player and gui specific items.
+            self.updateInterface()
+
+            # tell pygame to actually display changes to user.
+            pygame.display.update()
+
+    def updateInterface(self):
+        # render any non-map items, such as player specific data or gui elements.
+
+        # find the player of this client and render actionText if they have any.
+        for sprite in self.step["sprites"]:
+            if "playerNumber" in sprite and sprite["playerNumber"] == self.playerNumber:
+                if "actionText" in sprite:
+                    t = engine.text.Text(
+                        sprite["actionText"] + " (spacebar)",
+                        maxWidth=self.screen.get_width()
+                        )
+                    # set text location to center/bottom of screen.
+                    t.setXY(
+                        centerX=self.screen.get_width() / 2,
+                        topY=self.screen.get_height() - t.pixelHeight - 4
+                        )
+                    t.blit(self.screen)
+                break
+
+    ########################################################
+    # Main Loop
+    ########################################################
+
+    def main(self):
+        # Run the loop below once every  1/fps seconds.
+
+        startAt = time.perf_counter()
+        nextStatusAt = startAt + 10
+        sleepTime = 0
+        nextStepAt = startAt + (1.0 / self.fps)
+        while True:
+            # process messages from server (recvReplyMsgs calls processMsg once for each msg received)
+            self.socket.recvReplyMsgs(self.processMsg)
+
+            # update the screen so player can see data that server sent
+            self.updateScreen()
+
+            # process any user input and send it to the server as required.
+            self.processEvents()
+
+            # busy wait (for accuracy) until next step should start.
+            ptime = time.perf_counter()
+            if ptime < nextStepAt:
+                sleepTime += nextStepAt - ptime
+
+                if ptime > nextStatusAt:
+                    # log the amount of time we are busy vs. waiting for the next step.
+                    log(f"Status: busy == {int(100-(sleepTime/(ptime-startAt)*100))}%")
+                    startAt = ptime
+                    nextStatusAt = startAt + 10
+                    sleepTime = 0
+                while ptime < nextStepAt:
+                    ptime = time.perf_counter()
+            else:
+                log("Client running slower than " + str(self.fps) + " fps.", "VERBOSE")
+
+            nextStepAt = ptime + (1.0 / self.fps)
