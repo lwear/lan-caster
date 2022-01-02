@@ -8,7 +8,7 @@ from engine.log import setLogLevel
 try:
   import msgpack
 except BaseException:
-  log("Python pakage missing. Install with something similar to:\n py -3 -m pip install msgpack-python", "FAILURE")
+  log("Python package missing. Install with something similar to:\n py -3 -m pip install msgpack-python", "FAILURE")
   exit()
 
 import engine.network
