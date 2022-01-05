@@ -6,16 +6,14 @@ from engine.log import setLogLevel
 
 # only import msgpack and pygame here to make sure they are installed.
 try:
-  import pygame
-  import msgpack
+    import pygame
+    import msgpack
 except BaseException:
-  log("Python packages missing. Install with something similar to:\n py -3 -m pip install pygame msgpack-python", "FAILURE")
-  exit()
+    log("Python packages missing. Install with something similar to:\n py -3 -m pip install pygame msgpack-python", "FAILURE")
+    exit()
 
 import engine.network
 import engine.loaders
-
-
 
 
 def startClient():

@@ -19,7 +19,6 @@ class ServerMap(engine.servermap.ServerMap):
 
         self.CHICKENSPEED = 10
         self.THROWSPEED = 360
-
         self.initBomb()
 
     ########################################################
@@ -39,12 +38,10 @@ class ServerMap(engine.servermap.ServerMap):
 
     def stepStart(self):
         super().stepStart()
-
         self.animateChickens()
 
     def stepEnd(self):
         self.delSpeedMultiplier()
-
         super().stepEnd()
 
     ########################################################

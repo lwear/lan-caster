@@ -97,7 +97,6 @@ class ClientMap(engine.map.Map):
 
                 ts.blitTile(tilesetTileNumber, destImage, destPixelX, destPixelY)
 
-
     def blitObjectLayer(self, destImage, objectLayer):
         geo.sortXY(objectLayer, self.pixelWidth)
         for object in objectLayer:
