@@ -17,7 +17,7 @@ class Server(engine.server.Server):
 
         for ipport in self.players:
             sprite = self.players[ipport].sprite
-            if sprite["mapName"] != "end" or not geo.rectContains(endGame, sprite["anchorX"], sprite["anchorY"]):
+            if sprite["mapName"] != "end" or not geo.objectContains(endGame, sprite["anchorX"], sprite["anchorY"]):
                 return
             playersIn += 1
 

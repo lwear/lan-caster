@@ -95,13 +95,13 @@ class ServerMap(engine.map.Map):
         # order of action priority needs to be: pickup, use, drop.
 
         if "action" in sprite and "holding" not in sprite:
-            holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable")
+            holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
             if holdable:
                 self.actionPickUp(sprite, holdable)
                 self.delSpriteAction(sprite)
 
         if "action" in sprite:
-            useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable")
+            useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
             if useable:
                 self.actionUse(sprite, useable)
                 self.delSpriteAction(sprite)
@@ -158,8 +158,8 @@ class ServerMap(engine.map.Map):
         if sprite["type"] != "player":
             return  # only players can see their action text.
 
-        holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable")
-        useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable")
+        holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
+        useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
 
         if "actionText" in sprite:
             old = sprite["actionText"]
@@ -251,12 +251,12 @@ class ServerMap(engine.map.Map):
 
     def stepTrigger(self, sprite):
         # find all triggers that contain this sprites anchor and process each one.
-        try:
-            triggers = self.findAllObjects(x=sprite["anchorX"], y=sprite["anchorY"], objectList=self.triggers)
-        except BaseException:
-            log(self.sprites)
-            log(self.overlay)
-            exit()
+        triggers = self.findObject(
+            x=sprite["anchorX"],
+            y=sprite["anchorY"],
+            objectList=self.triggers,
+            returnAll=True,
+            exclude=sprite)
         for trigger in triggers:
             self.stepProcessTrigger(trigger, sprite)
 
@@ -289,7 +289,7 @@ class ServerMap(engine.map.Map):
     def delPopUpText(self):
         # popUpText only lasts one step so it's to be added every step to be seen by player.
         # Remove all popUpText. It will get added in the triggers below. see triggerPopUpText()
-        for popUpText in self.findAllObjects(type="popUpText", objectList=self.overlay):
+        for popUpText in self.findObject(type="popUpText", objectList=self.overlay, returnAll=True):
             self.removeObject(popUpText, objectList=self.overlay)
 
     def triggerPopUpText(self, trigger, sprite):

@@ -49,7 +49,7 @@ class ServerMap(engine.servermap.ServerMap):
     ########################################################
 
     def animateChickens(self):
-        for chicken in self.findAllObjects(name="chicken"):
+        for chicken in self.findObject(name="chicken", returnAll=True):
             # if this is a chicken and it is not being thrown right now then set have it walk to closest player.
             # we know something is being thrown because it's speed will be self.THROWSPEED
             if ("speed" not in chicken or (
@@ -57,7 +57,7 @@ class ServerMap(engine.servermap.ServerMap):
                 player = False
                 playerDistance = 0
                 # find the closet player.
-                for p in self.findAllObjects(type="player"):
+                for p in self.findObject(type="player", returnAll=True):
                     pDis = geo.distance(chicken["anchorX"], chicken["anchorY"], p["anchorX"], p["anchorY"])
                     if pDis < playerDistance or player == False:
                         player = p

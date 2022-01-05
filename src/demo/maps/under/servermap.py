@@ -55,11 +55,11 @@ class ServerMap(demo.servermap.ServerMap):
         Type "saw" will act as both a sprite and a trigger! Note, when we move the sprite the trigger will
         also move.
         '''
-        for saw in self.findAllObjects(type="saw"):
+        for saw in self.findObject(type="saw", returnAll=True):
             self.triggers.append(saw)
 
     def animateSaws(self):
-        for saw in self.findAllObjects(type="saw"):
+        for saw in self.findObject(type="saw", returnAll=True):
             # if saw has stopped then reverse their direction.
             if "destX" not in saw:
                 if saw["properties"]["speed"] > 0:

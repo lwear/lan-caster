@@ -12,44 +12,31 @@ between degrees and radians in your code as follows:
 """
 
 
-def rectContains(rect, x, y):
+def objectContains(object, x, y):
     """
-    returns True if rect contains x,y else returns False.
-    rect must contain at least x, y and should have width, height
+    returns True if object contains x,y else returns False.
     """
-    if "point" in rect or (not "width" in rect) or (not "height" in rect) or rect["width"] == 0 or rect["height"] == 0:
-        # rect is a point
-        return False
-    if rect["x"] <= x and x <= rect["x"] + rect["width"] and rect["y"] <= y and y <= rect["y"] + rect["height"]:
-        return True
+    if "ellipse" in object:
+        pass  # not yet supported.
+    elif "point" in object:
+        if x == object["x"] and y == object["y"]:
+            return True
+    else:  # this is a rect. Tile objects ("gid") and text objects are also treated as rects.
+        if object["x"] <= x and x <= object["x"] + object["width"] and \
+           object["y"] <= y and y <= object["y"] + object["height"]:
+            return True
+
     return False
 
 
-def rectsContains(rects, x, y):
+def objectsContains(objects, x, y):
     """
-    returns first rect in list of rects, that contains x,y.
-    Each rect must contain at least x, y and should have width, height
+    returns true if any object in list of objects contains point x,y
     """
-    for rect in rects:
-        if "point" in rect or (not "width" in rect) or (
-                not "height" in rect) or rect["width"] == 0 or rect["height"] == 0:
-            # rect is a point
-            contine
-        if rect["x"] <= x and x <= rect["x"] + rect["width"] and rect["y"] <= y and y <= rect["y"] + rect["height"]:
-            return rect
-    return None
-
-
-def allRectsContains(rects, x, y):
-    """
-    returns list of only those rects, that contains x,y.
-    Each rect must contain at least x, y and should have width, height.
-    """
-    contains = []
-    for rect in rects:
-        if rectContains(rect, x, y):
-            contains.append(rect)
-    return contains
+    for object in objects:
+        if objectContains(object, x, y):
+            return True
+    return False
 
 
 def normalizeAngle(a):

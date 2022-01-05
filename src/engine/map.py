@@ -248,22 +248,16 @@ class Map:
         objectList.remove(object)
         self.setMapChanged()
 
-    def findObject(self, x=False, y=False, name=False, type=False, objectList=False):
-        ''' return first object in objectList, that meets criteria provided. '''
-        if not isinstance(objectList, list):
-            objectList = self.sprites
-
-        for object in objectList:
-            if (type == False or object['type'] == type) and \
-               (name == False or object['name'] == name) and \
-               (x == False or y == False or geo.rectContains(object, x, y)):
-                return object
-        return False
-
-    def findAllObjects(self, x=False, y=False, name=False, type=False, objectList=False):
+    def findObject(self, x=False, y=False, name=False, type=False, objectList=False, exclude=False, returnAll=False):
         '''
-        return all objects in objectList, that meets criteria provided and return in a list.
+        if returnAll = False (default) then return first object in objectList that meets criteria provided.
+        if none is found then it returns False
+
+        if returnAll = True then return all objects in objectList, that meets criteria provided, in a list.
         if none are found then an empty list is returned.
+
+        Note, exclude is normally used to filter out an object that is being acted on but is also in the
+        list being searched.
         '''
         if not isinstance(objectList, list):
             objectList = self.sprites
@@ -272,8 +266,14 @@ class Map:
         for object in objectList:
             if (type == False or object['type'] == type) and \
                (name == False or object['name'] == name) and \
-               (x == False or y == False or geo.rectContains(object, x, y)):
+               (exclude == False or exclude != object) and \
+               (x == False or y == False or geo.objectContains(object, x, y)):
+                if not returnAll:
+                    return object
                 found.append(object)
+
+        if not returnAll:
+            return False
         return found
 
     ########################################################
