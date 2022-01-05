@@ -227,7 +227,7 @@ class ServerMap(engine.map.Map):
         # Move within this map while respecting inBounds and outOfBounds
         if "destX" in sprite and "destY" in sprite and "speed" in sprite:
             stepSpeed = sprite["speed"] / engine.server.SERVER.fps  # convert pixels per second to pixels per step
-            # compute a new anchor x,y
+            # compute a new anchor x,y which moves directly towards destination
             newAnchorX, newAnchorY = geo.project(
                 sprite["anchorX"],
                 sprite["anchorY"],
@@ -235,14 +235,29 @@ class ServerMap(engine.map.Map):
                 stepSpeed
                 )
 
-            # movement is only allowed if it is on the map and (inside inBounds OR if is not inside outOfBounds)
-            # i.e. inBounds overrides outOfBounds
+            # movement is only allowed if it is inbounds.
+            inBounds = False
+            # if sprite can move directly towards destination
             if self.objectInBounds(sprite, newAnchorX, newAnchorY):
+                inBounds = True
+            # elif sprite is moving along X then try to stay at the same Y and move along only along X
+            elif newAnchorX != sprite["anchorX"] and self.objectInBounds(sprite, newAnchorX, sprite["anchorY"]):
+                newAnchorY = sprite["anchorY"]
+                inBounds = True
+            # elif sprite is moving along Y then try to stay at the same X and move along only along Y
+            elif newAnchorY != sprite["anchorY"] and self.objectInBounds(sprite, sprite["anchorX"], newAnchorY):
+                newAnchorX = sprite["anchorX"]
+                inBounds = True
+
+            if inBounds:
+                # move sprite to new location
                 self.setObjectLocationByAnchor(sprite, newAnchorX, newAnchorY)
+
                 # stop sprite if we are close to destination
                 if geo.distance(sprite["anchorX"], sprite["anchorY"], sprite["destX"], sprite["destY"]) < stepSpeed:
                     self.stopObject(sprite)
             else:
+                # sprite has hit an inside corner and can't continue.
                 self.stopObject(sprite)
 
     ########################################################
