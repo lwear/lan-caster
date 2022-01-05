@@ -104,7 +104,12 @@ class ClientMap(engine.map.Map):
                 self.blitTileObject(destImage, object)
             elif "text" in object:
                 self.blitTextObject(destImage, object)
-            # other object types not yet supported.
+            elif "ellipse" in object:
+                pass  # not yet supported.
+            elif "point" in object:
+                pass  # not yet supported.
+            else:  # this is a rect
+                pass  # not yet supported.
 
     def blitTileObject(self, destImage, tileObject):
         tilesetName, tilesetTileNumber = self.findTile(tileObject["gid"])
