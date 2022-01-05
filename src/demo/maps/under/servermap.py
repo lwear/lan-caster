@@ -79,11 +79,8 @@ class ServerMap(demo.servermap.ServerMap):
                 saw["gid"] = self.tsFirstGid["sawtrap"]
 
     def triggerSaw(self, trigger, sprite):
-        # sprite was hit by saw, Note, saws can be sprites and triggers so we need to
-        # exclude them from triggers themselfs.
-        if trigger != sprite:
-            # For a saw to work the sprite had to previouly had a respawn point set.
-            self.setSpriteLocationByRespawnPoint(sprite)
+        # For a saw hitting a sprite to work, the sprite had to previously had a respawn point set.
+        self.setSpriteLocationByRespawnPoint(sprite)
 
     ########################################################
     # TRIGGER STOP SAW
