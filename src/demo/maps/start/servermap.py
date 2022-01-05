@@ -1,6 +1,7 @@
 from engine.log import log
 import demo.servermap
 
+
 class ServerMap(demo.servermap.ServerMap):
     '''
     This class implements the LockedMapDoor mechanics.
@@ -33,5 +34,3 @@ class ServerMap(demo.servermap.ServerMap):
         else:
             # while the door is locked function as a popUpText trigger.
             self.triggerPopUpText(trigger, sprite)
-
-   

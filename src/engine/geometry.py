@@ -84,7 +84,7 @@ def sortXY(listOfGameObs, maxWidth, useAnchor=True):
 
     if useAnchor:  # use the anchor point to sort by
         listOfGameObs[:] = [(maxWidth * o["anchorY"] + o["anchorX"], o) for o in listOfGameObs]
-    else:  # use x,y to sort by
+    else:  # use middle of object rect to sort by
         listOfGameObs[:] = [(maxWidth * (o["y"] + o['height'] / 2) + o["x"] + o['width'] / 2, o) for o in listOfGameObs]
     listOfGameObs.sort(key=lambda x: x[0])
     listOfGameObs[:] = [o for (k, o) in listOfGameObs]

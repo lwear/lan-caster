@@ -5,11 +5,15 @@ import engine.geometry as geo
 
 
 class ServerMap(demo.servermap.ServerMap):
+    '''
+    This class implements the Lever and Magic Wand mechanics.
+    '''
 
     ########################################################
     # ACTION DISPATCHER
     ########################################################
     def stepAction(self, sprite):
+        # if sprite has requested an action while holding the magic wand and standing in a magicArea.
         if "action" in sprite and "holding" in sprite:
             if sprite["holding"]["name"] == "magic wand" and self.findObject(
                     x=sprite["anchorX"], y=sprite["anchorY"], type="magicArea", objectList=self.reference):
@@ -24,13 +28,16 @@ class ServerMap(demo.servermap.ServerMap):
     ########################################################
 
     def actionUse(self, sprite, useable):
-        # some hard coding specific to this map and it's assignment of gids.
+        # if the sprite is using the lever
         if useable["name"] == "lever":
-            # add 1 to levers gid and make sure it stays in range 381-382
             start = engine.server.SERVER.maps["start"]
+
+            # hard coding of gids is specific to this map and it's assignment of gids.
+            # add 1 to levers gid and make sure it stays in range 381-382
             useable["gid"] += 1
             if useable["gid"] == 384:
                 useable["gid"] = 381
+
             if useable["gid"] == 381:
                 self.setLayerVisablitybyName("bridge1", True)
                 start.setLayerVisablitybyName("bridge2", False)
@@ -80,11 +87,10 @@ class ServerMap(demo.servermap.ServerMap):
     ########################################################
 
     def stepActionText(self, sprite):
-        # order of action priority is always: pickup, use, drop.
-
         if sprite["type"] != "player":
             return  # only players can see their action text.
 
+        # if sprite is holding the magic wand and standing in a magicArea.
         if "holding" in sprite:
             if sprite["holding"]["name"] == "magic wand" and self.findObject(
                     x=sprite["anchorX"], y=sprite["anchorY"], type="magicArea", objectList=self.reference):

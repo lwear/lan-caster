@@ -7,6 +7,8 @@ import engine.server
 
 class ServerMap(engine.map.Map):
     '''
+    This class implements the Pick Up, Use, Drop, Move, Map Door, and PopUpText mechanics.
+
     The objects in object layers have the following keys added for this subclass:
     dynamic keys (only in object while in use): action, actionText, holding
 
@@ -91,26 +93,34 @@ class ServerMap(engine.map.Map):
         del sprite["action"]
 
     def stepAction(self, sprite):
+        '''
+        if an action has been requested then see if an action can be run.
+        perform at most one action and then clear the action request.
+        order of action priority is: pickup, use, drop.
+        '''
 
-        # order of action priority needs to be: pickup, use, drop.
-
+        # Pick Up
         if "action" in sprite and "holding" not in sprite:
             holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
             if holdable:
                 self.actionPickUp(sprite, holdable)
                 self.delSpriteAction(sprite)
 
+        # Drop
         if "action" in sprite:
             useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
             if useable:
                 self.actionUse(sprite, useable)
                 self.delSpriteAction(sprite)
 
+        # Use
         if "action" in sprite and "holding" in sprite:
             self.actionDrop(sprite)
             self.delSpriteAction(sprite)
 
+        # No available action found.
         if "action" in sprite:
+            # did not find any available action so just clear action request.
             self.delSpriteAction(sprite)
 
     ########################################################

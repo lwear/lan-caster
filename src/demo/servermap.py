@@ -9,13 +9,16 @@ dynamic keys (only in object while in use): normalSpeed, respawnX, respawnY, res
 
 
 class ServerMap(engine.servermap.ServerMap):
+    '''
+    This class implements the Chicken, Throw, SpeedMultiplier (mud), Bomb, and RespawnPoint mechanics.
+    '''
 
     ########################################################
     # INIT
     ########################################################
 
     def __init__(self, tilesets, mapDir, game):
-        super().__init__(tilesets, mapDir, game)  # Note, this will call readMapJson() before returning
+        super().__init__(tilesets, mapDir, game)
 
         self.CHICKENSPEED = 10
         self.THROWSPEED = 360
@@ -27,6 +30,7 @@ class ServerMap(engine.servermap.ServerMap):
 
     def objectInBounds(self, object, x, y):
         # allow things that have bee thrown to go out of bounds so they can be thrown over water.
+        # The way the throw zones are set up ensures that objects can't throws thrown off the map.
         if "speed" in object and object["speed"] == self.THROWSPEED:
             return True
 
@@ -85,7 +89,7 @@ class ServerMap(engine.servermap.ServerMap):
                     self.actionBomb(sprite)
                     self.delSpriteAction(sprite)
 
-        # if we are holding anything while in a throwArea then we can throw it.
+        # if we are holding anything while in a throwArea then throw it.
         if "action" in sprite and "holding" in sprite:
             throwarea = self.findObject(
                 x=sprite["anchorX"],
@@ -152,8 +156,6 @@ class ServerMap(engine.servermap.ServerMap):
     ########################################################
 
     def stepActionText(self, sprite):
-        # order of action priority is always: pickup, use, drop.
-
         if sprite["type"] != "player":
             return  # only players can see their action text.
 

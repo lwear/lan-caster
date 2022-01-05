@@ -1,13 +1,14 @@
 from engine.log import log
 import demo.servermap
 
-'''
-The objects in object layers have the following keys added for this subclass:
-dynamic keys (only in object while in use): stopSawDestX, stopSawDestY, stopSawSpeed
-'''
-
 
 class ServerMap(demo.servermap.ServerMap):
+    '''
+    This class implements the Saw and StopSaw mechanics.
+
+    The objects in object layers have the following keys added for this subclass:
+    dynamic keys (only in object while in use): stopSawDestX, stopSawDestY, stopSawSpeed
+    '''
 
     ########################################################
     # INIT
@@ -63,7 +64,11 @@ class ServerMap(demo.servermap.ServerMap):
             # if saw has stopped then reverse their direction.
             if "destX" not in saw:
                 if saw["properties"]["speed"] > 0:
-                    self.setObjectDest(saw, saw["properties"]["maxX"], saw["anchorY"], saw["properties"]["speed"])
+                    self.setObjectDest(
+                        saw,
+                        saw["properties"]["maxX"],
+                        saw["anchorY"],
+                        saw["properties"]["speed"])
                 else:
                     self.setObjectDest(
                         saw,

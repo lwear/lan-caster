@@ -115,6 +115,7 @@ class ClientMap(engine.map.Map):
         tilesetName, tilesetTileNumber = self.findTile(tileObject["gid"])
         self.tilesets[tilesetName].blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'])
 
+        # If properties -> labelText is present the render it under the tile. Normally used to display player names.
         if "properties" in tileObject and "labelText" in tileObject["properties"]:
             engine.text.Text(
                 text=tileObject["properties"]["labelText"],
