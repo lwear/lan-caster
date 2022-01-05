@@ -187,6 +187,42 @@ class ServerMap(engine.map.Map):
     # STEP MOVE
     ########################################################
 
+    def setObjectDest(self, object, destX, destY, speed):
+        object["destX"] = destX
+        object["destY"] = destY
+        object["speed"] = speed
+
+    def stopObject(self, object):
+        if "destX" in object:
+            del object["destX"]
+        if "destY" in object:
+            del object["destY"]
+        if "speed" in object:
+            del object["speed"]
+
+    def objectInBounds(self, object, x=False, y=False):
+        '''
+        return True if object's anchor point is inbounds considering the map size, inBounds layer, and
+        outOfBounds layer; else return False. If x and y are provided then they are used instead of the
+        object anchor. This is useful to test if an object would be inbounds before setting it to a
+        new location.
+
+        Priority of evaluation is as follows:
+        1) if object is not on the map then it is NOT inbounds.
+        2) if object is inside an object on the inBounds layer then it IS inbounds.
+        3) if object is inside an object on the outOfBounds layer then it is NOT inbounds.
+        4) else it IS inbounds.
+
+        '''
+        if x == False:
+            x = object["anchorX"]
+        if y == False:
+            y = object["anchorY"]
+        if geo.objectContains({"x": 0, "y": 0, "width": self.pixelWidth, "height": self.pixelHeight}, x, y) and \
+                (geo.objectsContains(self.inBounds, x, y) or (not geo.objectsContains(self.outOfBounds, x, y))):
+            return True
+        return False
+
     def stepMove(self, sprite):
         # Move within this map while respecting inBounds and outOfBounds
         if "destX" in sprite and "destY" in sprite and "speed" in sprite:

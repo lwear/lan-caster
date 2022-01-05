@@ -342,32 +342,3 @@ class Map:
             object["x"] = anchorX - object["width"] / 2
             object["y"] = anchorY - object["height"] / 2
         self.setMapChanged()
-
-    def setObjectDest(self, object, destX, destY, speed):
-        object["destX"] = destX
-        object["destY"] = destY
-        object["speed"] = speed
-
-    def stopObject(self, object):
-        if "destX" in object:
-            del object["destX"]
-        if "destY" in object:
-            del object["destY"]
-        if "speed" in object:
-            del object["speed"]
-
-    def objectInBounds(self, object, x=False, y=False):
-        '''
-        return True if object's anchor point is inbounds considering the map size, inBounds layer, and
-        outOfBounds layer; else return False. If x and y are provided then they are used instead of the
-        object anchor. This is useful to test if an object would be inbounds before setting it to a
-        new location.
-        '''
-        if x == False:
-            x = object["anchorX"]
-        if y == False:
-            y = object["anchorY"]
-        if geo.rectContains({"x": 0, "y": 0, "width": self.pixelWidth, "height": self.pixelHeight}, x, y) and \
-                (geo.rectsContains(self.inBounds, x, y) or (not geo.rectsContains(self.outOfBounds, x, y))):
-            return True
-        return False
