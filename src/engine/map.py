@@ -62,7 +62,9 @@ class Map:
             mapfiledata = json.load(f)
 
         # ensure tiled map file is correct format.
-        if mapfiledata["type"] != "map" or mapfiledata["orientation"] != "orthogonal":
+        if mapfiledata["type"] != "map" or \
+           mapfiledata["orientation"] != "orthogonal" or \
+           mapfiledata["renderorder"] != "right-down":
             log(f"{mapDir} does not appear to be an orthogonal map!", "FAILURE")
             exit()
 
@@ -78,12 +80,6 @@ class Map:
         self.pixelWidth = self.width * self.tilewidth
         self.layers = mapfiledata["layers"]
 
-        # convert layer visibility data into a more useful form.
-        self.layerVisabilityMask = 0
-        for layerIndex in range(len(self.layers)):
-            if self.layers[layerIndex]["visible"] == True:
-                self.setLayerVisablitybyIndex(layerIndex, True)
-
         '''
         Create quick reference dict from tileset name to firstgid.
         {filesetName1: firstgid1, tilesetName2: firstgid2, ...}
@@ -93,6 +89,12 @@ class Map:
             name = ts["source"].split("/")[-1].split(".")[0]
             self.tsFirstGid[name] = ts["firstgid"]
 
+        # convert layer visibility data into a more useful form.
+        self.layerVisabilityMask = 0
+        for layerIndex in range(len(self.layers)):
+            if self.layers[layerIndex]["visible"] == True:
+                self.setLayerVisablitybyIndex(layerIndex, True)
+
         # set up quick reference to object lists of well known object layers.
         self.triggers = []
         self.sprites = []
@@ -100,7 +102,7 @@ class Map:
         self.inBounds = []
         self.outOfBounds = []
         self.overlay = []
-        for l in mapfiledata["layers"]:
+        for l in self.layers:
             if l["type"] == "objectgroup":
                 if l["name"] == "triggers":
                     self.triggers = l['objects']
@@ -116,7 +118,7 @@ class Map:
                     self.overlay = l['objects']
 
         '''
-        objects loaded from tiled need some data conversion and data added to be useful
+        objects loaded from tiled need some data conversion and clean up to be useful
         '''
         for layer in self.layers:
             if layer["type"] == "objectgroup":
@@ -140,7 +142,13 @@ class Map:
                         '''
                         object["y"] -= object["height"]
 
-                    # finaly check the object for any other missing data that is not directly
+                    # remove object keys that Tiled saves but the game engine does not use/support.
+                    # Doing this will help reduce unneeded data from being sent over the network.
+                    for key in ("rotation", "id", "visible"):
+                        if key in object:
+                            del object[key]
+
+                    # finally check the object for any other missing data or other issues that is not directly
                     # related to the tiled file format.
                     self.checkObject(object)
 
