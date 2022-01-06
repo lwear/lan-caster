@@ -10,18 +10,14 @@ class ServerMap(engine.map.Map):
     This class implements the Pick Up, Use, Drop, Move, Map Door, and PopUpText mechanics.
 
     The objects in object layers have the following keys added for this subclass:
-    dynamic keys (only in object while in use): action, actionText, holding
+    dynamic keys (only in object while in use): action, actionText, holding, destX, destY, speed
 
-    Sample Sprite Object with added 'action', 'actionText', 'holding', and 'text'
+    Sample Sprite Object with added 'action', 'actionText', 'holding', 'text', destX, destY, and speed
     {
       o 'action' = True
       o 'actionText': 'Available Action: Drop book',
-        'anchorX': 260.2614907044467,
-        'anchorY': 394.0083806621534,
-        'destX': 255,
-        'destY': 394,
-        'gid': 151,
-        'height': 32,
+      o 'destX': 255,
+      o 'destY': 394,
       o 'holding': {
             'anchorX': 558.91942244993,
             'anchorY': 395.714951094551,
@@ -36,23 +32,24 @@ class ServerMap(engine.map.Map):
             'x': 542.91942244993,
             'y': 379.714951094551
         },
-        'mapName': 'actions',
-        'name': '',
-        'playerNumber': 1,
-        'properties': {'labelText': 'Bob'},
-        'speed': 120,
+      o 'speed': 120,
       o 'text': {
             'color': '#00ff00',
             'pixelsize': 16,
             'text': "The door is locked."
         },
-        'tilesetName': 'fantasy-tileset',
-        'tilesetTileNumber': 150,
-        'type': 'player',
-        'width': 32,
-        'x': 244.26149070444671,
-        'y': 378.0083806621534
+        ...
+        ...
+        ...
+        <see other keys already in engine.map>
+        ...
+        ...
+        ...
     }
+
+    o Optional keys are only present when in use. If not sure then check before use.
+      eg. if 'gid' in sprite:
+            do something with sprite['gid']
     '''
 
     ########################################################

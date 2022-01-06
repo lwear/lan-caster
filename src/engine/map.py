@@ -9,7 +9,7 @@ class Map:
     '''
     The objects in object layers have the following keys:
     permanent keys: name, type, x, y, width, height, anchorX, anchorY
-    dynamic keys (only in object while in use): destX, destY, speed, labelText (see player class)
+    dynamic keys (only in object while in use): labelText (see player class)
     tile objects always have key: gid, tilesetName, tilesetTileNumber
     text object always have key: text
 
@@ -19,15 +19,12 @@ class Map:
     {
       * 'anchorX': 260.2614907044467,
       * 'anchorY': 394.0083806621534,
-      o 'destX': 255,
-      o 'destY': 394,
       o 'gid': 151,
       * 'height': 32,
       * 'mapName': 'actions',
       * 'name': '',
       o 'playerNumber': 1,
       o 'properties': {'labelText': 'Bob'},
-      o 'speed': 120,
       o 'tilesetName': 'fantasy-tileset',
       o 'tilesetTileNumber': 150,
       * 'type': 'player',

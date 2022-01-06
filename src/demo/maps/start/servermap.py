@@ -4,7 +4,7 @@ import demo.servermap
 
 class ServerMap(demo.servermap.ServerMap):
     '''
-    This class implements the LockedMapDoor mechanics.
+    This class implements the lockedMapDoor mechanic.
     '''
 
     ########################################################
