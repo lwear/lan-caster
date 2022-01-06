@@ -7,13 +7,19 @@ import engine.geometry as geo
 
 class Map:
     '''
-    The objects in object layers have the following keys:
-    permanent keys: name, type, x, y, width, height, anchorX, anchorY
-    dynamic keys (only in object while in use): labelText (see player class)
-    tile objects always have key: gid, tilesetName, tilesetTileNumber
-    text object always have key: text
+    The Map class is responsible for:
+        1) Loading Tiled map files and cleaning the data so it an be used by the game engine.
+        2) Provide utility functions for manipulating and searching map data.
+    It is assumed the map class with be sub-classed to add additional functionality.
 
-    Tiled layer objects are stored as Python Dictionaries. (https://www.w3schools.com/python/python_dictionaries.asp)
+    Most of the data cleaning is performed on objects from Tiled object layers. 
+    Tiled layer objects are stored as Python Dictionaries. 
+    (https://www.w3schools.com/python/python_dictionaries.asp)
+
+    The map engine ensures all objects in Tiled object layers have the following:
+        - Always have keys: name, type, x, y, width, height, anchorX, anchorY
+        - May have dynamic keys (only in object while in use): properties->labelText (see player class)
+        - Tile objects always have key: gid, tilesetName, tilesetTileNumber
 
     Sample Sprite Object:
     {
@@ -86,13 +92,15 @@ class Map:
             name = ts["source"].split("/")[-1].split(".")[0]
             self.tsFirstGid[name] = ts["firstgid"]
 
-        # convert layer visibility data into a more useful form.
+        # convert layer visibility data into a more compact form that is better for sending over network.
         self.layerVisabilityMask = 0
         for layerIndex in range(len(self.layers)):
             if self.layers[layerIndex]["visible"] == True:
                 self.setLayerVisablitybyIndex(layerIndex, True)
 
         # set up quick reference to object lists of well known object layers.
+        # these can be used directly rather than searching for these layers over and over.
+        # it also ensure all these layers exist in case they were not in the Tiled file.
         self.triggers = []
         self.sprites = []
         self.reference = []
@@ -157,6 +165,7 @@ class Map:
     ########################################################
 
     def setMapChanged(self, changed=True):
+        # flag the map has changed or not changed.
         self.changed = changed
 
     ########################################################
@@ -202,7 +211,7 @@ class Map:
     ########################################################
 
     def findTile(self, tileGid):
-        # converts Gid for this map to a tileset specific tile number.
+        # converts Gid for this map to a specific tileset name and tileset tile number.
         for tilesetName in self.tsFirstGid:
             firstGid = self.tsFirstGid[tilesetName]
             lastGid = firstGid + self.tilesets[tilesetName].tilecount - 1
@@ -221,6 +230,8 @@ class Map:
                 return self.tsFirstGid[tilesetName] + tilesetTileSearchNumber
 
         # By design this should never happen so we need to quit!
+        # This probably means a tile object was added to this map but this map does
+        # not have the required tileset added to it.
         log(f"tilesetName {str(tilesetSearchName)} not found in map {self.name}!", "FAILURE")
         exit()
 
@@ -229,11 +240,13 @@ class Map:
     ########################################################
 
     def addObject(self, object, objectList=False):
-        # assumes that objectList is from an object layer on this may.
-        # recored in the object itself that it is now on this map.
+        # add object to one of the object list of an object layer on this map.
+        # assumes that objectList is from an object layer on this map.
+
         if not isinstance(objectList, list):
             objectList = self.sprites
 
+        # record in the object itself that it is now on this map.
         object["mapName"] = self.name
 
         # add object to list
@@ -246,7 +259,11 @@ class Map:
         self.setMapChanged()
 
     def removeObject(self, object, objectList=False):
-        # do not remove self.name from object["mapName"] since the object could be in more than one list for this map.
+        # remove object from objectlist. Assumes object is in list.
+
+        # Note, do not remove self.mapName from object["mapName"] since the object could be in 
+        # more than one list for this map.
+
         if not isinstance(objectList, list):
             objectList = self.sprites
 
@@ -286,7 +303,8 @@ class Map:
     ########################################################
 
     def checkObject(self, object):
-        # object must be at dict {}
+        # ensure object meets all basic criteria
+        # object must be a dictionary {}
 
         if "mapName" not in object:
             object["mapName"] = self.name
@@ -321,6 +339,8 @@ class Map:
         return object
 
     def setObjectLocationByXY(self, object, x, y):
+        # set an objects location using its top/left corner.
+
         object["x"], object["y"] = x, y
         '''
         set the anchor for the object, this is the point we consider to be the point
@@ -338,6 +358,8 @@ class Map:
         self.setMapChanged()
 
     def setObjectLocationByAnchor(self, object, anchorX, anchorY):
+        # set an objects location using its anchor point.
+
         object["anchorX"], object["anchorY"] = anchorX, anchorY
         if "gid" in object:
             object["x"] = anchorX - self.tilesets[object["tilesetName"]].tileoffsetX

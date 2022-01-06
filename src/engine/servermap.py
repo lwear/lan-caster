@@ -10,7 +10,7 @@ class ServerMap(engine.map.Map):
     This class implements the Pick Up, Use, Drop, Move, Map Door, and PopUpText mechanics.
 
     The objects in object layers have the following keys added for this subclass:
-    dynamic keys (only in object while in use): action, actionText, holding, destX, destY, speed
+    dynamic keys (only in object while in use): action, actionText, holding, text, destX, destY, speed
 
     Sample Sprite Object with added 'action', 'actionText', 'holding', 'text', destX, destY, and speed
     {
@@ -244,7 +244,7 @@ class ServerMap(engine.map.Map):
 
             # movement is only allowed if it is inbounds.
             inBounds = False
-            
+
             # if sprite can move directly towards destination
             if self.objectInBounds(sprite, newAnchorX, newAnchorY):
                 inBounds = True
