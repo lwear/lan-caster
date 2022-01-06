@@ -6,7 +6,12 @@ from engine.log import log
 
 
 class Tileset:
-
+    '''
+    The Tileset class is responsible for:
+        1) Loading Tiled tileset files and images so it an be used by the game engine.
+        2) Provide utility functions on the tileset data.
+    It is assumed the map class with be sub-classed to add additional functionality.
+    '''
     def __init__(self, tilesetsDir, tilesetFile, loadImages):
         self.tilesetsDir = tilesetsDir
         self.tilesetFile = tilesetsDir + "/" + tilesetFile
