@@ -244,6 +244,7 @@ class ServerMap(engine.map.Map):
 
             # movement is only allowed if it is inbounds.
             inBounds = False
+            
             # if sprite can move directly towards destination
             if self.objectInBounds(sprite, newAnchorX, newAnchorY):
                 inBounds = True
@@ -257,12 +258,15 @@ class ServerMap(engine.map.Map):
                 inBounds = True
 
             if inBounds:
+                if geo.distance(sprite["anchorX"], sprite["anchorY"], newAnchorX, newAnchorY) < 1:
+                    # if sprite is only going to move less than 1 pixel then stop it.
+                    self.stopObject(sprite)
+                elif geo.distance(newAnchorX, newAnchorY, sprite["destX"], sprite["destY"]) < stepSpeed:
+                    # stop sprite if we are close to destination
+                    self.stopObject(sprite)
+
                 # move sprite to new location
                 self.setObjectLocationByAnchor(sprite, newAnchorX, newAnchorY)
-
-                # stop sprite if we are close to destination
-                if geo.distance(sprite["anchorX"], sprite["anchorY"], sprite["destX"], sprite["destY"]) < stepSpeed:
-                    self.stopObject(sprite)
             else:
                 # sprite has hit an inside corner and can't continue.
                 self.stopObject(sprite)
