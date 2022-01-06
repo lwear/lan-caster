@@ -12,14 +12,14 @@ class Map:
         2) Provide utility functions for manipulating and searching map data.
     It is assumed the map class with be sub-classed to add additional functionality.
 
-    Most of the data cleaning is performed on objects from Tiled object layers. 
-    Tiled layer objects are stored as Python Dictionaries. 
+    Most of the data cleaning is performed on objects from Tiled object layers.
+    Tiled layer objects are stored as Python Dictionaries.
     (https://www.w3schools.com/python/python_dictionaries.asp)
 
     The map engine ensures all objects in Tiled object layers have the following:
-        - Always have keys: name, type, x, y, width, height, anchorX, anchorY
-        - May have dynamic keys (only in object while in use): properties->labelText (see player class)
-        - Tile objects always have key: gid, tilesetName, tilesetTileNumber
+        - Required keys (always present): name, type, x, y, width, height, anchorX, anchorY
+        - Dynamic keys (only in object while in use): properties->labelText (see player class)
+        - Tile objects also have required keys: gid, tilesetName, tilesetTileNumber
 
     Sample Sprite Object:
     {
@@ -261,7 +261,7 @@ class Map:
     def removeObject(self, object, objectList=False):
         # remove object from objectlist. Assumes object is in list.
 
-        # Note, do not remove self.mapName from object["mapName"] since the object could be in 
+        # Note, do not remove self.mapName from object["mapName"] since the object could be in
         # more than one list for this map.
 
         if not isinstance(objectList, list):
