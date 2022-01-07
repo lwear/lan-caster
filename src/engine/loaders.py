@@ -2,7 +2,6 @@ import os
 import importlib
 
 from engine.log import log
-import engine.tileset
 
 
 def loadServer(game):
@@ -36,11 +35,20 @@ def loadTilesets(game, loadImages):
     Return a dictionary of tileset objects, with the key being the tileset name:
     {'tileset1name': tileset1object, 'tileset2name': tileset2object, ....}
     '''
+
+    if loadImages:
+        module = importlib.import_module(f"engine.clienttileset")
+    else:
+        module = importlib.import_module(f"engine.tileset")
+
     tilesetsDir = f"src/{game}/tilesets"
     tilesets = {}
     listing = os.listdir(tilesetsDir)
     for tilesetFile in listing:
-        ts = engine.tileset.Tileset(tilesetsDir, tilesetFile, loadImages)
+        if loadImages:
+            ts = module.ClientTileset(tilesetsDir, tilesetFile)
+        else:
+            ts = module.Tileset(tilesetsDir, tilesetFile)
         tilesets[ts.name] = ts
     return tilesets
 
