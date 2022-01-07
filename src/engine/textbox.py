@@ -5,22 +5,21 @@ import engine.log
 from engine.log import log
 
 
-class Text:
-
-    def __init__(self, text, centerX=0, topY=0, maxWidth=255, removeTime=-1, size=18):
+class TextBox:
+    """
+    Generate and render centered text. If text is wider than maxWidth then it is wrapped to multiple lines.
+    """
+    def __init__(self, text, centerX=0, topY=0, maxWidth=255, size=18):
         self.text = text,
         self.centerX = centerX
         self.topY = topY
         self.maxWidth = maxWidth
-        self.removeTime = removeTime
         self.size = size
 
         self.pixelWidth = 0
         self.pixelHeight = 0
 
         self.font = pygame.freetype.Font(None, self.size)
-
-        # pre-render text
 
         # first, split the text into words
         words = text.split()

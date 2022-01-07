@@ -10,7 +10,7 @@ from engine.log import log
 import engine.messages
 import engine.network
 import engine.loaders
-import engine.text
+import engine.textbox
 
 
 class Client:
@@ -177,7 +177,7 @@ class Client:
         for sprite in self.step["sprites"]:
             if "playerNumber" in sprite and sprite["playerNumber"] == self.playerNumber:
                 if "actionText" in sprite:
-                    t = engine.text.Text(
+                    t = engine.textbox.TextBox(
                         sprite["actionText"] + " (spacebar)",
                         maxWidth=self.screen.get_width()
                         )

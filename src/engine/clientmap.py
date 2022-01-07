@@ -3,7 +3,7 @@ from pygame.locals import *
 
 from engine.log import log
 import engine.map
-import engine.text
+import engine.textbox
 import engine.geometry as geo
 
 
@@ -117,18 +117,14 @@ class ClientMap(engine.map.Map):
 
         # If properties -> labelText is present the render it under the tile. Normally used to display player names.
         if "properties" in tileObject and "labelText" in tileObject["properties"]:
-            engine.text.Text(
+            engine.textbox.TextBox(
                 text=tileObject["properties"]["labelText"],
                 centerX=tileObject['x'] + tileObject['width'] / 2,
                 topY=tileObject['y'] + tileObject['height']
                 ).blit(destImage)
 
     def blitTextObject(self, destImage, textObject):
-        # Tiled does not save pixelsize if it is the default size of 16 so we need to check.
-        if "pixelsize" not in textObject["text"]:
-            textObject["text"]["pixelsize"] = 16
-
-        engine.text.Text(
+        engine.textbox.TextBox(
             textObject["text"]["text"],
             centerX=textObject["x"] + textObject['width'] / 2,
             topY=textObject["y"],

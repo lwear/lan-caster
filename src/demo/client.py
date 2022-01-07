@@ -27,7 +27,7 @@ class Client(engine.client.Client):
         super().updateInterface()
 
         if self.showOpeningText:
-            t = engine.text.Text(
+            t = engine.textbox.TextBox(
                 "All players must gather in the stone circle to win!",
                 maxWidth=self.screen.get_width() / 2,
                 size=24
@@ -39,7 +39,7 @@ class Client(engine.client.Client):
             t.blit(self.screen)
 
         if self.showWinText:
-            t = engine.text.Text(
+            t = engine.textbox.TextBox(
                 "Game Won! Good teamwork everyone.",
                 maxWidth=self.screen.get_width() / 2,
                 size=24
