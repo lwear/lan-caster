@@ -317,6 +317,7 @@ class Map:
         if "height" not in object:
             object["height"] = 0
 
+        # if this is a Tile Object
         if "gid" in object and ("tilesetName" not in object or "tilesetTileNumber" not in object):
             '''
             objects may move between maps so in addition to the gid in this map we need to store
@@ -324,6 +325,7 @@ class Map:
             '''
             object["tilesetName"], object["tilesetTileNumber"] = self.findTile(object["gid"])
 
+        # if this is a Text Object
         if "text" in object:
             if "pixelsize" not in object["text"]:
                 object["text"]["pixelsize"] = 16 # Tiled default text pixelsize

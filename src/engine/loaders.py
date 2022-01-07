@@ -50,7 +50,7 @@ def loadMaps(tilesets, game, maptype):
     Return a dictionary of map objects, with the key being the map name:
     {'map1name': map1object, 'map2name': map2object, ....}
 
-    The map object is either a client or server map and the most specific version of
+    The map objects are either client or server maps and the most specific version of
     each will be searched for by looking first in the map folder for servermap.py or
     clientmap.py, then the game folder, and then the engine folder.
     '''

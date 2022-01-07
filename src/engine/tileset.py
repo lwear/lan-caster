@@ -11,13 +11,18 @@ class Tileset:
         1) Loading Tiled tileset files and images so it an be used by the game engine.
         2) Provide utility functions on the tileset data.
     It is assumed the map class with be sub-classed to add additional functionality.
+
+    Tiles within a tileset are numbers from right to left and top to bottom. The top
+    left tile is number 0, the tile to it's right is numbered 1, and so on.
     '''
     def __init__(self, tilesetsDir, tilesetFile, loadImages):
         self.tilesetsDir = tilesetsDir
         self.tilesetFile = tilesetsDir + "/" + tilesetFile
+
+        # Don't load the images if they will not be rendered to the screen. e.g. The server does not need images.
         self.loadImages = loadImages
 
-        # Tilesets are named based on their tilesetFile with .json removed
+        # Tileset name is based on tilesetFile with .json removed
         self.name = tilesetFile.split("/")[-1].split(".")[0]
 
         with open(self.tilesetFile) as f:
@@ -53,6 +58,8 @@ class Tileset:
         return engine.log.objectToStr(self)
 
     def blitTile(self, tileNumber, destImage, destX, destY):
+        # blit tileNumber's pixels into destImage at destX, destY
+
         if not self.image:
             log("Tried to blit a tile when images were not loaded!", "FAILURE")
             exit()

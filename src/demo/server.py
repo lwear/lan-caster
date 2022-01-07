@@ -7,8 +7,13 @@ import engine.geometry as geo
 class Server(engine.server.Server):
 
     def checkForEndGame(self):
-        # This completely replace the engine.server.checkForEndGame() since our ending
-        # conditions are totally different than the default.
+        '''
+        Send gameWon messages and quit if all 3 players are inside stone circle.
+
+        Don't call super().
+        This completely replace the engine.server.checkForEndGame() since our ending
+        conditions are totally different than the default.
+        '''
 
         end = self.maps["end"]
         endGame = end.findObject(name="endGame", objectList=end.reference)

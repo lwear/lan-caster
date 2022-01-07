@@ -11,7 +11,7 @@ class ServerMap(engine.map.Map):
         1) Implementing the game logic of "stepping" the map forward in time.
         2) Implement several basic game mechanics that occur within a step.
 
-    This class implements the Pick Up, Use, Drop, Move, Map Door, and PopUpText mechanics.
+    This class implements the Pick Up, Use, Drop, Move, Map Door, ActionText, and PopUpText mechanics.
 
     The objects in object layers have the following keys added for this subclass:
         - Required keys (always present): no added keys

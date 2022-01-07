@@ -4,9 +4,11 @@ import os
 from datetime import datetime
 import pprint
 
-# global printing of debug and info log level messages on/off
+# global printing of debug and verbose log level messages on/off
 LOGDEBUG = False
 LOGVERBOSE = False
+
+# global printing to logfile on/off
 LOGFILE = False
 
 
@@ -76,6 +78,7 @@ def log(msg, level="INFO", depth=3):
 
     time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
+    # format msg to be human readable
     if(isinstance(msg, dict)):
         msg = dictToStr(msg, depth)
     else:

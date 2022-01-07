@@ -14,7 +14,7 @@ between degrees and radians in your code as follows:
 
 def objectContains(object, x, y):
     """
-    returns True if object contains x,y else returns False.
+    returns True if x,y is inside object's x,y,width,height else returns False.
     """
     if "ellipse" in object:
         pass  # not yet supported.
@@ -29,11 +29,11 @@ def objectContains(object, x, y):
     return False
 
 
-def objectsContains(objects, x, y):
+def objectsContains(objectList, x, y):
     """
-    returns true if any object in list of objects contains point x,y
+    returns true if x,y is inside any object's x,y,width,height in objectList
     """
-    for object in objects:
+    for object in objectList:
         if objectContains(object, x, y):
             return True
     return False

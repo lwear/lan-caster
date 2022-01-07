@@ -14,7 +14,10 @@ from engine.log import log
 ########################################################
 
 class Socket:
-    """Engine Msg filtering and basic reliable send/recv for UDP soket. """
+    """ 
+    Basic network communications class for reliable and unreliable send/recv of Messages.
+    Socket is based on UDP/IP sockets.
+    """
 
     def __init__(self, messages, sourceIP, sourcePort, destinationIP='127.0.0.1', destinationPort=20000):
         """

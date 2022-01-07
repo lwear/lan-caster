@@ -5,7 +5,12 @@ import engine.server
 
 
 class Player():
-
+    """
+    The Player class is used by the server and provides a place to store player information 
+    that does not need to be in the sprite and is not needed by the client. Some items, such
+    as ip and port should never be shared with other clients for security and therefore can't
+    be stored in the sprite since it is sent to all clients.
+    """
     def __init__(self, sprite, ip, port, playerNumber, playerDisplayName, mapName):
         self.ip = ip
         self.port = port
@@ -15,6 +20,7 @@ class Player():
         self.sprite["playerNumber"] = playerNumber
         self.sprite["mapName"] = mapName
 
+        # add playerDisplaName to sprite properties as "labelText" so client can display it.
         if not "properties" in self.sprite:
             self.sprite["properties"] = {}
         self.sprite["properties"]["labelText"] = playerDisplayName

@@ -30,7 +30,7 @@ class ServerMap(engine.servermap.ServerMap):
 
     def objectInBounds(self, object, x, y):
         # allow things that have bee thrown to go out of bounds so they can be thrown over water.
-        # The way the throw zones are set up ensures that objects can't throws thrown off the map.
+        # The way the throw zones are set up ensures that objects can't be thrown off the map.
         if "speed" in object and object["speed"] == self.THROWSPEED:
             return True
 
@@ -54,7 +54,7 @@ class ServerMap(engine.servermap.ServerMap):
 
     def animateChickens(self):
         for chicken in self.findObject(name="chicken", returnAll=True):
-            # if this is a chicken and it is not being thrown right now then set have it walk to closest player.
+            # if this chicken is not being thrown right now then have it walk to closest player.
             # we know something is being thrown because it's speed will be self.THROWSPEED
             if ("speed" not in chicken or (
                     "speed" in chicken and chicken["speed"] != self.THROWSPEED)):
@@ -110,7 +110,8 @@ class ServerMap(engine.servermap.ServerMap):
     def initBomb(self):
         '''
         Bomb Mechanic init. Note, this is hard coded to the one bomb area in the game.
-        remove and store the map doors and inBounds that are covered by rocks.
+
+        Remove and store the map doors and inBounds that are covered by rocks.
         It will get put back when the bomb is set off. see actionBomb()
         '''
         if self.name == "start" or self.name == "under":
@@ -120,18 +121,24 @@ class ServerMap(engine.servermap.ServerMap):
             self.removeObject(self.ladder1InBounds, objectList=self.inBounds)
 
     def actionBomb(self, sprite):
-        # this code not in generic and will only work with the one rock in this game for the one bomb in this game.
-        # remove bomb and delete it from game completely
-        del sprite["holding"]
+        '''
+        this code not in generic and will only work with the one rock in this game 
+        for the one bomb in this game.
+        '''
+        del sprite["holding"]  # remove bomb and delete it from game completely
+
+        # find maps at top and bottom of ladder.
         start = engine.server.SERVER.maps["start"]
         under = engine.server.SERVER.maps["under"]
 
+        # update start map to after the bomb has done off.
         start.setLayerVisablitybyName("rockOnStairs", False)
         start.setLayerVisablitybyName("rockOnStairs2", False)
         start.setLayerVisablitybyName("rockOffStairs", True)
         start.triggers.append(start.ladder1MapDoor)
         start.inBounds.append(start.ladder1InBounds)
 
+        # update under map to after the bomb has done off.
         under.setLayerVisablitybyName("rockOnStairs", False)
         under.setLayerVisablitybyName("rockOffStairs", True)
         under.triggers.append(under.ladder1MapDoor)
@@ -208,6 +215,8 @@ class ServerMap(engine.servermap.ServerMap):
             del object["respawnY"]
 
     def setSpriteLocationByRespawnPoint(self, sprite):
+        # Move sprite to respawn point if one was previously stored.
+
         if "respawnX" in sprite:
             destMap = self
             if sprite["respawnMapName"] != self.name:
@@ -217,7 +226,7 @@ class ServerMap(engine.servermap.ServerMap):
             destMap.setObjectLocationByAnchor(sprite, sprite["respawnX"], sprite["respawnY"])
             destMap.stopObject(sprite)
         # else this object never went through a respawn point. Perhaps it is something the player carried into over
-        # the respan area. Let's hope it's OK to leave it where it is.
+        # the respawn area. Let's hope it's OK to leave it where it is.
 
     def triggerSaveRespawnPoint(self, trigger, object):
         '''

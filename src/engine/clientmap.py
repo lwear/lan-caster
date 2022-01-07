@@ -8,6 +8,10 @@ import engine.geometry as geo
 
 
 class ClientMap(engine.map.Map):
+    """
+    The ClientMap class is responsible for rendering a map.
+    """
+
     ########################################################
     # INIT METHODS
     #####################################################
@@ -24,7 +28,7 @@ class ClientMap(engine.map.Map):
     ########################################################
 
     def setLayerVisablityMask(self, layerVisabilityMask):
-        if super().setLayerVisablityMask(layerVisabilityMask):  # returns True only if new mask was different.
+        if super().setLayerVisablityMask(layerVisabilityMask):  # returns True only if mask changed.
             # re-blit top and bottom images since they may have changed.
             self.blitBottomImage()
             self.blitTopImage()
@@ -34,7 +38,11 @@ class ClientMap(engine.map.Map):
     #####################################################
 
     def blitBottomImage(self):
-        # blit together all the visible layers below the sprite layer.
+        '''
+        blit together all the visible layers BELOW the sprite layer and store it in
+        self.bottomImage. self.bottomImage can then be used for faster screen updates
+        rather than doing all the work of blitting these layers together every frame.
+        '''
 
         # Start with grey background.
         self.bottomImage = pygame.Surface((self.width * self.tilewidth, self.height * self.tileheight))
@@ -46,7 +54,11 @@ class ClientMap(engine.map.Map):
             self.blitLayer(self.bottomImage, layerNumber)
 
     def blitTopImage(self):
-        # blit together all the visible layers above the sprite layer.
+        '''
+        blit together all the visible layers ABOVE the sprite layer and store it in
+        self.bottomImage. self.bottomImage can then be used for faster screen updates
+        rather than doing all the work of blitting these layers together every frame.
+        '''
 
         # Start with transparent background.
         self.topImage = pygame.Surface(
@@ -65,7 +77,7 @@ class ClientMap(engine.map.Map):
     def blitLayer(self, destImage, layerNumber):
         '''
         blit layer onto destImage. Note object layers named "sprites" and "overlay" will not be rendered since
-        they are provided by the server and must rendered separately with a direct call to blitObjectLayer().
+        they are provided by the server and must be rendered separately with a direct call to blitObjectLayer().
         '''
         if self.getLayerVisablitybyIndex(layerNumber):
             if self.layers[layerNumber]["type"] == "tilelayer":

@@ -1,34 +1,35 @@
 import engine.log
 from engine.log import log
 
-"""
-**About Messages**
-
-Every message is a python dict type with at least a type attribute (i.e. field) and a
-string value.
-
-For example: { 'type': 'getInfoRequest'}
-
-messageDefinitions below defines valid types and additional fields that must be included and
-can optionally be included based on type.
-
-Optional fields end in '_o' which marks the fields as optional. The '_o' should not
-appear in the actual message, it is just a marker that the field is optional.
-For example, a joinRequest message with optional class field would be:
-
-{'type': 'joinRequest', 'name': 'Dave'}
-
-All fields have a defined type in the form of <type> or [<type>,min,max].
-<type> can be expressed as multiple acceptable types as (<type>,<type>,...)
-
-For fields types of 'str' min and max are the min length and max length of the string.
-
-All Request messages have a corresponding Reply message. The Request is sent to the
-server and the server returns the reply message or an Error message.
-"""
-
-
 class Messages:
+
+    """
+    Messages defines and can validate what information can be sent over the network
+    between the server and clients.
+
+    Every message is a python dict type with at least a type attribute (i.e. field) and a
+    string value.
+
+    For example: { 'type': 'getInfoRequest'}
+
+    messageDefinitions below defines valid types and additional fields that must be included and
+    can optionally be included based on type.
+
+    Optional fields end in '_o' which marks the fields as optional. The '_o' should not
+    appear in the actual message, it is just a marker that the field is optional.
+    For example, a joinRequest message with optional class field would be:
+
+    {'type': 'joinRequest', 'name': 'Dave'}
+
+    All fields have a defined type in the form of <type> or [<type>,min,max].
+    <type> can be expressed as multiple acceptable types as (<type>,<type>,...)
+
+    For fields types of 'str' min and max are the min length and max length of the string.
+
+    All Request messages have a corresponding Reply message. The Request is sent to the
+    server and the server returns the reply message or an Error message.
+    """
+
     def __init__(self):
         self.messageDefinitions = {
             # msg type             other required msg fields
@@ -52,7 +53,7 @@ class Messages:
         return engine.log.objectToStr(self)
 
     def isValidMsg(self, msg):
-        """ Returns True if msg is a valid message, otherwise returns false. """
+        """ Returns True if msg is a valid message as defined by messageDefinitions, otherwise returns false. """
 
         if not isinstance(msg, dict):
             log("Msg is type " + str(type(msg)) + " but must be dict type: " + str(msg), "ERROR")

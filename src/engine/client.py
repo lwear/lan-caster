@@ -14,6 +14,13 @@ import engine.textbox
 
 
 class Client:
+    """
+    The Client class is responsible for:
+        1) Opening the game interface window;
+        2) Requesting that the server allow the player to join the game;
+        3) Collecting user input and sending it to the server over the network;
+        4) Receiving updates from the server and rendering them to the screen.
+    """
 
     #####################################################
     # INIT METHODS
@@ -104,6 +111,8 @@ class Client:
         self.quit()
 
     def processMsg(self, ip, port, ipport, msg, callbackData):
+        # This method is called for each msg received.
+
         if ipport != self.serverIpport:
             # Msg recived was NOT from the server. Ignore this message.
             log(f"Msg received but not from server! Msg from ({ipport}).", "WARNING")
