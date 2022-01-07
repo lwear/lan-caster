@@ -1,7 +1,7 @@
-# lan-caster
+# LAN-Caster
 Simple python 2D multiplayer online game engine for local area networks (LAN).
 
-The goal of Lancaster is to provide an easy-to-use code base for developing 2D multiplayer online games. The networking component of Lancaster is specifically a design for local area networks.
+The goal of LAN-Caster is to provide an easy-to-use code base for developing 2D multiplayer online games. The networking component of Lancaster is specifically a design for local area networks.
 
 # How To Run
 
@@ -17,7 +17,7 @@ LAN-Caster uses Python 3.6 or higher (tested on python 3.7.3) which can be insta
 > If multiple versions of python are installed, ensure you are running python 3.6+, not python 3.5 or python 2. The examples in this README use the "python" command assuming python 3.6+ is the default. The command "python3" (Linux) or "py -3" (Windows) may be required to force the correct version.
 
 ### Python Modules
-LAN-Caster requires two added python moduels to be installed. 
+LAN-Caster requires two added python moduels to be installed. If a computer is only running the LAN-Caster server then the pygame module is not required.
 1) Pygame is used by the clients to open the game window, render graphics, and collect player input. 
 2) Msgpack is used to encode and decode messages between the server and clients.
 
