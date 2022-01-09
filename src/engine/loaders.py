@@ -3,31 +3,32 @@ import importlib
 
 from engine.log import log
 
+def findModule(moduleName, game = False, map = False):
+    '''
+    Return module for moduleName based on searching maps, game, and engine folders, in that order. 
+    Map and game will only be searched if provided.
+    '''
 
-def loadServer(game):
-    '''
-    Find the most specific server.py file for this game and load it.
-    Look in the game folder first and then the engine folder.
-    '''
-    if os.path.isfile(f"src/{game}/server.py"):
-        log(f"Importing {game}.server module")
-        return importlib.import_module(f"{game}.server")
+    fortext = ""
+    if game and map:
+        fortext = f" for game {game} and map {map}"
+    elif game:
+        fortext = f" for game {game}"
+
+    if game and map and os.path.isfile(f"src/{game}/maps/{map}/{moduleName}.py"):
+        log(f"Importing {game}.maps.{map}.{moduleName} module{fortext}.")
+        module = importlib.import_module(f"{game}.maps.{map}.{moduleName}")
+    elif game and os.path.isfile(f"src/{game}/{moduleName}.py"):
+        log(f"Importing {game}.{moduleName} module{fortext}.")
+        module = importlib.import_module(f"{game}.{moduleName}")
+    elif os.path.isfile(f"src/engine/{moduleName}.py"):
+        log(f"Importing engine.{moduleName} module{fortext}.")
+        module = importlib.import_module(f"engine.{moduleName}")
     else:
-        log(f"Importing engine.server module")
-        return importlib.import_module(f"engine.server")
+        log(f"Module name {moduleName} not found{fortext}.", "FAILURE")
+        exit()
 
-
-def loadClient(game):
-    '''
-    Find the most specific client.py file for this game and load it.
-    Look in the game folder first and then the engine folder.
-    '''
-    if os.path.isfile(f"src/{game}/client.py"):
-        log(f"Importing {game}.client module")
-        return importlib.import_module(f"{game}.client")
-    else:
-        log(f"Importing engine.client module")
-        return importlib.import_module(f"engine.client")
+    return module
 
 
 def loadTilesets(game, loadImages):
@@ -37,9 +38,9 @@ def loadTilesets(game, loadImages):
     '''
 
     if loadImages:
-        module = importlib.import_module(f"engine.clienttileset")
+        module = findModule("clienttileset", game = game)
     else:
-        module = importlib.import_module(f"engine.tileset")
+        module = findModule("tileset", game = game)
 
     tilesetsDir = f"src/{game}/tilesets"
     tilesets = {}
@@ -63,9 +64,9 @@ def loadMaps(tilesets, game, maptype):
     clientmap.py, then the game folder, and then the engine folder.
     '''
     if maptype == "ServerMap":
-        filename = "servermap"
+        moduleName = "servermap"
     elif maptype == "ClientMap":
-        filename = "clientmap"
+        moduleName = "clientmap"
     else:
         log(f"maptype == {maptype} is not supported. maptype must be 'ServerMap' or 'ClientMap'.", "FAILURE")
         exit()
@@ -73,21 +74,13 @@ def loadMaps(tilesets, game, maptype):
     mapsDir = f"src/{game}/maps"
     maps = {}
     listing = os.listdir(mapsDir)
-    for mapDir in listing:
-        if os.path.isfile(f"src/{game}/maps/{mapDir}/{filename}.py"):
-            log(f"Importing {game}.maps.{mapDir}.{filename} module for map {mapDir}")
-            module = importlib.import_module(f"{game}.maps.{mapDir}.{filename}")
-        elif os.path.isfile(f"src/{game}/{filename}.py"):
-            log(f"Importing {game}.{filename} module for map {mapDir}")
-            module = importlib.import_module(f"{game}.{filename}")
-        else:
-            log(f"Importing engine.{filename} module for map {mapDir}")
-            module = importlib.import_module(f"engine.{filename}")
+    for map in listing:
+        module = findModule(moduleName, game=game, map=map)
 
         if maptype == "ServerMap":
-            mapObj = module.ServerMap(tilesets, mapsDir + "/" + mapDir, game)
+            mapObj = module.ServerMap(tilesets, mapsDir + "/" + map, game)
         else:
-            mapObj = module.ClientMap(tilesets, mapsDir + "/" + mapDir, game)
+            mapObj = module.ClientMap(tilesets, mapsDir + "/" + map, game)
 
         maps[mapObj.name] = mapObj
 
