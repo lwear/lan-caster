@@ -347,7 +347,9 @@ class ServerMap(engine.map.Map):
             destMap.stopObject(sprite)
             destMap.addObject(sprite)
         else:
-            log(f'Trigger destination not found = {trigger["properties"]["destMapName"]} - {trigger["properties"]["destReference"]}', "ERROR")
+            log(
+                f'Trigger destination not found = {trigger["properties"]["destMapName"]} - {trigger["properties"]["destReference"]}',
+                "ERROR")
 
     ########################################################
     # TRIGGER POPUPTEXT

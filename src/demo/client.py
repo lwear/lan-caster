@@ -42,11 +42,11 @@ class Client(engine.client.Client):
                     'width': self.screen.get_width() / 2,
                     'height': self.screen.get_height() / 4,
                     'valign': "top",
-                    'text': { 
+                    'text': {
                         'text': "All players must gather in the stone circle to win!",
-                        'pixelsize': 24 
+                        'pixelsize': 24
                         }
-                })
+                    })
         if self.showWinText:
             self.maps[self.step["mapName"]].blitTextObject(
                 self.screen,
@@ -56,8 +56,8 @@ class Client(engine.client.Client):
                     'width': self.screen.get_width() / 2,
                     'height': self.screen.get_height() / 4,
                     'valign': "top",
-                    'text': { 
+                    'text': {
                         'text': "Game Won! Good teamwork everyone.",
-                        'pixelsize': 24 
+                        'pixelsize': 24
                         }
-                })
+                    })

@@ -14,7 +14,7 @@ from engine.log import log
 ########################################################
 
 class Socket:
-    """ 
+    """
     Basic network communications class for reliable and unreliable send/recv of Messages.
     Socket is based on UDP/IP sockets.
     """

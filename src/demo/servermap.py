@@ -122,7 +122,7 @@ class ServerMap(engine.servermap.ServerMap):
 
     def actionBomb(self, sprite):
         '''
-        this code not in generic and will only work with the one rock in this game 
+        this code not in generic and will only work with the one rock in this game
         for the one bomb in this game.
         '''
         del sprite["holding"]  # remove bomb and delete it from game completely

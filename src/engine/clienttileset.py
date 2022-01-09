@@ -5,12 +5,14 @@ from engine.log import log
 
 import engine.tileset
 
+
 class ClientTileset(engine.tileset.Tileset):
     '''
     The ClientTileset class is responsible for:
         1) Loading tileset image so it an be used by the game engine.
         2) Provide tile render method.
     '''
+
     def __init__(self, tilesetsDir, tilesetFile):
         super().__init__(tilesetsDir, tilesetFile)
 

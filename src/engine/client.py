@@ -192,8 +192,8 @@ class Client:
                             'width': self.screen.get_width(),
                             'height': self.screen.get_height(),
                             'valign': "bottom",
-                            'text': { 'text': sprite["actionText"] + " (spacebar)" }
-                        })
+                            'text': {'text': sprite["actionText"] + " (spacebar)"}
+                            })
                 break
 
     ########################################################

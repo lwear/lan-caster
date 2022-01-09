@@ -328,7 +328,7 @@ class Map:
         # if this is a Text Object
         if "text" in object:
             if "pixelsize" not in object["text"]:
-                object["text"]["pixelsize"] = 16 # Tiled default text pixelsize
+                object["text"]["pixelsize"] = 16  # Tiled default text pixelsize
 
         # we assume that if object has x then it has y AND if it has anchorX then it has anchorY
         if "x" not in object and "anchorX" not in object:

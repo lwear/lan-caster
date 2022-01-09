@@ -136,8 +136,8 @@ class ClientMap(engine.map.Map):
                     'width': 256,
                     'height': 40,
                     'valign': "top",
-                    'text': { 'text': tileObject["properties"]["labelText"] }
-                })
+                    'text': {'text': tileObject["properties"]["labelText"]}
+                    })
 
     def blitTextObject(self, destImage, textObject):
         text = textObject["text"]["text"]
@@ -188,7 +188,7 @@ class ClientMap(engine.map.Map):
         for line in lines:
             tx = pixelWidth / 2 - line[0] / 2
             font.render_to(image, (tx, ty), line[2],
-                                fgcolor=Color('green'), bgcolor=Color('black'))
+                           fgcolor=Color('green'), bgcolor=Color('black'))
             ty += maxLineHeight
 
         centerX = textObject["x"] + textObject['width'] / 2

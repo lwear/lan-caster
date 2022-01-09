@@ -17,6 +17,7 @@ class Server:
         3) Send updated map data to players for the map they are on;
         4) Receiving messages from players and store the data for processing by the step logic.
     """
+
     def __init__(self, game, fps, serverIP, serverPort):
         global SERVER
         SERVER = self
@@ -141,12 +142,12 @@ class Server:
             mapName = self.players[ipport].sprite["mapName"]
             if self.maps[mapName].changed:
                 self.socket.sendMessage(msg={
-                        'type': 'step',
-                        'gameSec': time.perf_counter(),
-                        'mapName': mapName,
-                        'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
-                        'sprites': self.maps[mapName].sprites,
-                        'overlay': self.maps[mapName].overlay
+                    'type': 'step',
+                    'gameSec': time.perf_counter(),
+                    'mapName': mapName,
+                    'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
+                    'sprites': self.maps[mapName].sprites,
+                    'overlay': self.maps[mapName].overlay
                     },
                     destinationIP=self.players[ipport].ip,
                     destinationPort=self.players[ipport].port

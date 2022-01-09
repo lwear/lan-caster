@@ -13,6 +13,7 @@ class Tileset:
     Tiles within a tileset are numbers from right to left and top to bottom. The top
     left tile is number 0, the tile to it's right is numbered 1, and so on.
     '''
+
     def __init__(self, tilesetsDir, tilesetFile):
         self.tilesetsDir = tilesetsDir
         self.tilesetFile = tilesetsDir + "/" + tilesetFile
