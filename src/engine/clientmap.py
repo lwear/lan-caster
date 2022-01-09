@@ -3,7 +3,6 @@ from pygame.locals import *
 
 from engine.log import log
 import engine.map
-import engine.textbox
 import engine.geometry as geo
 
 
@@ -129,17 +128,72 @@ class ClientMap(engine.map.Map):
 
         # If properties -> labelText is present the render it under the tile. Normally used to display player names.
         if "properties" in tileObject and "labelText" in tileObject["properties"]:
-            engine.textbox.TextBox(
-                text=tileObject["properties"]["labelText"],
-                centerX=tileObject['x'] + tileObject['width'] / 2,
-                topY=tileObject['y'] + tileObject['height']
-                ).blit(destImage)
+            self.blitTextObject(
+                destImage,
+                {
+                    'x': tileObject['x'] + tileObject['width'] / 2 - 128,
+                    'y': tileObject['y'] + tileObject['height'],
+                    'width': 256,
+                    'height': 40,
+                    'valign': "top",
+                    'text': { 'text': tileObject["properties"]["labelText"] }
+                })
 
     def blitTextObject(self, destImage, textObject):
-        engine.textbox.TextBox(
-            textObject["text"]["text"],
-            centerX=textObject["x"] + textObject['width'] / 2,
-            topY=textObject["y"],
-            size=textObject["text"]["pixelsize"],
-            maxWidth=textObject['width']
-            ).blit(destImage)
+        text = textObject["text"]["text"]
+        maxWidth = textObject['width']
+        if "pixelsize" in textObject["text"]:
+            size = textObject["text"]["pixelsize"]
+        else:
+            size = 16
+
+        pixelWidth = 0
+        pixelHeight = 0
+
+        font = pygame.freetype.Font(None, size)
+
+        # first, split the text into words
+        words = text.split()
+        lines = []
+
+        maxLineHeight = 0
+
+        while len(words) > 0:
+            # get as many words as will fit within allowed_width
+            lineWords = words.pop(0)
+            r = font.get_rect(lineWords)
+            fw, fh = r.width, r.height
+            while fw < maxWidth and len(words) > 0:
+                r = font.get_rect(lineWords + ' ' + words[0])
+                if r.width > maxWidth:
+                    break
+                lineWords = lineWords + ' ' + words.pop(0)
+                fw, fh = r.width, r.height
+
+            # add a line consisting of those words
+            line = lineWords
+            if pixelWidth < fw:
+                pixelWidth = fw
+            if maxLineHeight < fh:
+                maxLineHeight = fh
+            lines.append((fw, fh, line))
+
+        pixelHeight = maxLineHeight * len(lines)
+        pixelWidth += 4
+        pixelHeight += 4
+        image = pygame.Surface((pixelWidth, pixelHeight))
+        image.fill(Color('black'))
+
+        ty = 2
+        for line in lines:
+            tx = pixelWidth / 2 - line[0] / 2
+            font.render_to(image, (tx, ty), line[2],
+                                fgcolor=Color('green'), bgcolor=Color('black'))
+            ty += maxLineHeight
+
+        centerX = textObject["x"] + textObject['width'] / 2
+        topY = textObject["y"]
+        if "valign" in textObject and textObject["valign"] == "bottom":
+            topY = textObject["height"] - pixelHeight
+
+        destImage.blit(image, (centerX - pixelWidth / 2, topY))

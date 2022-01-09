@@ -10,7 +10,6 @@ from engine.log import log
 import engine.messages
 import engine.network
 import engine.loaders
-import engine.textbox
 
 
 class Client:
@@ -186,16 +185,16 @@ class Client:
         for sprite in self.step["sprites"]:
             if "playerNumber" in sprite and sprite["playerNumber"] == self.playerNumber:
                 if "actionText" in sprite:
-                    t = engine.textbox.TextBox(
-                        sprite["actionText"] + " (spacebar)",
-                        maxWidth=self.screen.get_width()
-                        )
-                    # set text location to center/bottom of screen.
-                    t.setXY(
-                        centerX=self.screen.get_width() / 2,
-                        topY=self.screen.get_height() - t.pixelHeight - 4
-                        )
-                    t.blit(self.screen)
+                    self.maps[self.step["mapName"]].blitTextObject(
+                        self.screen,
+                        {
+                            'x': 0,
+                            'y': 0,
+                            'width': self.screen.get_width(),
+                            'height': self.screen.get_height(),
+                            'valign': "bottom",
+                            'text': { 'text': sprite["actionText"] + " (spacebar)" }
+                        })
                 break
 
     ########################################################

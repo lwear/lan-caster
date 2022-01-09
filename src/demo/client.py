@@ -2,7 +2,6 @@ import pygame
 from pygame.locals import *
 
 from engine.log import log
-import engine.textbox
 import engine.client
 
 
@@ -35,25 +34,30 @@ class Client(engine.client.Client):
 
         # render open and ending text on top of (after) everything else.
         if self.showOpeningText:
-            t = engine.textbox.TextBox(
-                "All players must gather in the stone circle to win!",
-                maxWidth=self.screen.get_width() / 2,
-                size=24
-                )
-            t.setXY(
-                centerX=self.screen.get_width() / 2,
-                topY=self.screen.get_height() / 4 * 3
-                )
-            t.blit(self.screen)
-
+            self.maps[self.step["mapName"]].blitTextObject(
+                self.screen,
+                {
+                    'x': self.screen.get_width() / 4,
+                    'y': self.screen.get_height() / 4 * 3,
+                    'width': self.screen.get_width() / 2,
+                    'height': self.screen.get_height() / 4,
+                    'valign': "top",
+                    'text': { 
+                        'text': "All players must gather in the stone circle to win!",
+                        'pixelsize': 24 
+                        }
+                })
         if self.showWinText:
-            t = engine.textbox.TextBox(
-                "Game Won! Good teamwork everyone.",
-                maxWidth=self.screen.get_width() / 2,
-                size=24
-                )
-            t.setXY(
-                centerX=self.screen.get_width() / 2,
-                topY=self.screen.get_height() / 4 * 3
-                )
-            t.blit(self.screen)
+            self.maps[self.step["mapName"]].blitTextObject(
+                self.screen,
+                {
+                    'x': self.screen.get_width() / 4,
+                    'y': self.screen.get_height() / 4 * 3,
+                    'width': self.screen.get_width() / 2,
+                    'height': self.screen.get_height() / 4,
+                    'valign': "top",
+                    'text': { 
+                        'text': "Game Won! Good teamwork everyone.",
+                        'pixelsize': 24 
+                        }
+                })
