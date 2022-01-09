@@ -5,9 +5,7 @@ import os
 
 from engine.log import log
 import engine.log
-import engine.messages
 import engine.network
-import engine.player
 import engine.loaders
 
 
@@ -28,6 +26,7 @@ class Server:
         self.game = game
         self.fps = fps
 
+        self.playerModule = engine.loaders.loadModule("player", game=self.game)
         self.players = {}  # dict of player object indexed by their ipport (eg. '192.168.3.4:20013')
         self.socket = None  # set up below
 
@@ -54,7 +53,7 @@ class Server:
         # set up networking
         try:
             self.socket = engine.network.Socket(
-                engine.messages.Messages(),
+                engine.loaders.loadModule("messages", game=game).Messages(),
                 serverIP,
                 serverPort
                 )
@@ -96,8 +95,13 @@ class Server:
             else:
                 # add the client to the game.
                 sprite, mapName = self.unassignedPlayerSprites.pop()
-                self.players[ipport] = engine.player.Player(sprite, ip, port, len(self.players) + 1,
-                                                            msg['playerDisplayName'], mapName)
+                self.players[ipport] = self.playerModule.Player(
+                    sprite,
+                    ip,
+                    port,
+                    len(self.players) + 1,
+                    msg['playerDisplayName'],
+                    mapName)
                 result = "OK"
                 log("Player from " + ipport + " joined the game.")
 

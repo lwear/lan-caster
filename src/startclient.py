@@ -40,7 +40,7 @@ def startClient():
 
     setLogLevel(args.debug, args.verbose)
 
-    module = engine.loaders.findModule("client", game = args.game)
+    module = engine.loaders.loadModule("client", game=args.game)
     module.Client(args.game, args.playerDisplayName, (640, 640), args.fps,
                   args.myIP, args.myPort, args.serverIP, args.serverPort).main()
 

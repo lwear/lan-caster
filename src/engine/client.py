@@ -7,7 +7,6 @@ from pygame.locals import *
 import engine.log
 from engine.log import log
 
-import engine.messages
 import engine.network
 import engine.loaders
 
@@ -60,7 +59,7 @@ class Client:
         # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
         try:
             self.socket = engine.network.Socket(
-                engine.messages.Messages(),
+                engine.loaders.loadModule("messages", game=game).Messages(),
                 myIP,
                 myPort,
                 serverIP,
