@@ -74,10 +74,6 @@ class Server:
     # Network Message Processing
     ########################################################
 
-    def playerCount(self):
-        # return number of players that have joined game and total number of players that can join game.
-        return len(self.players), len(self.players) + len(self.unassignedPlayerSprites)
-
     def joinRequest(self, ip, port, ipport, msg):
         # process joinRequest msg from client.
 
@@ -89,8 +85,7 @@ class Server:
             result = "Client and Server are not running the same game."
             log("Player at " + ipport + " tried to join wrong game.")
         else:
-            current, max = self.playerCount()
-            if current == max:
+            if len(self.unassignedPlayerSprites) == 0:
                 result = "Game is full. No more players can join."
                 log("Player from " + ipport + " tried to join full game.")
             else:
