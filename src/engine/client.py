@@ -156,22 +156,13 @@ class Client:
             # find the map that the server wants us to render.
             map = self.maps[self.step["mapName"]]
 
-            # update layer mask. This will cause the map's topImage and bottomImage to be updated if needed.
+            # update layer visibility.
             map.setLayerVisablityMask(self.step["layerVisabilityMask"])
 
-            # start with the pre-rendered image of all visable layers below the sprites.
-            self.screen.blit(map.bottomImage, (0, 0))
+            # draw the map.
+            map.blitMap(self.screen, self.step["sprites"], self.step["overlay"])
 
-            # blit the sprite layer from the server
-            map.blitObjectLayer(self.screen, self.step["sprites"])
-
-            # add the pre-rendered image of all visable layers above the sprites
-            self.screen.blit(map.topImage, (0, 0))
-
-            # add the overlay layer from the server
-            map.blitObjectLayer(self.screen, self.step["overlay"])
-
-            # finally add on the player and gui specific items.
+            # add on the player and gui specific items.
             self.updateInterface()
 
             # tell pygame to actually display changes to user.
@@ -184,7 +175,9 @@ class Client:
         for sprite in self.step["sprites"]:
             if "playerNumber" in sprite and sprite["playerNumber"] == self.playerNumber:
                 if "actionText" in sprite:
-                    self.maps[self.step["mapName"]].blitTextObject(
+                    # find the map that the server wants us to render.
+                    map = self.maps[self.step["mapName"]]
+                    map.blitTextObject(
                         self.screen,
                         {
                             'x': 0,

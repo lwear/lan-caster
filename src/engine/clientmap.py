@@ -73,6 +73,19 @@ class ClientMap(engine.map.Map):
             if passedSpriteLayer == True:
                 self.blitLayer(self.topImage, layerNumber)
 
+    def blitMap(self, destImage, sprites, overlay):
+        # start with the pre-rendered image of all visible layers below the sprites.
+        destImage.blit(self.bottomImage, (0, 0))
+
+        # blit the sprite layer from the server
+        self.blitObjectLayer(destImage, sprites)
+
+        # add the pre-rendered image of all visible layers above the sprites
+        destImage.blit(self.topImage, (0, 0))
+
+        # add the overlay layer from the server
+        self.blitObjectLayer(destImage, overlay)
+
     def blitLayer(self, destImage, layerNumber):
         '''
         blit layer onto destImage. Note object layers named "sprites" and "overlay" will not be rendered since
