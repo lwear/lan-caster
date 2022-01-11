@@ -28,6 +28,9 @@ class Tileset:
             log(f"{failename} does not appear to be a tileset!", "FAILURE")
             exit()
 
+        # store for later use in case needed by a subclass.
+        self.tilesetfiledata = ts
+
         self.tileheight = ts["tileheight"]
         self.tilewidth = ts["tilewidth"]
         self.imageheight = ts["imageheight"]
