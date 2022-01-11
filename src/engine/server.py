@@ -228,7 +228,9 @@ class Server:
     ########################################################
 
     def main(self):
-        # Run the loop below once every  1/fps seconds.
+        '''
+        Run the loop below once every  1/fps seconds.
+        '''
 
         startAt = time.perf_counter()
         nextStatusAt = startAt + 10
