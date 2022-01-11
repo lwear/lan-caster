@@ -155,7 +155,11 @@ class Server:
     # GAME LOGIC
     ########################################################
 
-    def checkForEndGame(self):
+    def stepStart(self):
+        '''
+        perform any game logic for the start of a step that is not map specific.
+        '''
+
         '''
         if game is won or lost then tell players and quit.
         We do this by simply checking if any player is holding
@@ -190,7 +194,18 @@ class Server:
                     log("Game Lost!!!")
                     self.quit()
 
+    def stepEnd(self):
+        '''
+        perform any game logic for the end of a step that is not map specific.
+        '''
+        pass
+
     def step(self):
+        '''
+        process one step that should take place over 1/fps seconds.
+        '''
+        self.stepStart()
+
         # Run map.step() for any maps that have players on them. We do not bother
         # to process maps that do not currently contain players.
 
@@ -206,6 +221,8 @@ class Server:
         for mapName in mapNames:
             self.maps[mapName].step()
 
+        self.stepEnd()
+
     ########################################################
     # MAIN LOOP
     ########################################################
@@ -218,8 +235,6 @@ class Server:
         sleepTime = 0
         nextStepAt = startAt + (1.0 / self.fps)
         while True:
-            self.checkForEndGame()
-
             # process messages from server (recvReplyMsgs calls processMsg once for each msg received)
             self.socket.recvReplyMsgs(self.processMsg)
 

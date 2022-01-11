@@ -6,7 +6,7 @@ import engine.geometry as geo
 
 class Server(engine.server.Server):
 
-    def checkForEndGame(self):
+    def stepStart(self):
         '''
         Send gameWon messages and quit if all 3 players are inside stone circle.
 
