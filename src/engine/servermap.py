@@ -62,12 +62,12 @@ class ServerMap(engine.map.Map):
     # STEP DISPATCHER (Order of steps matters!)
     ########################################################
 
-    def step(self):
+    def stepMap(self):
         # move the map forward one step in time.
 
-        self.stepStart()
+        self.stepMapStart()
         self.stepSprites()
-        self.stepEnd()
+        self.stepMapEnd()
 
     def stepSprites(self):
         # process any actions that sprites are waiting to perform.
@@ -89,25 +89,17 @@ class ServerMap(engine.map.Map):
     ############################################################
     # STEP MAP GENERAL PROCESSING
     ############################################################
-    def stepStart(self):
+    def stepMapStart(self):
         # Logic needed at the start of the step that is not related to any specific sprite.
         self.delPopUpText()
 
-    def stepEnd(self):
+    def stepMapEnd(self):
         # Logic needed at the end of the step that is not related to any specific sprite.
         pass
 
     ########################################################
     # ACTION DISPATCHER
     ########################################################
-    def setSpriteAction(self, sprite):
-        # flag a sprite as waiting to perform an action.
-        # Normally set in a player sprite after the server receives an playerAction message from client.
-        sprite["action"] = True
-
-    def delSpriteAction(self, sprite):
-        # clear sprite flag from sprite.
-        del sprite["action"]
 
     def stepAction(self, sprite):
         '''
@@ -140,6 +132,15 @@ class ServerMap(engine.map.Map):
         if "action" in sprite:
             # did not find any available action so just clear action request.
             self.delSpriteAction(sprite)
+
+    def setSpriteAction(self, sprite):
+        # flag a sprite as waiting to perform an action.
+        # Normally set in a player sprite after the server receives an playerAction message from client.
+        sprite["action"] = True
+
+    def delSpriteAction(self, sprite):
+        # clear sprite flag from sprite.
+        del sprite["action"]
 
     ########################################################
     # ACTION - DROP
@@ -221,46 +222,6 @@ class ServerMap(engine.map.Map):
     # STEP MOVE
     ########################################################
 
-    def setObjectDest(self, object, destX, destY, speed):
-        # flag a sprite as wanting to move to a new location at a specific speed.
-        # Normally set in a player sprite after the server receives a playerMove message from the client.
-        object["destX"] = destX
-        object["destY"] = destY
-        object["speed"] = speed
-
-    def stopObject(self, object):
-        # stop a sprite from moving
-        if "destX" in object:
-            del object["destX"]
-        if "destY" in object:
-            del object["destY"]
-        if "speed" in object:
-            del object["speed"]
-
-    def objectInBounds(self, object, x=False, y=False):
-        '''
-        return True if object's anchor point is inbounds considering the map size, inBounds layer, and
-        outOfBounds layer; else return False.
-
-        If x and y are provided then they are used instead of the object anchor. This is useful to test
-        if an object would be inbounds before setting it to a new location.
-
-        Priority of evaluation is as follows:
-        1) if object is not on the map then it is NOT inbounds.
-        2) if object is inside an object on the inBounds layer then it IS inbounds.
-        3) if object is inside an object on the outOfBounds layer then it is NOT inbounds.
-        4) else it IS inbounds.
-
-        '''
-        if x == False:
-            x = object["anchorX"]
-        if y == False:
-            y = object["anchorY"]
-        if geo.objectContains({"x": 0, "y": 0, "width": self.pixelWidth, "height": self.pixelHeight}, x, y) and \
-                (geo.objectsContains(self.inBounds, x, y) or (not geo.objectsContains(self.outOfBounds, x, y))):
-            return True
-        return False
-
     def stepMove(self, sprite):
         # Move sprite within this map while respecting inBounds and outOfBounds
 
@@ -306,6 +267,46 @@ class ServerMap(engine.map.Map):
             else:
                 # sprite cannot move.
                 self.stopObject(sprite)
+
+    def objectInBounds(self, object, x=False, y=False):
+        '''
+        return True if object's anchor point is inbounds considering the map size, inBounds layer, and
+        outOfBounds layer; else return False.
+
+        If x and y are provided then they are used instead of the object anchor. This is useful to test
+        if an object would be inbounds before setting it to a new location.
+
+        Priority of evaluation is as follows:
+        1) if object is not on the map then it is NOT inbounds.
+        2) if object is inside an object on the inBounds layer then it IS inbounds.
+        3) if object is inside an object on the outOfBounds layer then it is NOT inbounds.
+        4) else it IS inbounds.
+
+        '''
+        if x == False:
+            x = object["anchorX"]
+        if y == False:
+            y = object["anchorY"]
+        if geo.objectContains({"x": 0, "y": 0, "width": self.pixelWidth, "height": self.pixelHeight}, x, y) and \
+                (geo.objectsContains(self.inBounds, x, y) or (not geo.objectsContains(self.outOfBounds, x, y))):
+            return True
+        return False
+
+    def setObjectDest(self, object, destX, destY, speed):
+        # flag a sprite as wanting to move to a new location at a specific speed.
+        # Normally set in a player sprite after the server receives a playerMove message from the client.
+        object["destX"] = destX
+        object["destY"] = destY
+        object["speed"] = speed
+
+    def stopObject(self, object):
+        # stop a sprite from moving
+        if "destX" in object:
+            del object["destX"]
+        if "destY" in object:
+            del object["destY"]
+        if "speed" in object:
+            del object["speed"]
 
     ########################################################
     # TRIGGER DISPATCHER
@@ -355,12 +356,6 @@ class ServerMap(engine.map.Map):
     # TRIGGER POPUPTEXT
     ########################################################
 
-    def delPopUpText(self):
-        # popUpText only lasts one step so it's to be added every step to be seen by player.
-        # Remove all popUpText. It will get added in the triggers below. see triggerPopUpText()
-        for popUpText in self.findObject(type="popUpText", objectList=self.overlay, returnAll=True):
-            self.removeObject(popUpText, objectList=self.overlay)
-
     def triggerPopUpText(self, trigger, sprite):
         # add text to overlay layer.
 
@@ -394,3 +389,9 @@ class ServerMap(engine.map.Map):
             self.addObject(popUpText, objectList=self.overlay)
         else:
             log(f'Could not find name=f{trigger["properties"]["textReference"]} on reference layer.', "WARNING")
+
+    def delPopUpText(self):
+        # popUpText only lasts one step so it's to be added every step to be seen by player.
+        # Remove all popUpText. It will get added in the triggers below. see triggerPopUpText()
+        for popUpText in self.findObject(type="popUpText", objectList=self.overlay, returnAll=True):
+            self.removeObject(popUpText, objectList=self.overlay)

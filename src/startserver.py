@@ -34,7 +34,7 @@ def startServer():
     setLogLevel(args.debug, args.verbose)
 
     module = engine.loaders.loadModule("server", game=args.game)
-    module.Server(args.game, args.fps, args.serverIP, args.serverPort).main()
+    module.Server(args.game, args.fps, args.serverIP, args.serverPort).run()
 
 
 if __name__ == "__main__":

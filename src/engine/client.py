@@ -41,7 +41,7 @@ class Client:
         self.lastStep = False  # Previous step from the server. Can be used to determine difference between steps.
         self.stepChanged = False  # if the current step has been changed and need to be rendered to screen.
 
-        # Note, we must init pygame before we create a client state, since client state needs to load images.
+        # Note, we must init pygame before we load tileset data.
         pygame.init()
         pygame.mixer.quit()  # Turn all sound off.
         pygame.display.set_caption(f"{game} - {playerDisplayName}")  # Set the title of the window
@@ -92,22 +92,48 @@ class Client:
         return engine.log.objectToStr(self)
 
     ########################################################
-    # NETWORK MESSAGE PROCESSING
+    # Main Loop
     ########################################################
 
-    def msgStep(self, msg):
-        self.lastStep = self.step  # keep the last step in case it is useful.
-        self.step = msg  # store the new step
-        self.stepChanged = True  # flag that we need to redraw the screen.
+    def run(self):
+        # Run the loop below once every 1/fps seconds.
 
-    def msgGameWon(self, msg):
-        log("Game Won!!!")
-        quit()
+        startAt = time.perf_counter()
+        nextStatusAt = startAt + 10
+        sleepTime = 0
+        nextStepAt = startAt + (1.0 / self.fps)
+        while True:
+            # process messages from server (recvReplyMsgs calls processMsg once for each msg received)
+            self.socket.recvReplyMsgs(self.processMsg)
 
-    def msgGameLost(self, msg):
-        log("Game Lost!!!")
-        quit()
+            # update the screen so player can see data that server sent
+            self.updateScreen()
 
+            # process any user input and send it to the server as required.
+            self.processEvents()
+
+            # busy wait (for accuracy) until next step should start.
+            ptime = time.perf_counter()
+            if ptime < nextStepAt:
+                sleepTime += nextStepAt - ptime
+
+                if ptime > nextStatusAt:
+                    # log the amount of time we are busy vs. waiting for the next step.
+                    log(f"Status: busy == {int(100-(sleepTime/(ptime-startAt)*100))}%")
+                    startAt = ptime
+                    nextStatusAt = startAt + 10
+                    sleepTime = 0
+                while ptime < nextStepAt:
+                    ptime = time.perf_counter()
+            else:
+                log("Client running slower than " + str(self.fps) + " fps.", "VERBOSE")
+
+            nextStepAt = ptime + (1.0 / self.fps)
+
+    ########################################################
+    # NETWORK MESSAGE PROCESSING
+    ########################################################
+    
     def processMsg(self, ip, port, ipport, msg, callbackData):
         # This method is called for each msg received.
 
@@ -124,6 +150,19 @@ class Client:
             self.msgGameLost(msg)
 
         return None
+
+    def msgStep(self, msg):
+        self.lastStep = self.step  # keep the last step in case it is useful.
+        self.step = msg  # store the new step
+        self.stepChanged = True  # flag that we need to redraw the screen.
+
+    def msgGameWon(self, msg):
+        log("Game Won!!!")
+        quit()
+
+    def msgGameLost(self, msg):
+        log("Game Lost!!!")
+        quit()
 
     ########################################################
     # USER INPUT HANDLING
@@ -189,41 +228,3 @@ class Client:
                             })
                 break
 
-    ########################################################
-    # Main Loop
-    ########################################################
-
-    def main(self):
-        # Run the loop below once every  1/fps seconds.
-
-        startAt = time.perf_counter()
-        nextStatusAt = startAt + 10
-        sleepTime = 0
-        nextStepAt = startAt + (1.0 / self.fps)
-        while True:
-            # process messages from server (recvReplyMsgs calls processMsg once for each msg received)
-            self.socket.recvReplyMsgs(self.processMsg)
-
-            # update the screen so player can see data that server sent
-            self.updateScreen()
-
-            # process any user input and send it to the server as required.
-            self.processEvents()
-
-            # busy wait (for accuracy) until next step should start.
-            ptime = time.perf_counter()
-            if ptime < nextStepAt:
-                sleepTime += nextStepAt - ptime
-
-                if ptime > nextStatusAt:
-                    # log the amount of time we are busy vs. waiting for the next step.
-                    log(f"Status: busy == {int(100-(sleepTime/(ptime-startAt)*100))}%")
-                    startAt = ptime
-                    nextStatusAt = startAt + 10
-                    sleepTime = 0
-                while ptime < nextStepAt:
-                    ptime = time.perf_counter()
-            else:
-                log("Client running slower than " + str(self.fps) + " fps.", "VERBOSE")
-
-            nextStepAt = ptime + (1.0 / self.fps)

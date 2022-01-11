@@ -40,13 +40,13 @@ class ServerMap(engine.servermap.ServerMap):
     # STEP MAP GENERAL PROCESSING
     ############################################################
 
-    def stepStart(self):
-        super().stepStart()
+    def stepMapStart(self):
+        super().stepMapStart()
         self.animateChickens()
 
-    def stepEnd(self):
+    def stepMapEnd(self):
         self.delSpeedMultiplier()
-        super().stepEnd()
+        super().stepMapEnd()
 
     ########################################################
     # CHICKENS

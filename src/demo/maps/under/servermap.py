@@ -23,15 +23,15 @@ class ServerMap(demo.servermap.ServerMap):
     # STEP MAP GENERAL PROCESSING
     ############################################################
 
-    def stepStart(self):
-        super().stepStart()
+    def stepMapStart(self):
+        super().stepMapStart()
 
         self.animateSaws()
 
-    def stepEnd(self):
+    def stepMapEnd(self):
         self.delStopSaw()
 
-        super().stepEnd()
+        super().stepMapEnd()
 
     ########################################################
     # TRIGGER DISPATCHER
