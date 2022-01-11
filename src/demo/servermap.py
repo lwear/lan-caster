@@ -24,18 +24,6 @@ class ServerMap(engine.servermap.ServerMap):
         self.THROWSPEED = 360
         self.initBomb()
 
-    ########################################################
-    # OBJECTS
-    ########################################################
-
-    def objectInBounds(self, object, x, y):
-        # allow things that have bee thrown to go out of bounds so they can be thrown over water.
-        # The way the throw zones are set up ensures that objects can't be thrown off the map.
-        if "speed" in object and object["speed"] == self.THROWSPEED:
-            return True
-
-        return super().objectInBounds(object, x, y)
-
     ############################################################
     # STEP MAP GENERAL PROCESSING
     ############################################################
@@ -159,38 +147,6 @@ class ServerMap(engine.servermap.ServerMap):
             )
 
     ########################################################
-    # ACTIONTEXT
-    ########################################################
-
-    def stepActionText(self, sprite):
-        if sprite["type"] != "player":
-            return  # only players can see their action text.
-
-        if "holding" in sprite:
-            if sprite["holding"]["name"] == "bomb":
-                bombArea = self.findObject(
-                    x=sprite["anchorX"],
-                    y=sprite["anchorY"],
-                    type="bombArea",
-                    objectList=self.reference
-                    )
-                if bombArea:
-                    sprite["actionText"] = f"Available Action: Set off {sprite['holding']['name']}."
-                    return
-
-            throwarea = self.findObject(
-                x=sprite["anchorX"],
-                y=sprite["anchorY"],
-                type="throwArea",
-                objectList=self.reference
-                )
-            if throwarea:
-                sprite["actionText"] = f"Available Action: Throw {sprite['holding']['name']}"
-                return
-
-        super().stepActionText(sprite)
-
-    ########################################################
     # TRIGGER DISPATCHER
     ########################################################
 
@@ -252,3 +208,48 @@ class ServerMap(engine.servermap.ServerMap):
         if "speed" in sprite and sprite["type"] != "saw":
             sprite["normalSpeed"] = sprite["speed"]
             sprite["speed"] *= trigger["properties"]["speedMultiplier"]
+
+    ########################################################
+    # STEP MOVE
+    ########################################################
+
+    def objectInBounds(self, object, x, y):
+        # allow things that have bee thrown to go out of bounds so they can be thrown over water.
+        # The way the throw zones are set up ensures that objects can't be thrown off the map.
+        if "speed" in object and object["speed"] == self.THROWSPEED:
+            return True
+
+        return super().objectInBounds(object, x, y)
+
+    ########################################################
+    # ACTIONTEXT
+    ########################################################
+
+    def stepActionText(self, sprite):
+        if sprite["type"] != "player":
+            return  # only players can see their action text.
+
+        if "holding" in sprite:
+            if sprite["holding"]["name"] == "bomb":
+                bombArea = self.findObject(
+                    x=sprite["anchorX"],
+                    y=sprite["anchorY"],
+                    type="bombArea",
+                    objectList=self.reference
+                    )
+                if bombArea:
+                    sprite["actionText"] = f"Available Action: Set off {sprite['holding']['name']}."
+                    return
+
+            throwarea = self.findObject(
+                x=sprite["anchorX"],
+                y=sprite["anchorY"],
+                type="throwArea",
+                objectList=self.reference
+                )
+            if throwarea:
+                sprite["actionText"] = f"Available Action: Throw {sprite['holding']['name']}"
+                return
+
+        super().stepActionText(sprite)
+        

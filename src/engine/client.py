@@ -133,7 +133,7 @@ class Client:
     ########################################################
     # NETWORK MESSAGE PROCESSING
     ########################################################
-    
+
     def processMsg(self, ip, port, ipport, msg, callbackData):
         # This method is called for each msg received.
 
@@ -163,25 +163,6 @@ class Client:
     def msgGameLost(self, msg):
         log("Game Lost!!!")
         quit()
-
-    ########################################################
-    # USER INPUT HANDLING
-    ########################################################
-
-    def processEvents(self):
-        # process input events from user.
-        for event in pygame.event.get():
-            self.processEvent(event)
-
-    def processEvent(self, event):
-        if event.type == QUIT:
-            quit()
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                self.socket.sendMessage({'type': 'playerAction'})
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            destX, destY = pygame.mouse.get_pos()
-            self.socket.sendMessage({'type': 'playerMove', 'destX': destX, 'destY': destY})
 
     ########################################################
     # SCREEN DRAWING
@@ -228,3 +209,21 @@ class Client:
                             })
                 break
 
+    ########################################################
+    # USER INPUT HANDLING
+    ########################################################
+
+    def processEvents(self):
+        # process input events from user.
+        for event in pygame.event.get():
+            self.processEvent(event)
+
+    def processEvent(self, event):
+        if event.type == QUIT:
+            quit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                self.socket.sendMessage({'type': 'playerAction'})
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            destX, destY = pygame.mouse.get_pos()
+            self.socket.sendMessage({'type': 'playerMove', 'destX': destX, 'destY': destY})

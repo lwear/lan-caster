@@ -23,12 +23,6 @@ class Client(engine.client.Client):
         self.showWinText = True
         self.stepChanged = True  # this will cause screen to update again.
 
-    def processEvent(self, event):
-        # show the opening text until the players gives a mouse click or key press.
-        if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-            self.showOpeningText = False
-        super().processEvent(event)
-
     def updateInterface(self):
         super().updateInterface()
 
@@ -61,3 +55,9 @@ class Client(engine.client.Client):
                         'pixelsize': 24
                         }
                     })
+
+    def processEvent(self, event):
+        # show the opening text until the players gives a mouse click or key press.
+        if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            self.showOpeningText = False
+        super().processEvent(event)

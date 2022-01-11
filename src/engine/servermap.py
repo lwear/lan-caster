@@ -182,41 +182,92 @@ class ServerMap(engine.map.Map):
         self.addObject(dropping)
 
     ########################################################
-    # ACTIONTEXT
+    # TRIGGER DISPATCHER
     ########################################################
 
-    def stepActionText(self, sprite):
-        # if sprite is a player and inside another sprite that is either holdable or useable then
-        # add action text to the sprite that can inform the user of what action can be performed.
+    def stepTrigger(self, sprite):
+        # find all triggers that contain this sprite's anchor and process each one.
+        triggers = self.findObject(
+            x=sprite["anchorX"],
+            y=sprite["anchorY"],
+            objectList=self.triggers,
+            returnAll=True,
+            exclude=sprite)
+        for trigger in triggers:
+            self.stepProcessTrigger(trigger, sprite)
+
+    def stepProcessTrigger(self, trigger, sprite):
+        if trigger['type'] == "mapDoor":
+            self.triggerMapDoor(trigger, sprite)
+        elif trigger['type'] == "popUpText":
+            self.triggerPopUpText(trigger, sprite)
+        else:
+            log(f"Trigger is of unsupported type = {trigger['type']}", "ERROR")
+
+    ########################################################
+    # TRIGGER MAPDOOR
+    ########################################################
+
+    def triggerMapDoor(self, trigger, sprite):
+        # Move sprite based on trigger. This may include moving to a new map.
+
+        # find destination based on object named trigger["properties"]["destReference"] on
+        # layer "reference" of map trigger["properties"]["destMapName"]
+        destMap = engine.server.SERVER.maps[trigger["properties"]["destMapName"]]
+        dest = self.findObject(name=trigger["properties"]["destReference"], objectList=destMap.reference)
+        if dest:
+            self.removeObject(sprite)
+            destMap.setObjectLocationByAnchor(sprite, dest["anchorX"], dest["anchorY"])
+            destMap.stopObject(sprite)
+            destMap.addObject(sprite)
+        else:
+            log(
+                f'Trigger destination not found = {trigger["properties"]["destMapName"]} - {trigger["properties"]["destReference"]}',
+                "ERROR")
+
+    ########################################################
+    # TRIGGER POPUPTEXT
+    ########################################################
+
+    def triggerPopUpText(self, trigger, sprite):
+        # add text to overlay layer.
 
         if sprite["type"] != "player":
-            return  # only players can see their action text.
+            return  # only players can trigger pop up text.
 
-        holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
-        useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
+        # find dest based on object named trigger["properties"]["destReference"] on layer"reference"
+        dest = self.findObject(name=trigger["properties"]["textReference"], objectList=self.reference)
+        if dest:
+            if "textColor" not in trigger["properties"]:
+                trigger["properties"]["textColor"] = "#00ff00"
 
-        if "actionText" in sprite:
-            old = sprite["actionText"]
+            if "textSize" not in trigger["properties"]:
+                trigger["properties"]["textSize"] = 16
+
+            popUpText = self.checkObject(
+                {
+                    "height": dest["height"],
+                    "text":
+                        {
+                            "color": trigger["properties"]["textColor"],
+                            "pixelsize": trigger["properties"]["textSize"],
+                            "text": trigger["properties"]["text"]
+                            },
+                    "type": "popUpText",
+                    "width": dest["width"],
+                    "x": dest["x"],
+                    "y": dest["y"]
+                    })
+
+            self.addObject(popUpText, objectList=self.overlay)
         else:
-            old = False
+            log(f'Could not find name=f{trigger["properties"]["textReference"]} on reference layer.', "WARNING")
 
-        # priority has to match the Use mechanic: Pick Up, Use, Drop
-        if holdable and not "holding" in sprite:
-            sprite["actionText"] = f"Available Action: Pick Up {holdable['name']}"
-        elif useable:
-            sprite["actionText"] = f"Available Action: Use {useable['name']}"
-        elif "holding" in sprite:
-            sprite["actionText"] = f"Available Action: Drop {sprite['holding']['name']}"
-        elif "actionText" in sprite:
-            del sprite["actionText"]
-
-        if "actionText" in sprite:
-            new = sprite["actionText"]
-        else:
-            new = False
-
-        if new != old:
-            self.setMapChanged()
+    def delPopUpText(self):
+        # popUpText only lasts one step so it's to be added every step to be seen by player.
+        # Remove all popUpText. It will get added in the triggers below. see triggerPopUpText()
+        for popUpText in self.findObject(type="popUpText", objectList=self.overlay, returnAll=True):
+            self.removeObject(popUpText, objectList=self.overlay)
 
     ########################################################
     # STEP MOVE
@@ -309,89 +360,39 @@ class ServerMap(engine.map.Map):
             del object["speed"]
 
     ########################################################
-    # TRIGGER DISPATCHER
+    # ACTIONTEXT
     ########################################################
 
-    def stepTrigger(self, sprite):
-        # find all triggers that contain this sprite's anchor and process each one.
-        triggers = self.findObject(
-            x=sprite["anchorX"],
-            y=sprite["anchorY"],
-            objectList=self.triggers,
-            returnAll=True,
-            exclude=sprite)
-        for trigger in triggers:
-            self.stepProcessTrigger(trigger, sprite)
-
-    def stepProcessTrigger(self, trigger, sprite):
-        if trigger['type'] == "mapDoor":
-            self.triggerMapDoor(trigger, sprite)
-        elif trigger['type'] == "popUpText":
-            self.triggerPopUpText(trigger, sprite)
-        else:
-            log(f"Trigger is of unsupported type = {trigger['type']}", "ERROR")
-
-    ########################################################
-    # TRIGGER MAPDOOR
-    ########################################################
-
-    def triggerMapDoor(self, trigger, sprite):
-        # Move sprite based on trigger. This may include moving to a new map.
-
-        # find destination based on object named trigger["properties"]["destReference"] on
-        # layer "reference" of map trigger["properties"]["destMapName"]
-        destMap = engine.server.SERVER.maps[trigger["properties"]["destMapName"]]
-        dest = self.findObject(name=trigger["properties"]["destReference"], objectList=destMap.reference)
-        if dest:
-            self.removeObject(sprite)
-            destMap.setObjectLocationByAnchor(sprite, dest["anchorX"], dest["anchorY"])
-            destMap.stopObject(sprite)
-            destMap.addObject(sprite)
-        else:
-            log(
-                f'Trigger destination not found = {trigger["properties"]["destMapName"]} - {trigger["properties"]["destReference"]}',
-                "ERROR")
-
-    ########################################################
-    # TRIGGER POPUPTEXT
-    ########################################################
-
-    def triggerPopUpText(self, trigger, sprite):
-        # add text to overlay layer.
+    def stepActionText(self, sprite):
+        # if sprite is a player and inside another sprite that is either holdable or useable then
+        # add action text to the sprite that can inform the user of what action can be performed.
 
         if sprite["type"] != "player":
-            return  # only players can trigger pop up text.
+            return  # only players can see their action text.
 
-        # find dest based on object named trigger["properties"]["destReference"] on layer"reference"
-        dest = self.findObject(name=trigger["properties"]["textReference"], objectList=self.reference)
-        if dest:
-            if "textColor" not in trigger["properties"]:
-                trigger["properties"]["textColor"] = "#00ff00"
+        holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
+        useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
 
-            if "textSize" not in trigger["properties"]:
-                trigger["properties"]["textSize"] = 16
-
-            popUpText = self.checkObject(
-                {
-                    "height": dest["height"],
-                    "text":
-                        {
-                            "color": trigger["properties"]["textColor"],
-                            "pixelsize": trigger["properties"]["textSize"],
-                            "text": trigger["properties"]["text"]
-                            },
-                    "type": "popUpText",
-                    "width": dest["width"],
-                    "x": dest["x"],
-                    "y": dest["y"]
-                    })
-
-            self.addObject(popUpText, objectList=self.overlay)
+        if "actionText" in sprite:
+            old = sprite["actionText"]
         else:
-            log(f'Could not find name=f{trigger["properties"]["textReference"]} on reference layer.', "WARNING")
+            old = False
 
-    def delPopUpText(self):
-        # popUpText only lasts one step so it's to be added every step to be seen by player.
-        # Remove all popUpText. It will get added in the triggers below. see triggerPopUpText()
-        for popUpText in self.findObject(type="popUpText", objectList=self.overlay, returnAll=True):
-            self.removeObject(popUpText, objectList=self.overlay)
+        # priority has to match the Use mechanic: Pick Up, Use, Drop
+        if holdable and not "holding" in sprite:
+            sprite["actionText"] = f"Available Action: Pick Up {holdable['name']}"
+        elif useable:
+            sprite["actionText"] = f"Available Action: Use {useable['name']}"
+        elif "holding" in sprite:
+            sprite["actionText"] = f"Available Action: Drop {sprite['holding']['name']}"
+        elif "actionText" in sprite:
+            del sprite["actionText"]
+
+        if "actionText" in sprite:
+            new = sprite["actionText"]
+        else:
+            new = False
+
+        if new != old:
+            self.setMapChanged()
+            
