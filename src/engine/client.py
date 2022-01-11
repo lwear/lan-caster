@@ -10,6 +10,10 @@ from engine.log import log
 import engine.network
 import engine.loaders
 
+def quit(signal=None, frame=None):
+    log(engine.client.CLIENT.socket.getStats())
+    log("Quiting", "INFO")
+    exit()
 
 class Client:
     """
@@ -27,7 +31,7 @@ class Client:
     def __init__(self, game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort):
         global CLIENT
         CLIENT = self
-        signal.signal(signal.SIGINT, self.quit)
+        signal.signal(signal.SIGINT, quit)
 
         self.fps = fps
         self.serverIpport = engine.network.formatIpPort(serverIP, serverPort)
@@ -75,21 +79,17 @@ class Client:
 
             if reply["type"] != "joinReply":
                 log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
-                self.quit()
+                quit()
             self.playerNumber = reply["playerNumber"]
         except engine.network.SocketException as e:
             log("Is server running at" + serverIP + ":" + str(serverPort) + "?")
             log(str(e), "FAILURE")
-            self.quit()
+            quit()
 
         log("Join server was successful.")
 
     def __str__(self):
         return engine.log.objectToStr(self)
-
-    def quit(signal=None, frame=None):
-        log("Quiting", "INFO")
-        exit()
 
     ########################################################
     # NETWORK MESSAGE PROCESSING
@@ -102,11 +102,11 @@ class Client:
 
     def msgGameWon(self, msg):
         log("Game Won!!!")
-        self.quit()
+        quit()
 
     def msgGameLost(self, msg):
         log("Game Lost!!!")
-        self.quit()
+        quit()
 
     def processMsg(self, ip, port, ipport, msg, callbackData):
         # This method is called for each msg received.
@@ -136,7 +136,7 @@ class Client:
 
     def processEvent(self, event):
         if event.type == QUIT:
-            self.quit()
+            quit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.socket.sendMessage({'type': 'playerAction'})

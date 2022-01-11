@@ -8,6 +8,10 @@ import engine.log
 import engine.network
 import engine.loaders
 
+def quit(signal=None, frame=None):
+    log(engine.server.SERVER.socket.getStats())
+    log("Quiting", "INFO")
+    exit()
 
 class Server:
     """
@@ -21,7 +25,7 @@ class Server:
     def __init__(self, game, fps, serverIP, serverPort):
         global SERVER
         SERVER = self
-        signal.signal(signal.SIGINT, self.quit)
+        signal.signal(signal.SIGINT, quit)
         random.seed()
 
         self.game = game
@@ -61,14 +65,10 @@ class Server:
 
         except Exception as e:
             log(str(e), "FAILURE")
-            self.quit()
+            quit()
 
     def __str__(self):
         return engine.log.objectToStr(self)
-
-    def quit(signal=None, frame=None):
-        log("Quiting", "INFO")
-        exit()
 
     ########################################################
     # Network Message Processing
@@ -183,7 +183,7 @@ class Server:
                             destinationPort=self.players[ipport2].port
                             )
                     log("Game Won!!!")
-                    self.quit()
+                    quit()
                 elif sprite["holding"]["properties"]["endGame"] == "lost":
                     for ipport2 in self.players:
                         self.socket.sendMessage(
@@ -192,7 +192,7 @@ class Server:
                             destinationPort=self.players[ipport2].port
                             )
                     log("Game Lost!!!")
-                    self.quit()
+                    quit()
 
     def stepEnd(self):
         '''
