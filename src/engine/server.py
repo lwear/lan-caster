@@ -8,10 +8,12 @@ import engine.log
 import engine.network
 import engine.loaders
 
+
 def quit(signal=None, frame=None):
     log(engine.server.SERVER.socket.getStats())
     log("Quiting", "INFO")
     exit()
+
 
 class Server:
     """

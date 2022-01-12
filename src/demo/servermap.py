@@ -252,4 +252,3 @@ class ServerMap(engine.servermap.ServerMap):
                 return
 
         super().stepActionText(sprite)
-        

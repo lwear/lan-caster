@@ -10,10 +10,12 @@ from engine.log import log
 import engine.network
 import engine.loaders
 
+
 def quit(signal=None, frame=None):
     log(engine.client.CLIENT.socket.getStats())
     log("Quiting", "INFO")
     exit()
+
 
 class Client:
     """
