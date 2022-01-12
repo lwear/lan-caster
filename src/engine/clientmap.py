@@ -137,7 +137,13 @@ class ClientMap(engine.map.Map):
 
     def blitTileObject(self, destImage, tileObject):
         tilesetName, tilesetTileNumber = self.findTile(tileObject["gid"])
-        self.tilesets[tilesetName].blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'])
+        tileset = self.tilesets[tilesetName]
+
+        # check to see what the actual tileNumber is to be blited.
+        tilesetTileNumber, effectiveUntil = tileset.effectiveTileNumber(tilesetTileNumber, tileObject)
+
+        # bit the tile
+        tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'])
 
         # If properties -> labelText is present the render it under the tile. Normally used to display player names.
         if "properties" in tileObject and "labelText" in tileObject["properties"]:

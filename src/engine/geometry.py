@@ -3,8 +3,8 @@ import math
 from engine.log import log
 
 """
-Note, all angles below are in radians. You can convert
-between degrees and radians in your code as follows:
+Note, all angles below are in radians, starting a 3 oclock and increasing clockwise.
+You can convert between degrees and radians in your code as follows:
 
     import math
     r = math.radians(d)
@@ -37,6 +37,23 @@ def objectsContains(objectList, x, y):
         if objectContains(object, x, y):
             return True
     return False
+
+
+def angleLable(a):
+    """
+    Return angle label: Up, Down, Left, Right
+    """
+    if a < math.pi / 4:
+        label = 'Right'
+    elif a < math.pi - math.pi / 4:
+        label = 'Down'
+    elif a < math.pi + math.pi / 4:
+        label = 'Left'
+    elif a < math.pi * 2 - math.pi / 4:
+        label = 'Up'
+    else:
+        label = 'Right'
+    return label
 
 
 def normalizeAngle(a):

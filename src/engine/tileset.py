@@ -48,5 +48,29 @@ class Tileset:
             self.tileoffsetX = self.tilewidth / 2
             self.tileoffsetY = self.tileheight / 2
 
+        self.tiles = {}
+        if "tiles" in ts:
+            for tile in ts["tiles"]:
+                if "properties" in tile:
+                    '''
+                    convert tiled object properties into a more useful form.
+                    from: {{name: name1, value: value1},...}
+                    to: {name1: value1,...}
+                    '''
+                    newprops = {}
+                    for prop in tile["properties"]:
+                        newprops[prop["name"]] = prop["value"]
+                    tile["properties"] = newprops
+
+                # compute total length of animation
+                if "animation" in tile:
+                    tile["animationDuration"] = 0
+                    for t in tile["animation"]:
+                        tile["animationDuration"] += t["duration"]
+                    # convert to seconds
+                    tile["animationDuration"] /= 1000
+
+                self.tiles[tile['id']] = tile
+
     def __str__(self):
         return engine.log.objectToStr(self)
