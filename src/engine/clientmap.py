@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+import time
 
 from engine.log import log
 import engine.map
@@ -140,7 +141,7 @@ class ClientMap(engine.map.Map):
         tileset = self.tilesets[tilesetName]
 
         # check to see what the actual tileNumber is to be blited.
-        tilesetTileNumber, effectiveUntil = tileset.effectiveTileNumber(tilesetTileNumber, tileObject)
+        tilesetTileNumber, validUntil = tileset.effectiveTileNumber(tilesetTileNumber, tileObject)
 
         # bit the tile
         tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'])

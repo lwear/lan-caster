@@ -47,7 +47,7 @@ class ClientTileset(engine.tileset.Tileset):
         return the effective tileNumber based several criteria such as character movement and tile animations
         '''
         currentTime = time.perf_counter()
-        effectiveUntil = currentTime + 9999  # how long the effectiveTileNumber is valid for in seconds
+        validUntil = currentTime + 9999  # how long the effectiveTileNumber is valid for in seconds
 
         # CHARACTER TILE
         # if tileObject['direction'] exists and tile tileNumber is type 'character'
@@ -80,6 +80,6 @@ class ClientTileset(engine.tileset.Tileset):
                     tileNumber = frame['tileid']
                     break
                 animationTime -= frame['duration']
-            effectiveUntil = currentTime + frame['duration'] - animationTime
+            validUntil = currentTime + frame['duration'] - animationTime
 
-        return tileNumber, effectiveUntil
+        return tileNumber, validUntil
