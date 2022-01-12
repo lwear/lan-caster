@@ -18,12 +18,13 @@ class ServerMap(engine.map.Map):
         - Dynamic keys (only in object while in use): action, actionText, holding, destX, destY, speed
         - Text objects also have required keys: text
 
-    Sample Sprite Object with added 'action', 'actionText', 'holding', 'text', destX, destY, and speed
+    Sample Sprite Object with added 'action', 'actionText', 'holding', 'text', destX, destY, speed, direction
     {
       o 'action' = True
       o 'actionText': 'Available Action: Drop book',
       o 'destX': 255,
       o 'destY': 394,
+      o 'direction': 2.346,
       o 'holding': {
             'anchorX': 558.91942244993,
             'anchorY': 395.714951094551,
@@ -282,11 +283,16 @@ class ServerMap(engine.map.Map):
             # convert pixels per second to pixels per step
             stepSpeed = sprite["speed"] / engine.server.SERVER.fps
 
-            # compute a new anchor x,y which moves directly towards destination
+            # compute a new angle in radians which moves directly towards destination
+            # sprite["direction"] is stored and never removed so client will know the last
+            # direction the sprite was facing.
+            sprite["direction"] = geo.angle(sprite["anchorX"], sprite["anchorY"], sprite["destX"], sprite["destY"])
+
+            # compute a new anchor x,y which moves directly towards destination for this step
             newAnchorX, newAnchorY = geo.project(
                 sprite["anchorX"],
                 sprite["anchorY"],
-                geo.angle(sprite["anchorX"], sprite["anchorY"], sprite["destX"], sprite["destY"]),
+                sprite["direction"],
                 stepSpeed
                 )
 
@@ -395,4 +401,3 @@ class ServerMap(engine.map.Map):
 
         if new != old:
             self.setMapChanged()
-            
