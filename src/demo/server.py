@@ -36,4 +36,4 @@ class Server(engine.server.Server):
                 destinationPort=self.players[ipport].port
                 )
         log("Game Won!!!")
-        self.quit()
+        engine.server.quit()
