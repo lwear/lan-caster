@@ -12,7 +12,7 @@ import engine.loaders
 def quit(signal=None, frame=None):
     try:
         log(engine.server.SERVER.socket.getStats())
-    except:
+    except BaseException:
         pass
     log("Quiting", "INFO")
     exit()

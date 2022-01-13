@@ -24,7 +24,7 @@ class ClientMap(engine.clientmap.ClientMap):
         self.darknessImage = self.darknessImage.convert_alpha()
 
         # allocate and draw lightCircleImage
-        self.lightCircleImage = pygame.Surface((self.LIGHTRADIUS*2, self.LIGHTRADIUS*2), pygame.SRCALPHA, 32)
+        self.lightCircleImage = pygame.Surface((self.LIGHTRADIUS * 2, self.LIGHTRADIUS * 2), pygame.SRCALPHA, 32)
         self.lightCircleImage = self.lightCircleImage.convert_alpha()
         self.lightCircleImage.fill((0, 0, 0, 0))
         for i in range(255, 0, -5):
@@ -53,7 +53,7 @@ class ClientMap(engine.clientmap.ClientMap):
 
         # render the map normally
         validUntil = super().blitMap(destImage, sprites, overlay)
-        
+
         # add darknessImage on top of map rendered by super()
         destImage.blit(self.darknessImage, (0, 0))
 
