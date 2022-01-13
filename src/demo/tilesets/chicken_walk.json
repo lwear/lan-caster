@@ -12,82 +12,65 @@
         {
          "animation":[
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":0
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":1
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":2
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":3
                 }],
-         "id":0
+         "id":1
         }, 
         {
          "animation":[
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":4
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":5
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":6
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":7
                 }],
-         "id":4
+         "id":5
         }, 
         {
-         "animation":[
-                {
-                 "duration":500,
-                 "tileid":8
-                }, 
-                {
-                 "duration":500,
-                 "tileid":9
-                }, 
-                {
-                 "duration":500,
-                 "tileid":10
-                }, 
-                {
-                 "duration":500,
-                 "tileid":11
-                }],
          "id":8,
          "properties":[
                 {
                  "name":"movingDown",
                  "type":"int",
-                 "value":8
+                 "value":9
                 }, 
                 {
                  "name":"movingLeft",
                  "type":"int",
-                 "value":4
+                 "value":5
                 }, 
                 {
                  "name":"movingRight",
                  "type":"int",
-                 "value":12
+                 "value":13
                 }, 
                 {
                  "name":"movingUp",
                  "type":"int",
-                 "value":0
+                 "value":1
                 }, 
                 {
                  "name":"stationaryDown",
@@ -114,22 +97,42 @@
         {
          "animation":[
                 {
-                 "duration":500,
+                 "duration":180,
+                 "tileid":8
+                }, 
+                {
+                 "duration":180,
+                 "tileid":9
+                }, 
+                {
+                 "duration":180,
+                 "tileid":10
+                }, 
+                {
+                 "duration":180,
+                 "tileid":11
+                }],
+         "id":9
+        }, 
+        {
+         "animation":[
+                {
+                 "duration":180,
                  "tileid":12
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":13
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":14
                 }, 
                 {
-                 "duration":500,
+                 "duration":180,
                  "tileid":15
                 }],
-         "id":12
+         "id":13
         }],
  "tilewidth":32,
  "type":"tileset",
