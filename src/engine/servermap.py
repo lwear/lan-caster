@@ -312,8 +312,8 @@ class ServerMap(engine.map.Map):
                 inBounds = True
 
             if inBounds:
-                if geo.distance(sprite["anchorX"], sprite["anchorY"], newAnchorX, newAnchorY) < 1:
-                    # if sprite is only going to move less than 1 pixel then stop it.
+                if geo.distance(sprite["anchorX"], sprite["anchorY"], newAnchorX, newAnchorY) < 0.1:
+                    # if sprite is only going to move less than 0.1 pixel then stop it.
                     self.stopObject(sprite)
                 elif geo.distance(newAnchorX, newAnchorY, sprite["destX"], sprite["destY"]) < stepSpeed:
                     # if sprite is close to destination then stop it.
