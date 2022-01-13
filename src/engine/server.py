@@ -212,7 +212,7 @@ class Server:
         for ipport in self.players:
             mapNames.append(self.players[ipport].sprite["mapName"])
 
-        # set() removed duplicates and sorted() ensure we process maps in the same order each time.
+        # set() removes duplicates and sorted() ensures we process maps in the same order each time.
         mapNames = sorted(set(mapNames))
 
         # call stepMap for each map with at least one player
