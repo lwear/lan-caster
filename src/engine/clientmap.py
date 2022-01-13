@@ -17,11 +17,27 @@ class ClientMap(engine.map.Map):
     #####################################################
 
     def __init__(self, tilesets, mapDir, game):
-        super().__init__(tilesets, mapDir, game)  # Note, this will call readMapJson() before returning
+        super().__init__(tilesets, mapDir, game)
 
-        # pre-blit top and bottom images
-        self.blitBottomImage()
-        self.blitTopImage()
+        # allocate image for each layer (exclude sprites and overlay)
+        for layer in self.layers:
+            if layer["name"] != "sprites" and layer["name"] != "overlay":
+                layer['image'] = pygame.Surface(
+                    (self.width * self.tilewidth, self.height * self.tileheight),
+                    pygame.SRCALPHA,
+                    32)
+                layer['image'] = layer['image'].convert_alpha()
+                layer['imageValidUntil'] = 0  # invalid and needs to be rendered.
+
+        self.bottomImage = pygame.Surface((self.width * self.tilewidth, self.height * self.tileheight))
+        self.bottomImageValidUntil = 0  # invalid and needs to be rendered.
+
+        self.topImage = pygame.Surface(
+            (self.width * self.tilewidth, self.height * self.tileheight),
+            pygame.SRCALPHA,
+            32)
+        self.topImage = self.topImage.convert_alpha()
+        self.topImageValidUntil = 0  # invalid and needs to be rendered.
 
     ########################################################
     # LAYER VISABILITY
@@ -29,79 +45,115 @@ class ClientMap(engine.map.Map):
 
     def setLayerVisablityMask(self, layerVisabilityMask):
         if super().setLayerVisablityMask(layerVisabilityMask):  # returns True only if mask changed.
-            # re-blit top and bottom images since they may have changed.
-            self.blitBottomImage()
-            self.blitTopImage()
+            # invalidate top and bottom images since they may have changed.
+            self.bottomImageValidUntil = 0
+            self.topImageValidUntil = 0
 
     #####################################################
     # DRAW METHODS
     #####################################################
 
-    def blitBottomImage(self):
+    def blitMap(self, destImage, sprites, overlay):
+        validUntil = []
+        # start with all visible layers below the sprites.
+        validUntil.append(self.blitBottomImage(destImage))
+
+        # blit the sprite layer from the server
+        validUntil.append(self.blitObjectList(destImage, sprites))
+
+        # add all visible layers above the sprites
+        validUntil.append(self.blitTopImage(destImage))
+
+        # add the overlay layer from the server
+        validUntil.append(self.blitObjectList(destImage, overlay))
+
+        return min(validUntil)
+
+    def blitBottomImage(self, destImage):
         '''
         blit together all the visible layers BELOW the sprite layer and store it in
         self.bottomImage. self.bottomImage can then be used for faster screen updates
         rather than doing all the work of blitting these layers together every frame.
+
+        Note object layers named "sprites" and "overlay" will not be rendered since
+        they are provided by the server and must be rendered separately with a direct
+        call to blitObjectList()
         '''
+        currentTime = time.perf_counter()
+        # if there is already a valid image the don't render a new one
+        if self.bottomImageValidUntil < currentTime:
+            # Start with grey background.
+            self.bottomImage.fill((128, 128, 128, 255))
 
-        # Start with grey background.
-        self.bottomImage = pygame.Surface((self.width * self.tilewidth, self.height * self.tileheight))
-        self.bottomImage.fill((128, 128, 128))
+            self.bottomImageValidUntil = currentTime + 99999
+            for layerNumber in range(len(self.layers)):
+                if self.layers[layerNumber]["name"] == "sprites":
+                    break
+                if self.layers[layerNumber]["name"] == "overlay":
+                    continue
+                # if the layer is visible then add it to the destImage
+                if self.getLayerVisablitybyIndex(layerNumber):
+                    vu = self.blitLayer(self.bottomImage, self.layers[layerNumber])
+                    if self.bottomImageValidUntil > vu:
+                        self.bottomImageValidUntil = vu
 
-        for layerNumber in range(len(self.layers)):
-            if self.layers[layerNumber]["name"] == "sprites":
-                break
-            self.blitLayer(self.bottomImage, layerNumber)
+        destImage.blit(self.bottomImage, (0, 0))
+        return self.bottomImageValidUntil
 
-    def blitTopImage(self):
+    def blitTopImage(self, destImage):
         '''
         blit together all the visible layers ABOVE the sprite layer and store it in
-        self.bottomImage. self.bottomImage can then be used for faster screen updates
+        self.topImage. self.topImage can then be used for faster screen updates
         rather than doing all the work of blitting these layers together every frame.
+
+        Note object layers named "sprites" and "overlay" will not be rendered since
+        they are provided by the server and must be rendered separately with a direct
+        call to blitObjectList()
         '''
+        currentTime = time.perf_counter()
+        # if there is already a valid image the don't render a new one
+        if self.topImageValidUntil < currentTime:
+            # Start with transparent background.
+            self.topImage.fill((0, 0, 0, 0))
 
-        # Start with transparent background.
-        self.topImage = pygame.Surface(
-            (self.width * self.tilewidth, self.height * self.tileheight),
-            pygame.SRCALPHA,
-            32)
-        self.topImage = self.topImage.convert_alpha()
+            self.topImageValidUntil = currentTime + 99999
+            passedSpriteLayer = False
+            for layerNumber in range(len(self.layers)):
+                if self.layers[layerNumber]["name"] == "sprites":
+                    passedSpriteLayer = True
+                    continue
+                if self.layers[layerNumber]["name"] == "overlay":
+                    continue
+                if passedSpriteLayer == True:
+                    # if the layer is visible then add it to the destImage
+                    if self.getLayerVisablitybyIndex(layerNumber):
+                        vu = self.blitLayer(self.topImage, self.layers[layerNumber])
+                        if self.topImageValidUntil > vu:
+                            self.topImageValidUntil = vu
 
-        passedSpriteLayer = False
-        for layerNumber in range(len(self.layers)):
-            if self.layers[layerNumber]["name"] == "sprites":
-                passedSpriteLayer = True
-            if passedSpriteLayer == True:
-                self.blitLayer(self.topImage, layerNumber)
-
-    def blitMap(self, destImage, sprites, overlay):
-        # start with the pre-rendered image of all visible layers below the sprites.
-        destImage.blit(self.bottomImage, (0, 0))
-
-        # blit the sprite layer from the server
-        self.blitObjectLayer(destImage, sprites)
-
-        # add the pre-rendered image of all visible layers above the sprites
         destImage.blit(self.topImage, (0, 0))
+        return self.topImageValidUntil
 
-        # add the overlay layer from the server
-        self.blitObjectLayer(destImage, overlay)
-
-    def blitLayer(self, destImage, layerNumber):
+    def blitLayer(self, destImage, layer):
         '''
-        blit layer onto destImage. Note object layers named "sprites" and "overlay" will not be rendered since
-        they are provided by the server and must be rendered separately with a direct call to blitObjectLayer().
+        blit layer onto destImage.
         '''
-        if self.getLayerVisablitybyIndex(layerNumber):
-            if self.layers[layerNumber]["type"] == "tilelayer":
-                self.blitTileLayer(destImage, self.layers[layerNumber])
-            elif self.layers[layerNumber]["type"] == "objectgroup" and \
-                    self.layers[layerNumber]["name"] != "sprites" and \
-                    self.layers[layerNumber]["name"] != "overlay":
-                self.blitObjectLayer(destImage, self.layers[layerNumber]["objects"])
+        currentTime = time.perf_counter()
+        # if there is already a valid image then don't render a new one
+        if layer['imageValidUntil'] < currentTime:
+            # Start with transparent background.
+            layer['image'].fill((0, 0, 0, 0))
 
-    def blitTileLayer(self, destImage, tilelayer):
-        grid = tilelayer["data"]
+            if layer["type"] == "tilelayer":
+                layer['imageValidUntil'] = self.blitTileGrid(layer['image'], layer["data"])
+            elif layer["type"] == "objectgroup":
+                layer['imageValidUntil'] = self.blitObjectList(layer['image'], layer["objects"])
+
+        destImage.blit(layer['image'], (0, 0))
+        return layer['imageValidUntil']
+
+    def blitTileGrid(self, destImage, grid):
+        validUntil = time.perf_counter() + 99999
         for i in range(len(grid)):
             if grid[i] != 0:
                 tileX = i % self.width
@@ -120,15 +172,21 @@ class ClientMap(engine.map.Map):
                     log("using tiles smaller than tile layer is not supported yet.", "FAILURE")
                     exit()
 
-                ts.blitTile(tilesetTileNumber, destImage, destPixelX, destPixelY)
+                vu = ts.blitTile(tilesetTileNumber, destImage, destPixelX, destPixelY)
+                if validUntil > vu:
+                    validUntil = vu
 
-    def blitObjectLayer(self, destImage, objectLayer):
-        geo.sortXY(objectLayer, self.pixelWidth)
-        for object in objectLayer:
+        return validUntil
+
+    def blitObjectList(self, destImage, objectList):
+        validUntil = time.perf_counter() + 99999
+        vu = validUntil
+        geo.sortXY(objectList, self.pixelWidth)
+        for object in objectList:
             if "gid" in object:
-                self.blitTileObject(destImage, object)
+                vu = self.blitTileObject(destImage, object)
             elif "text" in object:
-                self.blitTextObject(destImage, object)
+                vu = self.blitTextObject(destImage, object)
             elif "ellipse" in object:
                 pass  # not yet supported.
             elif "point" in object:
@@ -136,15 +194,16 @@ class ClientMap(engine.map.Map):
             else:  # this is a rect
                 pass  # not yet supported.
 
+            if validUntil > vu:
+                    validUntil = vu
+        return validUntil
+
     def blitTileObject(self, destImage, tileObject):
         tilesetName, tilesetTileNumber = self.findTile(tileObject["gid"])
         tileset = self.tilesets[tilesetName]
 
-        # check to see what the actual tileNumber is to be blited.
-        tilesetTileNumber, validUntil = tileset.effectiveTileNumber(tilesetTileNumber, tileObject)
-
         # bit the tile
-        tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'])
+        validUntil = tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'], tileObject)
 
         # If properties -> labelText is present the render it under the tile. Normally used to display player names.
         if "properties" in tileObject and "labelText" in tileObject["properties"]:
@@ -158,6 +217,7 @@ class ClientMap(engine.map.Map):
                     'valign': "top",
                     'text': {'text': tileObject["properties"]["labelText"]}
                     })
+        return validUntil
 
     def blitTextObject(self, destImage, textObject):
         text = textObject["text"]["text"]
@@ -217,3 +277,7 @@ class ClientMap(engine.map.Map):
             topY = textObject["height"] - pixelHeight
 
         destImage.blit(image, (centerX - pixelWidth / 2, topY))
+
+        # text does not have an end time so just sent back a long time from now
+        validUntil = time.perf_counter() + 99999
+        return validUntil

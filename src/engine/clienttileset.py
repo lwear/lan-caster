@@ -21,12 +21,15 @@ class ClientTileset(engine.tileset.Tileset):
         # load the tileset image file
         self.image = pygame.image.load(f"{self.tilesetsDir}/{self.imagefile}")
 
-    def blitTile(self, tileNumber, destImage, destX, destY):
+    def blitTile(self, tileNumber, destImage, destX, destY, tileObject=False):
         # blit tileNumber's pixels into destImage at destX, destY
 
         if not self.image:
             log("Tried to blit a tile when images were not loaded!", "FAILURE")
             exit()
+
+        # check to see what the actual tileNumber is to be blited.
+        tileNumber, validUntil = self.effectiveTileNumber(tileNumber, tileObject)
 
         # width of tileset image in tiles
         width = int(self.imagewidth / self.tilewidth)
@@ -42,12 +45,14 @@ class ClientTileset(engine.tileset.Tileset):
                        (srcPixelX, srcPixelY, self.tilewidth, self.tileheight)
                        )
 
+        return validUntil
+
     def effectiveTileNumber(self, tileNumber, tileObject=False):
         '''
         return the effective tileNumber based several criteria such as character movement and tile animations
         '''
         currentTime = time.perf_counter()
-        validUntil = currentTime + 9999  # how long the effectiveTileNumber is valid for in seconds
+        validUntil = currentTime + 99999  # how long the effectiveTileNumber is valid for in seconds
 
         # CHARACTER TILE
         # if tileObject['direction'] exists and tile tileNumber is type 'character'
@@ -80,6 +85,9 @@ class ClientTileset(engine.tileset.Tileset):
                     tileNumber = frame['tileid']
                     break
                 animationTime -= frame['duration']
-            validUntil = currentTime + frame['duration'] - animationTime
+
+            remainingFrameTime = frame['duration'] - animationTime
+            # convert remainingFrameTime to seconds and set validUntil
+            validUntil = currentTime + remainingFrameTime / 1000
 
         return tileNumber, validUntil

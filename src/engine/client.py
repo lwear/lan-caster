@@ -39,15 +39,14 @@ class Client:
         self.serverIpport = engine.network.formatIpPort(serverIP, serverPort)
 
         self.playerNumber = -1  # set to a real number from the joinReply msg sent from the server
-        self.step = {}  # Currently displayed step. Empty until we get first step msg from server. = {}
-        self.lastStep = False  # Previous step from the server. Can be used to determine difference between steps.
-        self.stepChanged = False  # if the current step has been changed and need to be rendered to screen.
+        self.step = False  # Currently displayed step. Empty until we get first step msg from server. = {}
 
         # Note, we must init pygame before we load tileset data.
         pygame.init()
         pygame.mixer.quit()  # Turn all sound off.
         pygame.display.set_caption(f"{game} - {playerDisplayName}")  # Set the title of the window
         self.screen = pygame.display.set_mode(screenSize)  # open the window
+        self.screenValidUntil = 0  # invalid and needs to be rendered.
 
         self.tilesets = engine.loaders.loadTilesets(
             game=game,
@@ -154,9 +153,8 @@ class Client:
         return None
 
     def msgStep(self, msg):
-        self.lastStep = self.step  # keep the last step in case it is useful.
         self.step = msg  # store the new step
-        self.stepChanged = True  # flag that we need to redraw the screen.
+        self.screenValidUntil = 0  # flag that we need to redraw the screen.
 
     def msgGameWon(self, msg):
         log("Game Won!!!")
@@ -172,9 +170,7 @@ class Client:
 
     def updateScreen(self):
         # if we got a updated state from the server then render it to the screen.
-        if self.stepChanged:
-            self.stepChanged = False
-
+        if self.step and self.screenValidUntil < time.perf_counter():
             # find the map that the server wants us to render.
             map = self.maps[self.step["mapName"]]
 
@@ -182,7 +178,7 @@ class Client:
             map.setLayerVisablityMask(self.step["layerVisabilityMask"])
 
             # draw the map.
-            map.blitMap(self.screen, self.step["sprites"], self.step["overlay"])
+            self.screenValidUntil = map.blitMap(self.screen, self.step["sprites"], self.step["overlay"])
 
             # add on the player and gui specific items.
             self.updateInterface()
