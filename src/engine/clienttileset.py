@@ -1,5 +1,6 @@
 import pygame
 import time
+import sys
 
 import engine.log
 from engine.log import log
@@ -51,8 +52,7 @@ class ClientTileset(engine.tileset.Tileset):
         '''
         return the effective tileNumber based several criteria such as character movement and tile animations
         '''
-        currentTime = time.perf_counter()
-        validUntil = currentTime + 99999  # how long the effectiveTileNumber is valid for in seconds
+        validUntil = sys.float_info.max  # how long the effectiveTileNumber is valid for in seconds
 
         # CHARACTER TILE
         # if tileObject['direction'] exists and tile tileNumber is type 'character'
@@ -88,6 +88,6 @@ class ClientTileset(engine.tileset.Tileset):
 
             remainingFrameTime = frame['duration'] - animationTime
             # convert remainingFrameTime to seconds and set validUntil
-            validUntil = currentTime + remainingFrameTime / 1000
+            validUntil = time.perf_counter() + remainingFrameTime / 1000
 
         return tileNumber, validUntil

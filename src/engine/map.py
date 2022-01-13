@@ -51,8 +51,9 @@ class Map:
     ########################################################
 
     def __init__(self, tilesets, mapDir, game):
-        self.mapDir = mapDir
         self.tilesets = tilesets
+        self.mapDir = mapDir
+        self.game = game
 
         # Flag to say something on this map has changed
         self.changed = False

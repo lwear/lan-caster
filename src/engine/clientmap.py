@@ -1,6 +1,8 @@
 import pygame
 from pygame.locals import *
 import time
+import os
+import sys
 
 from engine.log import log
 import engine.map
@@ -19,6 +21,26 @@ class ClientMap(engine.map.Map):
     def __init__(self, tilesets, mapDir, game):
         super().__init__(tilesets, mapDir, game)
 
+        self.HIDELAYERS = (
+            "sprites",
+            "overlay",
+            "inBounds",
+            "outOfBounds",
+            "triggers",
+            "reference"
+            )
+
+        self.DEFAULTEXT = {
+            "bold": False,
+            "color": "#ff000000",
+            "fontfamily": "Arial",
+            "halign": "left",
+            "pixelsize": 16,
+            "underline": False,
+            "valign": "top",
+            "wrap": True
+            }
+
         # allocate image for each layer (exclude sprites and overlay)
         for layer in self.layers:
             if layer["name"] != "sprites" and layer["name"] != "overlay":
@@ -29,7 +51,11 @@ class ClientMap(engine.map.Map):
                 layer['image'] = layer['image'].convert_alpha()
                 layer['imageValidUntil'] = 0  # invalid and needs to be rendered.
 
-        self.bottomImage = pygame.Surface((self.width * self.tilewidth, self.height * self.tileheight))
+        self.bottomImage = pygame.Surface(
+            (self.width * self.tilewidth, self.height * self.tileheight),
+            pygame.SRCALPHA,
+            32)
+        self.bottomImage = self.bottomImage.convert_alpha()
         self.bottomImageValidUntil = 0  # invalid and needs to be rendered.
 
         self.topImage = pygame.Surface(
@@ -79,17 +105,16 @@ class ClientMap(engine.map.Map):
         they are provided by the server and must be rendered separately with a direct
         call to blitObjectList()
         '''
-        currentTime = time.perf_counter()
         # if there is already a valid image the don't render a new one
-        if self.bottomImageValidUntil < currentTime:
+        if self.bottomImageValidUntil < time.perf_counter():
             # Start with grey background.
             self.bottomImage.fill((128, 128, 128, 255))
 
-            self.bottomImageValidUntil = currentTime + 99999
+            self.bottomImageValidUntil = sys.float_info.max
             for layerNumber in range(len(self.layers)):
                 if self.layers[layerNumber]["name"] == "sprites":
                     break
-                if self.layers[layerNumber]["name"] == "overlay":
+                if self.layers[layerNumber]["name"] in self.HIDELAYERS:
                     continue
                 # if the layer is visible then add it to the destImage
                 if self.getLayerVisablitybyIndex(layerNumber):
@@ -110,19 +135,18 @@ class ClientMap(engine.map.Map):
         they are provided by the server and must be rendered separately with a direct
         call to blitObjectList()
         '''
-        currentTime = time.perf_counter()
         # if there is already a valid image the don't render a new one
-        if self.topImageValidUntil < currentTime:
+        if self.topImageValidUntil < time.perf_counter():
             # Start with transparent background.
             self.topImage.fill((0, 0, 0, 0))
 
-            self.topImageValidUntil = currentTime + 99999
+            self.topImageValidUntil = sys.float_info.max
             passedSpriteLayer = False
             for layerNumber in range(len(self.layers)):
                 if self.layers[layerNumber]["name"] == "sprites":
                     passedSpriteLayer = True
                     continue
-                if self.layers[layerNumber]["name"] == "overlay":
+                if self.layers[layerNumber]["name"] in self.HIDELAYERS:
                     continue
                 if passedSpriteLayer == True:
                     # if the layer is visible then add it to the destImage
@@ -138,9 +162,8 @@ class ClientMap(engine.map.Map):
         '''
         blit layer onto destImage.
         '''
-        currentTime = time.perf_counter()
         # if there is already a valid image then don't render a new one
-        if layer['imageValidUntil'] < currentTime:
+        if layer['imageValidUntil'] < time.perf_counter():
             # Start with transparent background.
             layer['image'].fill((0, 0, 0, 0))
 
@@ -153,7 +176,7 @@ class ClientMap(engine.map.Map):
         return layer['imageValidUntil']
 
     def blitTileGrid(self, destImage, grid):
-        validUntil = time.perf_counter() + 99999
+        validUntil = sys.float_info.max
         for i in range(len(grid)):
             if grid[i] != 0:
                 tileX = i % self.width
@@ -179,7 +202,7 @@ class ClientMap(engine.map.Map):
         return validUntil
 
     def blitObjectList(self, destImage, objectList):
-        validUntil = time.perf_counter() + 99999
+        validUntil = sys.float_info.max
         vu = validUntil
         geo.sortXY(objectList, self.pixelWidth)
         for object in objectList:
@@ -192,10 +215,10 @@ class ClientMap(engine.map.Map):
             elif "point" in object:
                 pass  # not yet supported.
             else:  # this is a rect
-                pass  # not yet supported.
+                vu = self.blitRectObject(destImage, object)
 
             if validUntil > vu:
-                    validUntil = vu
+                validUntil = vu
         return validUntil
 
     def blitTileObject(self, destImage, tileObject):
@@ -210,74 +233,133 @@ class ClientMap(engine.map.Map):
             self.blitTextObject(
                 destImage,
                 {
-                    'x': tileObject['x'] + tileObject['width'] / 2 - 128,
+                    'x': tileObject['x'] + tileObject['width'] / 2 - 64,
                     'y': tileObject['y'] + tileObject['height'],
-                    'width': 256,
+                    'width': 128,
                     'height': 40,
-                    'valign': "top",
-                    'text': {'text': tileObject["properties"]["labelText"]}
+                    'text': {
+                        'text': tileObject["properties"]["labelText"],
+                        'valign': 'top',
+                        'halign': 'center'
+                        }
                     })
         return validUntil
 
     def blitTextObject(self, destImage, textObject):
         text = textObject["text"]["text"]
         maxWidth = textObject['width']
-        if "pixelsize" in textObject["text"]:
-            size = textObject["text"]["pixelsize"]
+
+        # add text defaults if they are missing
+        for k, v in self.DEFAULTEXT.items():
+            if k not in textObject["text"]:
+                textObject["text"][k] = v
+
+        fontFilename = f'src/{self.game}/fonts/{textObject["text"]["fontfamily"]}.ttf'
+        if not os.path.isfile(fontFilename):
+            fontFilename = None
+        if fontFilename:
+            font = pygame.freetype.Font(fontFilename, textObject["text"]["pixelsize"])
         else:
-            size = 16
+            font = pygame.freetype.SysFont(textObject["text"]["fontfamily"], textObject["text"]["pixelsize"])
 
-        pixelWidth = 0
-        pixelHeight = 0
+        font.strong = textObject["text"]["bold"]
+        font.underline = textObject["text"]["underline"]
 
-        font = pygame.freetype.Font(None, size)
+        font.fgcolor = pygame.Color(textObject["text"]["color"])
+        # Tiled hex colors with alpha are #argb but pygame needs #rgba so now flip alpha to the end.
+        if len(textObject["text"]["color"]) == 9:  # eg. "#AARRGGBB"
+            font.fgcolor = pygame.Color(font.fgcolor[1], font.fgcolor[2], font.fgcolor[3], font.fgcolor[0])
 
-        # first, split the text into words
-        words = text.split()
         lines = []
-
-        maxLineHeight = 0
-
-        while len(words) > 0:
-            # get as many words as will fit within allowed_width
-            lineWords = words.pop(0)
-            r = font.get_rect(lineWords)
-            fw, fh = r.width, r.height
-            while fw < maxWidth and len(words) > 0:
-                r = font.get_rect(lineWords + ' ' + words[0])
-                if r.width > maxWidth:
-                    break
-                lineWords = lineWords + ' ' + words.pop(0)
+        if textObject["text"]["wrap"]:
+            words = text.split()
+            pixelWidth = 0
+            maxLineHeight = 0
+            while len(words) > 0:
+                # get as many words as will fit within allowed_width
+                lineWords = words.pop(0)
+                r = font.get_rect(lineWords)
                 fw, fh = r.width, r.height
+                while fw < maxWidth and len(words) > 0:
+                    r = font.get_rect(lineWords + ' ' + words[0])
+                    if r.width > maxWidth:
+                        break
+                    lineWords = lineWords + ' ' + words.pop(0)
+                    fw, fh = r.width, r.height
 
-            # add a line consisting of those words
-            line = lineWords
-            if pixelWidth < fw:
-                pixelWidth = fw
-            if maxLineHeight < fh:
-                maxLineHeight = fh
-            lines.append((fw, fh, line))
+                # add a line consisting of those words
+                line = lineWords
+                if pixelWidth < fw:
+                    pixelWidth = fw
+                if maxLineHeight < fh:
+                    maxLineHeight = fh
+                lines.append((fw, fh, line))
+        else:
+            r = font.get_rect(text)
+            pixelWidth = r.width
+            maxLineHeight = r.height
+            lines.append((r.width, r.height, text))
 
         pixelHeight = maxLineHeight * len(lines)
         pixelWidth += 4
         pixelHeight += 4
-        image = pygame.Surface((pixelWidth, pixelHeight))
-        image.fill(Color('black'))
+        image = pygame.Surface((pixelWidth, pixelHeight), pygame.SRCALPHA, 32)
+        image = image.convert_alpha()
+        image.fill((0, 0, 0, 0))
 
         ty = 2
         for line in lines:
-            tx = pixelWidth / 2 - line[0] / 2
-            font.render_to(image, (tx, ty), line[2],
-                           fgcolor=Color('green'), bgcolor=Color('black'))
+            if textObject["text"]["halign"] == "left":
+                tx = 2
+            elif textObject["text"]["halign"] == "center":
+                tx = pixelWidth / 2 - line[0] / 2
+            elif textObject["text"]["halign"] == "right":
+                tx = pixelWidth - line[0] - 2
+            font.render_to(image, (tx, ty), line[2])
             ty += maxLineHeight
 
-        centerX = textObject["x"] + textObject['width'] / 2
-        topY = textObject["y"]
-        if "valign" in textObject and textObject["valign"] == "bottom":
-            topY = textObject["height"] - pixelHeight
+        if textObject["text"]["halign"] == "left":
+            destX = textObject["x"]
+        elif textObject["text"]["halign"] == "center":
+            destX = textObject["x"] + textObject['width'] / 2 - pixelWidth / 2
+        elif textObject["text"]["halign"] == "right":
+            destX = textObject["x"] + textObject["width"] - pixelWidth
 
-        destImage.blit(image, (centerX - pixelWidth / 2, topY))
+        if textObject["text"]["valign"] == "top":
+            destY = textObject["y"]
+        elif textObject["text"]["valign"] == "center":
+            destY = textObject["y"] + textObject["height"] / 2 - pixelHeight / 2
+        elif textObject["text"]["valign"] == "bottom":
+            destY = textObject["y"] + textObject["height"] - pixelHeight
+
+        self.blitRectObject(destImage,
+                            {'x': destX - 2,
+                             'y': destY - 2,
+                             'width': pixelWidth + 4,
+                             'height': pixelHeight + 4},
+                            fillColor=(255, 255, 255, 64),
+                            borderColor=(0, 0, 0, 64),
+                            borderThickness=2,
+                            roundCorners=3)
+        destImage.blit(image, (destX, destY))
 
         # text does not have an end time so just sent back a long time from now
-        validUntil = time.perf_counter() + 99999
+        validUntil = sys.float_info.max
+        return validUntil
+
+    def blitRectObject(self, destImage, rectObject, fillColor=(0, 0, 0, 0),
+                       borderColor=(0, 0, 0, 255), borderThickness=1, roundCorners=0):
+        r = pygame.Rect(0, 0, rectObject['width'], rectObject['height'])
+
+        image = pygame.Surface((rectObject['width'], rectObject['height']), pygame.SRCALPHA, 32)
+        image = image.convert_alpha()
+
+        rect = pygame.Rect(0, 0, rectObject['width'], rectObject['height'])
+        pygame.draw.rect(image, fillColor, rect, 0, roundCorners)
+        pygame.draw.rect(image, borderColor, rect, borderThickness, roundCorners)
+
+        destImage.blit(image, (rectObject['x'], rectObject['y']))
+
+        # rect does not have an end time so just sent back a long time from now
+        validUntil = sys.float_info.max
         return validUntil
