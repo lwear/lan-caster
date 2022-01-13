@@ -183,7 +183,7 @@ layer order (using black layer to help)
 ```
 designed to be a single instance class
 map and tileset and clienttileset classes
-clientmap class
+clientmap class (blitting and validUntil)
 limitation (what parts of Tiled are not supported)
 ```
 
