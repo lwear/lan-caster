@@ -11,36 +11,50 @@ class ClientMap(engine.clientmap.ClientMap):
     Where players are standing it is as if they are holding a lantern, brighter closer to the player.
     '''
 
+    def __init__(self, tilesets, mapDir, game):
+        self.LIGHTRADIUS = 180
+
+        super().__init__(tilesets, mapDir, game)
+
+        # allocate darknessImage
+        self.darknessImage = pygame.Surface(
+            (self.width * self.tilewidth, self.height * self.tileheight),
+            pygame.SRCALPHA,
+            32)
+        self.darknessImage = self.darknessImage.convert_alpha()
+
+        # allocate and draw lightCircleImage
+        self.lightCircleImage = pygame.Surface((self.LIGHTRADIUS*2, self.LIGHTRADIUS*2), pygame.SRCALPHA, 32)
+        self.lightCircleImage = self.lightCircleImage.convert_alpha()
+        self.lightCircleImage.fill((0, 0, 0, 0))
+        for i in range(255, 0, -5):
+            pygame.draw.circle(
+                self.lightCircleImage,
+                color=(0, 0, 0, 255 - i),  # set the pixel values to subtract during blitMap() below.
+                center=(self.LIGHTRADIUS, self.LIGHTRADIUS),
+                radius=i / 255.0 * self.LIGHTRADIUS
+                )
+
     def blitMap(self, destImage, sprites, overlay):
-        super().blitMap(destImage, sprites, overlay)
+        # add darkness with light circles to map.
 
-        # darkness will be blited on top of the map that was rendered by super() above
-        darkness = pygame.Surface(
-            (self.width * self.tilewidth, self.height * self.tileheight),
-            pygame.SRCALPHA,
-            32)
-        darkness = darkness.convert_alpha()
-        # start with all black with alpha of 255 (255=opaque)
-        darkness.fill((0, 0, 0, 255))
+        # start with full darkness (opaque black)
+        self.darknessImage.fill((0, 0, 0, 255))
 
-        lightCircle = pygame.Surface(
-            (self.width * self.tilewidth, self.height * self.tileheight),
-            pygame.SRCALPHA,
-            32)
-        lightCircle = lightCircle.convert_alpha()
-
+        # add a lightCircle at each players location.
         players = self.findObject(objectList=sprites, type="player", returnAll=True)
         for player in players:
-            # below subtracts the pixel values so start with all 0s (no change)
-            lightCircle.fill((0, 0, 0, 0))
-            for i in range(255, 0, -5):
-                pygame.draw.circle(
-                    lightCircle,
-                    color=(0, 0, 0, 255 - i),  # set the pixel values to subtract below.
-                    center=(player['anchorX'], player['anchorY']),
-                    radius=i / 255.0 * 180
-                    )
             # subtract the light circle pixel values from the darkness pixel values.
-            darkness.blit(lightCircle, (0, 0), special_flags=BLEND_RGBA_SUB)
+            self.darknessImage.blit(
+                self.lightCircleImage,
+                (player['anchorX'] - self.LIGHTRADIUS, player['anchorY'] - self.LIGHTRADIUS),
+                special_flags=BLEND_RGBA_SUB
+                )
 
-        destImage.blit(darkness, (0, 0))
+        # render the map normally
+        validUntil = super().blitMap(destImage, sprites, overlay)
+        
+        # add darknessImage on top of map rendered by super()
+        destImage.blit(self.darknessImage, (0, 0))
+
+        return validUntil
