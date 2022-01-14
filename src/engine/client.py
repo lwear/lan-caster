@@ -199,15 +199,17 @@ class Client:
                     # find the map that the server wants us to render.
                     map = self.maps[self.step["mapName"]]
                     map.blitTextObject(
-                        self.screen,
-                        {
+                        self.screen, {
                             'x': 0,
                             'y': 0,
                             'width': self.screen.get_width(),
                             'height': self.screen.get_height(),
-                            'valign': "bottom",
-                            'text': {'text': sprite["actionText"] + " (spacebar)"}
-                            })
+                            'text': {
+                                'text': sprite["actionText"] + " (spacebar)",
+                                'valign': "bottom",
+                                'halign': "center"
+                            }
+                        })
                 break
 
     ########################################################

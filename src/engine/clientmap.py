@@ -32,13 +32,17 @@ class ClientMap(engine.map.Map):
 
         self.DEFAULTEXT = {
             "bold": False,
-            "color": "#ff000000",
-            "fontfamily": "Arial",
+            "color": "#00ff00",
+            "fontfamily": None,
             "halign": "left",
             "pixelsize": 16,
             "underline": False,
             "valign": "top",
-            "wrap": True
+            "wrap": True,
+            "bgcolor": "#000000",
+            "bgbordercolor": "#000000",
+            "bgborderThickness": 0,
+            "bgroundCorners": 0
             }
 
         # allocate image for each layer (exclude sprites and overlay)
@@ -332,15 +336,17 @@ class ClientMap(engine.map.Map):
         elif textObject["text"]["valign"] == "bottom":
             destY = textObject["y"] + textObject["height"] - pixelHeight
 
-        self.blitRectObject(destImage,
-                            {'x': destX - 2,
-                             'y': destY - 2,
-                             'width': pixelWidth + 4,
-                             'height': pixelHeight + 4},
-                            fillColor=(255, 255, 255, 64),
-                            borderColor=(0, 0, 0, 64),
-                            borderThickness=2,
-                            roundCorners=3)
+        self.blitRectObject(destImage,{
+                'x': destX - 2,
+                'y': destY - 2,
+                'width': pixelWidth + 4,
+                'height': pixelHeight + 4
+            },
+            fillColor=textObject["text"]["bgcolor"],
+            borderColor=textObject["text"]["bgcolor"],
+            borderThickness=textObject["text"]["bgborderThickness"],
+            roundCorners=textObject["text"]["bgroundCorners"])
+
         destImage.blit(image, (destX, destY))
 
         # text does not have an end time so just sent back a long time from now

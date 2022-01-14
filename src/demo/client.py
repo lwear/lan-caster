@@ -35,10 +35,11 @@ class Client(engine.client.Client):
                     'y': self.screen.get_height() / 4 * 3,
                     'width': self.screen.get_width() / 2,
                     'height': self.screen.get_height() / 4,
-                    'valign': "top",
                     'text': {
                         'text': "All players must gather in the stone circle to win!",
-                        'pixelsize': 24
+                        'pixelsize': 24,
+                        'valign': "top",
+                        'halign': "center",
                         }
                     })
         if self.showWinText:
@@ -49,10 +50,11 @@ class Client(engine.client.Client):
                     'y': self.screen.get_height() / 4 * 3,
                     'width': self.screen.get_width() / 2,
                     'height': self.screen.get_height() / 4,
-                    'valign': "top",
                     'text': {
                         'text': "Game Won! Good teamwork everyone.",
-                        'pixelsize': 24
+                        'pixelsize': 24,
+                        'valign': "top",
+                        'halign': "center",
                         }
                     })
 
