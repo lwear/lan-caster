@@ -41,6 +41,12 @@ class Client:
         self.fps = fps
         self.serverIpport = engine.network.formatIpPort(serverIP, serverPort)
 
+        # actionText defaults that differ from DEFAULTTEXT
+        self.ACTIONTEXT = {
+            "halign": "center",
+            "valign": "bottom"
+            }
+
         self.playerNumber = -1  # set to a real number from the joinReply msg sent from the server
         self.step = False  # Currently displayed step. Empty until we get first step msg from server. = {}
 
@@ -196,21 +202,28 @@ class Client:
         for sprite in self.step["sprites"]:
             if "playerNumber" in sprite and sprite["playerNumber"] == self.playerNumber:
                 if "actionText" in sprite:
-                    # find the map that the server wants us to render.
-                    map = self.maps[self.step["mapName"]]
-                    map.blitTextObject(
-                        self.screen, {
-                            'x': 0,
-                            'y': 0,
-                            'width': self.screen.get_width(),
-                            'height': self.screen.get_height(),
-                            'text': {
-                                'text': sprite["actionText"] + " (spacebar)",
-                                'valign': "bottom",
-                                'halign': "center"
-                            }
-                        })
+                    self.blitActionText(sprite)
                 break
+
+    def blitActionText(self, sprite):
+        textObject = {
+                        'x': 0,
+                        'y': 0,
+                        'width': self.screen.get_width(),
+                        'height': self.screen.get_height(),
+                        'text': {
+                            'text': sprite["actionText"] + " (spacebar)"
+                        }
+                    }
+
+        # add actiontext defaults if they are missing
+        for k, v in self.ACTIONTEXT.items():
+            if k not in textObject["text"]:
+                textObject["text"][k] = v
+
+        # find the map that the server wants us to render.
+        map = self.maps[self.step["mapName"]]
+        map.blitTextObject(self.screen, textObject)
 
     ########################################################
     # USER INPUT HANDLING

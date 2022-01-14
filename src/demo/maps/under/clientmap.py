@@ -2,19 +2,19 @@ import pygame
 from pygame.locals import *
 
 from engine.log import log
-import engine.clientmap
+import demo.clientmap
 
 
-class ClientMap(engine.clientmap.ClientMap):
+class ClientMap(demo.clientmap.ClientMap):
     '''
     This class makes the map render as black except where players are standing.
     Where players are standing it is as if they are holding a lantern, brighter closer to the player.
     '''
 
     def __init__(self, tilesets, mapDir, game):
-        self.LIGHTRADIUS = 180
-
         super().__init__(tilesets, mapDir, game)
+
+        self.LIGHTRADIUS = 180
 
         # allocate darknessImage
         self.darknessImage = pygame.Surface(

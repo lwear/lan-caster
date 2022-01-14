@@ -14,9 +14,23 @@ class Client(engine.client.Client):
     '''
 
     def __init__(self, game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort):
+        super().__init__(game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort)
+
         self.showOpeningText = True
         self.showWinText = False
-        super().__init__(game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort)
+        
+        # actionText defaults that differ from DEFAULTTEXT
+        self.ACTIONTEXT = {
+            'fontfamily': "Ariel",
+            'pixelsize': 16,
+            "color": (0,0,0,255),
+            "bgcolor": (255,255,255,128),
+            "halign": "center",
+            "valign": "bottom",
+            "bgbordercolor": (0,0,0,128),
+            "bgborderThickness": 3,
+            "bgroundCorners": 6
+            }
 
     def msgGameWon(self, msg):
         log("Game Won!!!")
@@ -37,9 +51,15 @@ class Client(engine.client.Client):
                     'height': self.screen.get_height() / 4,
                     'text': {
                         'text': "All players must gather in the stone circle to win!",
-                        'pixelsize': 24,
+                        'pixelsize': 36,
                         'valign': "top",
                         'halign': "center",
+                        "fontfamily": "Old London",
+                        "color": "#1d232b",
+                        "bgcolor": "#fafacd",
+                        "bgbordercolor": "#47361e",
+                        "bgborderThickness": 3,
+                        "bgroundCorners": 6
                         }
                     })
         if self.showWinText:
@@ -52,9 +72,15 @@ class Client(engine.client.Client):
                     'height': self.screen.get_height() / 4,
                     'text': {
                         'text': "Game Won! Good teamwork everyone.",
-                        'pixelsize': 24,
+                        'pixelsize': 36,
                         'valign': "top",
                         'halign': "center",
+                        "fontfamily": "Old London",
+                        "color": "#1d232b",
+                        "bgcolor": "#fafacd",
+                        "bgbordercolor": "#47361e",
+                        "bgborderThickness": 3,
+                        "bgroundCorners": 6
                         }
                     })
 

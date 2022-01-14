@@ -21,6 +21,7 @@ class ClientMap(engine.map.Map):
     def __init__(self, tilesets, mapDir, game):
         super().__init__(tilesets, mapDir, game)
 
+        # Layers with these names will never be rendered to the screen, even if they are set to visible.
         self.HIDELAYERS = (
             "sprites",
             "overlay",
@@ -30,6 +31,7 @@ class ClientMap(engine.map.Map):
             "reference"
             )
 
+        # default values for optional keys in a textObject["text"] dict.
         self.DEFAULTEXT = {
             "bold": False,
             "color": "#00ff00",
@@ -43,6 +45,11 @@ class ClientMap(engine.map.Map):
             "bgbordercolor": "#000000",
             "bgborderThickness": 0,
             "bgroundCorners": 0
+            }
+
+        # labelText defaults that differ from DEFAULTTEXT
+        self.LABELTEXT = {
+            "halign": "center"
             }
 
         # allocate image for each layer (exclude sprites and overlay)
@@ -221,8 +228,9 @@ class ClientMap(engine.map.Map):
             else:  # this is a rect
                 vu = self.blitRectObject(destImage, object)
 
-            if validUntil > vu:
-                validUntil = vu
+            labelvu = self.blitLabelText(destImage, object)
+
+            validUntil = min(validUntil, vu, labelvu)
         return validUntil
 
     def blitTileObject(self, destImage, tileObject):
@@ -232,22 +240,31 @@ class ClientMap(engine.map.Map):
         # bit the tile
         validUntil = tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'], tileObject)
 
+        return validUntil
+
+    def blitLabelText(self, destImage, object):
+        validUntil = sys.float_info.max
         # If properties -> labelText is present the render it under the tile. Normally used to display player names.
-        if "properties" in tileObject and "labelText" in tileObject["properties"]:
-            self.blitTextObject(
-                destImage,
-                {
-                    'x': tileObject['x'] + tileObject['width'] / 2 - 64,
-                    'y': tileObject['y'] + tileObject['height'],
+        if "properties" in object and "labelText" in object["properties"]:
+
+            textObject = {
+                    'x': object['x'] + object['width'] / 2 - 64,
+                    'y': object['y'] + object['height'],
                     'width': 128,
                     'height': 40,
                     'text': {
-                        'text': tileObject["properties"]["labelText"],
-                        'valign': 'top',
-                        'halign': 'center'
+                        'text': object["properties"]["labelText"]
                         }
-                    })
+                    }
+                    
+            # add labeltext defaults if they are missing
+            for k, v in self.LABELTEXT.items():
+                if k not in textObject["text"]:
+                    textObject["text"][k] = v
+
+            validUntil = self.blitTextObject(destImage, textObject)
         return validUntil
+
 
     def blitTextObject(self, destImage, textObject):
         text = textObject["text"]["text"]
@@ -336,14 +353,15 @@ class ClientMap(engine.map.Map):
         elif textObject["text"]["valign"] == "bottom":
             destY = textObject["y"] + textObject["height"] - pixelHeight
 
+        buffer = textObject["text"]["bgborderThickness"] + textObject["text"]["bgroundCorners"]
         self.blitRectObject(destImage,{
-                'x': destX - 2,
-                'y': destY - 2,
-                'width': pixelWidth + 4,
-                'height': pixelHeight + 4
+                'x': destX - buffer,
+                'y': destY - buffer,
+                'width': pixelWidth + buffer*2,
+                'height': pixelHeight + buffer*2
             },
             fillColor=textObject["text"]["bgcolor"],
-            borderColor=textObject["text"]["bgcolor"],
+            borderColor=textObject["text"]["bgbordercolor"],
             borderThickness=textObject["text"]["bgborderThickness"],
             roundCorners=textObject["text"]["bgroundCorners"])
 
