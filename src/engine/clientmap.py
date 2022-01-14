@@ -47,14 +47,26 @@ class ClientMap(engine.map.Map):
             "bgroundCorners": 0
             }
 
+
+        # speachText defaults that differ from DEFAULTTEXT
+        self.SPEACHTEXT = {
+            "valign": "bottom",
+            "halign": "center"
+            }
+
         # labelText defaults that differ from DEFAULTTEXT
         self.LABELTEXT = {
             "halign": "center"
             }
 
+        # sort object layers for right-down rendering
+        for layer in self.layers:
+            if layer["type"] == "objectgroup":
+                geo.sortRightDown(layer["objects"], self.pixelWidth)
+
         # allocate image for each layer (exclude sprites and overlay)
         for layer in self.layers:
-            if layer["name"] != "sprites" and layer["name"] != "overlay":
+            if layer["name"] not in self.HIDELAYERS:
                 layer['image'] = pygame.Surface(
                     (self.width * self.tilewidth, self.height * self.tileheight),
                     pygame.SRCALPHA,
@@ -91,9 +103,17 @@ class ClientMap(engine.map.Map):
     #####################################################
 
     def blitMap(self, destImage, sprites, overlay):
+
+        # sort sprites and overlay for right-down render order.
+        geo.sortRightDown(sprites, self.pixelWidth)
+        geo.sortRightDown(overlay, self.pixelWidth)
+
         validUntil = []
         # start with all visible layers below the sprites.
         validUntil.append(self.blitBottomImage(destImage))
+
+        # blit the sprite label text from the server under all sprites.
+        validUntil.append(self.blitObjectListLabelText(destImage, sprites))
 
         # blit the sprite layer from the server
         validUntil.append(self.blitObjectList(destImage, sprites))
@@ -103,6 +123,9 @@ class ClientMap(engine.map.Map):
 
         # add the overlay layer from the server
         validUntil.append(self.blitObjectList(destImage, overlay))
+
+        # blit the sprite speach text from the server on top of everything.
+        validUntil.append(self.blitObjectListSpeachText(destImage, sprites))
 
         return min(validUntil)
 
@@ -215,7 +238,6 @@ class ClientMap(engine.map.Map):
     def blitObjectList(self, destImage, objectList):
         validUntil = sys.float_info.max
         vu = validUntil
-        geo.sortXY(objectList, self.pixelWidth)
         for object in objectList:
             if "gid" in object:
                 vu = self.blitTileObject(destImage, object)
@@ -228,9 +250,7 @@ class ClientMap(engine.map.Map):
             else:  # this is a rect
                 vu = self.blitRectObject(destImage, object)
 
-            labelvu = self.blitLabelText(destImage, object)
-
-            validUntil = min(validUntil, vu, labelvu)
+            validUntil = min(validUntil, vu)
         return validUntil
 
     def blitTileObject(self, destImage, tileObject):
@@ -242,21 +262,59 @@ class ClientMap(engine.map.Map):
 
         return validUntil
 
+    def blitObjectListSpeachText(self, destImage, objectList):
+        validUntil = sys.float_info.max
+        vu = validUntil
+        for object in objectList:
+            vu = self.blitSpeachText(destImage, object)
+            validUntil = min(validUntil, vu)
+        return validUntil
+
+    def blitSpeachText(self, destImage, object):
+        validUntil = sys.float_info.max
+        # If speachText is present then render it above the tile.
+        if "speachText" in object:
+            textObject = {
+                    'x': object['x'] + object['width'] / 2 - 64,
+                    'y': object['y'],
+                    'width': 128,
+                    'height': 0,
+                    'text': {
+                        'text': object["speachText"]
+                        }
+                    }
+
+            # add labeltext defaults if they are missing
+            for k, v in self.SPEACHTEXT.items():
+                if k not in textObject["text"]:
+                    textObject["text"][k] = v
+            
+            validUntil = self.blitTextObject(destImage, textObject)
+        return validUntil
+
+    def blitObjectListLabelText(self, destImage, objectList):
+        validUntil = sys.float_info.max
+        vu = validUntil
+        for object in objectList:
+            vu = self.blitLabelText(destImage, object)
+            validUntil = min(validUntil, vu)
+        return validUntil
+
     def blitLabelText(self, destImage, object):
         validUntil = sys.float_info.max
-        # If properties -> labelText is present the render it under the tile. Normally used to display player names.
+        # If properties -> labelText is present then render it under the tile. Normally used to display player names.
         if "properties" in object and "labelText" in object["properties"]:
 
             textObject = {
                     'x': object['x'] + object['width'] / 2 - 64,
                     'y': object['y'] + object['height'],
                     'width': 128,
-                    'height': 40,
+                    'height': 0,
                     'text': {
                         'text': object["properties"]["labelText"]
                         }
                     }
-                    
+
             # add labeltext defaults if they are missing
             for k, v in self.LABELTEXT.items():
                 if k not in textObject["text"]:

@@ -83,6 +83,10 @@ class ServerMap(engine.map.Map):
         for sprite in self.sprites:
             self.stepMove(sprite)
 
+        # update sprite speachText
+        for sprite in self.sprites:
+            self.stepSpeachText(sprite)
+
         # update sprite actionText
         for sprite in self.sprites:
             self.stepActionText(sprite)
@@ -364,6 +368,14 @@ class ServerMap(engine.map.Map):
             del object["destY"]
         if "speed" in object:
             del object["speed"]
+
+    ########################################################
+    # SPEACHTEXT
+    ########################################################
+
+    def stepSpeachText(self, sprite):
+        if "speachText" in sprite:
+            del sprite["speachText"]
 
     ########################################################
     # ACTIONTEXT

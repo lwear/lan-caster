@@ -222,6 +222,42 @@ class ServerMap(engine.servermap.ServerMap):
         return super().objectInBounds(object, x, y)
 
     ########################################################
+    # SPEACHTEXT
+    ########################################################
+
+    def stepSpeachText(self, sprite):
+        # these speach texts are only for players to say (not things like chickens, or keys)
+        if sprite["type"] == "player":
+            if "holding" not in sprite or sprite['holding']['name'] != "bomb":
+                    bombArea = self.findObject(
+                        x=sprite["anchorX"],
+                        y=sprite["anchorY"],
+                        type="bombArea",
+                        objectList=self.reference
+                        )
+                    if bombArea:
+                        # if the rock has not been blown up yet.
+                        start = engine.server.SERVER.maps["start"]
+                        if start.getLayerVisablitybyName("rockOnStairs"):
+                            sprite["speachText"] = f"Hmmm I wonder if I could blow this up?"
+                        else:
+                            sprite["speachText"] = f"That done blow up good!"
+                        return
+
+            if "holding" not in sprite:
+                throwarea = self.findObject(
+                    x=sprite["anchorX"],
+                    y=sprite["anchorY"],
+                    type="throwArea",
+                    objectList=self.reference
+                    )
+                if throwarea:
+                    sprite["speachText"] = f"I could throw something from here."
+                    return
+
+        super().stepSpeachText(sprite)
+
+    ########################################################
     # ACTIONTEXT
     ########################################################
 

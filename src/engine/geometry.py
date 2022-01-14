@@ -91,7 +91,7 @@ def project(x, y, rad, dis):
     return xp, yp
 
 
-def sortXY(listOfGameObs, maxWidth, useAnchor=True):
+def sortRightDown(listOfGameObs, maxWidth, useAnchor=True):
     '''
     sort list of game objects by y and then x. Do sort in place but list is also returned in case needed.
 

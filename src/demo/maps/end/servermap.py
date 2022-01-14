@@ -83,6 +83,25 @@ class ServerMap(demo.servermap.ServerMap):
         self.actionUse(sprite, lever)
 
     ########################################################
+    # SPEACHTEXT
+    ########################################################
+
+    def stepSpeachText(self, sprite):
+        # these speach texts are only for players to say (not things like chickens, or keys)
+        if sprite["type"] == "player":
+            if "holding" not in sprite or sprite['holding']['name'] != "magic wand":
+                    magicArea = self.findObject(
+                        x=sprite["anchorX"], 
+                        y=sprite["anchorY"], 
+                        type="magicArea", 
+                        objectList=self.reference)
+                    if magicArea:
+                        sprite["speachText"] = f"This place seems magical but I feel like I need something to help cast a spell."
+                        return
+
+        super().stepSpeachText(sprite)
+
+    ########################################################
     # ACTIONTEXT (custom text for using magic wand in magic area)
     ########################################################
 

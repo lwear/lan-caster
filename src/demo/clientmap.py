@@ -18,3 +18,16 @@ class ClientMap(engine.clientmap.ClientMap):
             "halign": "center",
             "bgbordercolor": (0,0,0,0)
             }
+            
+        # speachText defaults that differ from DEFAULTTEXT
+        self.SPEACHTEXT = {
+            'fontfamily': "Ariel",
+            'pixelsize': 16,
+            "color": (0,0,0,255),
+            "bgcolor": (255,255,255,128),
+            "halign": "center",
+            "valign": "bottom",
+            "bgbordercolor": (0,0,0,128),
+            "bgborderThickness": 3,
+            "bgroundCorners": 6
+            }
