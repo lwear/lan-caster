@@ -46,9 +46,9 @@ def loadTilesets(game, loadImages):
     listing = os.listdir(tilesetsDir)
     for tilesetFile in listing:
         if loadImages:
-            ts = module.ClientTileset(tilesetsDir, tilesetFile)
+            ts = module.ClientTileset(tilesetsDir + "/" + tilesetFile)
         else:
-            ts = module.Tileset(tilesetsDir, tilesetFile)
+            ts = module.Tileset(tilesetsDir + "/" + tilesetFile)
         tilesets[ts.name] = ts
     return tilesets
 
@@ -78,9 +78,9 @@ def loadMaps(tilesets, game, maptype):
         module = loadModule(moduleName, game=game, mapName=mapName)
 
         if maptype == "ServerMap":
-            mapObj = module.ServerMap(tilesets, mapsDir + "/" + mapName, game)
+            mapObj = module.ServerMap(tilesets, mapsDir + "/" + mapName)
         else:
-            mapObj = module.ClientMap(tilesets, mapsDir + "/" + mapName, game)
+            mapObj = module.ClientMap(tilesets, mapsDir + "/" + mapName)
 
         maps[mapObj.name] = mapObj
 

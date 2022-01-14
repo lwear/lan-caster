@@ -16,11 +16,12 @@ class ClientTileset(engine.tileset.Tileset):
         2) Provide tile render method.
     '''
 
-    def __init__(self, tilesetsDir, tilesetFile):
-        super().__init__(tilesetsDir, tilesetFile)
+    def __init__(self, tilesetFile):
+        super().__init__(tilesetFile)
 
         # load the tileset image file
-        self.image = pygame.image.load(f"{self.tilesetsDir}/{self.imagefile}")
+        tilesetDir = '/'.join(tilesetFile.split('/')[0:-1])
+        self.image = pygame.image.load(f"{tilesetDir}/{self.imagefile}")
 
     def blitTile(self, tileNumber, destImage, destX, destY, tileObject=False):
         # blit tileNumber's pixels into destImage at destX, destY

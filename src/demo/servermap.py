@@ -17,8 +17,8 @@ class ServerMap(engine.servermap.ServerMap):
     # INIT
     ########################################################
 
-    def __init__(self, tilesets, mapDir, game):
-        super().__init__(tilesets, mapDir, game)
+    def __init__(self, tilesets, mapDir):
+        super().__init__(tilesets, mapDir)
 
         self.CHICKENSPEED = 10
         self.THROWSPEED = 360

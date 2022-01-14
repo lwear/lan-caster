@@ -6,8 +6,8 @@ import engine.clientmap
 
 class ClientMap(engine.clientmap.ClientMap):
 
-    def __init__(self, tilesets, mapDir, game):
-        super().__init__(tilesets, mapDir, game)
+    def __init__(self, tilesets, mapDir):
+        super().__init__(tilesets, mapDir)
 
         # labelText defaults that differ from DEFAULTTEXT
         self.LABELTEXT = {

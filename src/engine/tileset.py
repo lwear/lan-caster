@@ -14,10 +14,8 @@ class Tileset:
     left tile is number 0, the tile to it's right is numbered 1, and so on.
     '''
 
-    def __init__(self, tilesetsDir, tilesetFile):
-        self.tilesetsDir = tilesetsDir
-        self.tilesetFile = tilesetsDir + "/" + tilesetFile
-
+    def __init__(self, tilesetFile):
+        self.tilesetFile = tilesetFile
         # Tileset name is based on tilesetFile with .json removed
         self.name = tilesetFile.split("/")[-1].split(".")[0]
 

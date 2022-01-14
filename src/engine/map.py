@@ -50,16 +50,18 @@ class Map:
     # INIT
     ########################################################
 
-    def __init__(self, tilesets, mapDir, game):
+    def __init__(self, tilesets, mapDir):
         self.tilesets = tilesets
         self.mapDir = mapDir
-        self.game = game
 
         # Flag to say something on this map has changed
         self.changed = False
 
         # Maps are named based on their mapDirectory
         self.name = mapDir.split("/")[-1]
+
+        # store the game name in case we need it.
+        self.game = mapDir.split("/")[-3]
 
         # read tiled map file.
         with open(mapDir + "/" + self.name + ".json") as f:
@@ -304,7 +306,7 @@ class Map:
     ########################################################
 
     def checkObject(self, object):
-        # ensure object meets all basic criteria
+        # ensure object meets all basic criteria that are required by the server.
         # object must be a dictionary {}
 
         if "mapName" not in object:

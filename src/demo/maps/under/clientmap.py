@@ -11,8 +11,8 @@ class ClientMap(demo.clientmap.ClientMap):
     Where players are standing it is as if they are holding a lantern, brighter closer to the player.
     '''
 
-    def __init__(self, tilesets, mapDir, game):
-        super().__init__(tilesets, mapDir, game)
+    def __init__(self, tilesets, mapDir):
+        super().__init__(tilesets, mapDir)
 
         self.LIGHTRADIUS = 180
 

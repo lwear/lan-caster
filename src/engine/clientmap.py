@@ -18,8 +18,8 @@ class ClientMap(engine.map.Map):
     # INIT METHODS
     #####################################################
 
-    def __init__(self, tilesets, mapDir, game):
-        super().__init__(tilesets, mapDir, game)
+    def __init__(self, tilesets, mapDir):
+        super().__init__(tilesets, mapDir)
 
         # Layers with these names will never be rendered to the screen, even if they are set to visible.
         self.HIDELAYERS = (
