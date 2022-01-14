@@ -18,19 +18,6 @@ class Client(engine.client.Client):
 
         self.showOpeningText = True
         self.showWinText = False
-        
-        # actionText defaults that differ from DEFAULTTEXT
-        self.ACTIONTEXT = {
-            'fontfamily': "Ariel",
-            'pixelsize': 16,
-            "color": (0,0,0,255),
-            "bgcolor": (255,255,255,128),
-            "halign": "center",
-            "valign": "bottom",
-            "bgbordercolor": (0,0,0,128),
-            "bgborderThickness": 3,
-            "bgroundCorners": 6
-            }
 
     def msgGameWon(self, msg):
         log("Game Won!!!")

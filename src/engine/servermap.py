@@ -243,26 +243,20 @@ class ServerMap(engine.map.Map):
         # find dest based on object named trigger["properties"]["destReference"] on layer"reference"
         dest = self.findObject(name=trigger["properties"]["textReference"], objectList=self.reference)
         if dest:
-            if "textColor" not in trigger["properties"]:
-                trigger["properties"]["textColor"] = "#00ff00"
-
-            if "textSize" not in trigger["properties"]:
-                trigger["properties"]["textSize"] = 16
-
             popUpText = self.checkObject(
                 {
                     "height": dest["height"],
-                    "text":
-                        {
-                            "color": trigger["properties"]["textColor"],
-                            "pixelsize": trigger["properties"]["textSize"],
-                            "text": trigger["properties"]["text"]
-                            },
+                    "text": { "text": trigger["properties"]["text"] },
                     "type": "popUpText",
                     "width": dest["width"],
                     "x": dest["x"],
                     "y": dest["y"]
                     })
+            
+            if "textColor" in trigger["properties"]:
+                popUpText["text"]["textColor"] = trigger["properties"]["textColor"]
+            if "textSize" in trigger["properties"]:
+                popUpText["text"]["pixelsize"] = trigger["properties"]["textSize"]
 
             self.addObject(popUpText, objectList=self.overlay)
         else:

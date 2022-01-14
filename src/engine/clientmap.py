@@ -32,7 +32,7 @@ class ClientMap(engine.map.Map):
             )
 
         # default values for optional keys in a textObject["text"] dict.
-        self.DEFAULTEXT = {
+        self.DEFAULTTEXT = {
             "bold": False,
             "color": "#00ff00",
             "fontfamily": None,
@@ -56,7 +56,8 @@ class ClientMap(engine.map.Map):
 
         # labelText defaults that differ from DEFAULTTEXT
         self.LABELTEXT = {
-            "halign": "center"
+            "halign": "center",
+            "valign": "top"
             }
 
         # sort object layers for right-down rendering
@@ -329,7 +330,7 @@ class ClientMap(engine.map.Map):
         maxWidth = textObject['width']
 
         # add text defaults if they are missing
-        for k, v in self.DEFAULTEXT.items():
+        for k, v in self.DEFAULTTEXT.items():
             if k not in textObject["text"]:
                 textObject["text"][k] = v
 
@@ -403,6 +404,9 @@ class ClientMap(engine.map.Map):
             destX = textObject["x"] + textObject['width'] / 2 - pixelWidth / 2
         elif textObject["text"]["halign"] == "right":
             destX = textObject["x"] + textObject["width"] - pixelWidth
+        else:
+            log(f'halign == {textObject["text"]["halign"]} is not supported', 'FAILURE')
+            exit()
 
         if textObject["text"]["valign"] == "top":
             destY = textObject["y"]
@@ -410,6 +414,9 @@ class ClientMap(engine.map.Map):
             destY = textObject["y"] + textObject["height"] / 2 - pixelHeight / 2
         elif textObject["text"]["valign"] == "bottom":
             destY = textObject["y"] + textObject["height"] - pixelHeight
+        else:
+            log(f'valign == {textObject["text"]["valign"]} is not supported', 'FAILURE')
+            exit()
 
         buffer = textObject["text"]["bgborderThickness"] + textObject["text"]["bgroundCorners"]
         self.blitRectObject(destImage,{
