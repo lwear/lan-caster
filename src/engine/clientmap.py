@@ -245,9 +245,9 @@ class ClientMap(engine.map.Map):
             elif "text" in object:
                 vu = self.blitTextObject(destImage, object)
             elif "ellipse" in object:
-                pass  # not yet supported.
+                vu = self.blitRoundObject(destImage, object)
             elif "point" in object:
-                pass  # not yet supported.
+                vu = self.blitRoundObject(destImage, object)
             else:  # this is a rect
                 vu = self.blitRectObject(destImage, object)
 
@@ -455,6 +455,27 @@ class ClientMap(engine.map.Map):
         pygame.draw.rect(image, borderColor, rect, borderThickness, roundCorners)
 
         destImage.blit(image, (rectObject['x'], rectObject['y']))
+
+        # rect does not have an end time so just sent back a long time from now
+        validUntil = sys.float_info.max
+        return validUntil
+
+    def blitRoundObject(self, destImage, roundObject, fillColor=(0, 0, 0, 0),
+                       borderColor=(0, 0, 0, 255), borderThickness=1):
+        width = roundObject['width']
+        height = roundObject['height']
+        # points are drawn as small circles
+        if width == 0 and height == 0:
+            width = height = 3
+
+        image = pygame.Surface((width, height), pygame.SRCALPHA, 32)
+        image = image.convert_alpha()
+
+        rect = pygame.Rect(0, 0, width, height)
+        pygame.draw.ellipse(image, fillColor, rect, 0)
+        pygame.draw.ellipse(image, borderColor, rect, borderThickness)
+
+        destImage.blit(image, (roundObject['x'], roundObject['y']))
 
         # rect does not have an end time so just sent back a long time from now
         validUntil = sys.float_info.max
