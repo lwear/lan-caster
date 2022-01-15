@@ -14,7 +14,7 @@ class ClientMap(engine.map.Map):
     The ClientMap class is responsible for rendering a map.
     """
 
-    ########################################################
+    #####################################################
     # INIT METHODS
     #####################################################
 
@@ -65,7 +65,7 @@ class ClientMap(engine.map.Map):
             if layer["type"] == "objectgroup":
                 geo.sortRightDown(layer["objects"], self.pixelWidth)
 
-        # allocate image for each layer (exclude sprites and overlay)
+        # allocate image for each layer (exclude hidden layers since we will never need the image)
         for layer in self.layers:
             if layer["name"] not in self.HIDELAYERS:
                 layer['image'] = pygame.Surface(
@@ -100,7 +100,7 @@ class ClientMap(engine.map.Map):
             self.topImageValidUntil = 0
 
     #####################################################
-    # DRAW METHODS
+    # BLIT MAP
     #####################################################
 
     def blitMap(self, destImage, sprites, overlay):
@@ -193,6 +193,10 @@ class ClientMap(engine.map.Map):
         destImage.blit(self.topImage, (0, 0))
         return self.topImageValidUntil
 
+    #####################################################
+    # BLIT LAYERS
+    #####################################################
+
     def blitLayer(self, destImage, layer):
         '''
         blit layer onto destImage.
@@ -262,6 +266,10 @@ class ClientMap(engine.map.Map):
         validUntil = tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'], tileObject)
 
         return validUntil
+
+    #####################################################
+    # BLIT TEXT
+    #####################################################
 
     def blitObjectListSpeachText(self, destImage, objectList):
         validUntil = sys.float_info.max
@@ -443,10 +451,12 @@ class ClientMap(engine.map.Map):
         validUntil = sys.float_info.max
         return validUntil
 
+    #####################################################
+    # DRAW OBJECTS
+    #####################################################
+
     def blitRectObject(self, destImage, rectObject, fillColor=(0, 0, 0, 0),
                        borderColor=(0, 0, 0, 255), borderThickness=1, roundCorners=0):
-        r = pygame.Rect(0, 0, rectObject['width'], rectObject['height'])
-
         image = pygame.Surface((rectObject['width'], rectObject['height']), pygame.SRCALPHA, 32)
         image = image.convert_alpha()
 
