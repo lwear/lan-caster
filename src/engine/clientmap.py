@@ -417,6 +417,15 @@ class ClientMap(engine.map.Map):
             exit()
 
         buffer = textObject["text"]["bgborderThickness"] + textObject["text"]["bgroundCorners"]
+        if destX - buffer < 0:
+            destX = buffer
+        if destX+ pixelWidth + buffer*2 > self.pixelWidth:
+            destX = self.pixelWidth - pixelWidth - buffer
+        if destY - buffer < 0:
+            destY = buffer
+        if destY+ pixelHeight + buffer*2 > self.pixelHeight:
+            destY = self.pixelHeight - pixelHeight - buffer
+
         self.blitRectObject(destImage,{
                 'x': destX - buffer,
                 'y': destY - buffer,
