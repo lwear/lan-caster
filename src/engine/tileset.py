@@ -49,16 +49,17 @@ class Tileset:
         self.tiles = {}
         if "tiles" in ts:
             for tile in ts["tiles"]:
+                '''
+                convert tiled object properties into an easier to access form.
+                from: {object["properties"][{name: name1, value: value1}],[...]}
+                to: {object["prop-name1"]=value1,...}
+
+                Note, duplicate property names is not supported!
+                '''
                 if "properties" in tile:
-                    '''
-                    convert tiled object properties into a more useful form.
-                    from: {{name: name1, value: value1},...}
-                    to: {name1: value1,...}
-                    '''
-                    newprops = {}
                     for prop in tile["properties"]:
-                        newprops[prop["name"]] = prop["value"]
-                    tile["properties"] = newprops
+                        tile["prop-" + prop["name"]] = prop["value"]
+                    del tile["properties"]
 
                 # compute total length of animation
                 if "animation" in tile:

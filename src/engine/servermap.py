@@ -166,8 +166,8 @@ class ServerMap(engine.map.Map):
         mapdoor assuming, it has same properties as a mapdoor.
         More interesting things can be done with use in sub-classes.
         '''
-        if "properties" in useable and "trigger" in useable["properties"]:
-            if useable["properties"]["trigger"] == "mapDoor":
+        if "prop-trigger" in useable:
+            if useable["prop-trigger"] == "mapDoor":
                 self.triggerMapDoor(useable, sprite)  # assume usable has the properties required by a mapDoor trigger
 
     ########################################################
@@ -216,10 +216,10 @@ class ServerMap(engine.map.Map):
     def triggerMapDoor(self, trigger, sprite):
         # Move sprite based on trigger. This may include moving to a new map.
 
-        # find destination based on object named trigger["properties"]["destReference"] on
-        # layer "reference" of map trigger["properties"]["destMapName"]
-        destMap = engine.server.SERVER.maps[trigger["properties"]["destMapName"]]
-        dest = self.findObject(name=trigger["properties"]["destReference"], objectList=destMap.reference)
+        # find destination based on object named trigger["prop-destReference"] on
+        # layer "reference" of map trigger["prop-destMapName"]
+        destMap = engine.server.SERVER.maps[trigger["prop-destMapName"]]
+        dest = self.findObject(name=trigger["prop-destReference"], objectList=destMap.reference)
         if dest:
             self.removeObject(sprite)
             destMap.setObjectLocationByAnchor(sprite, dest["anchorX"], dest["anchorY"])
@@ -227,7 +227,7 @@ class ServerMap(engine.map.Map):
             destMap.addObject(sprite)
         else:
             log(
-                f'Trigger destination not found = {trigger["properties"]["destMapName"]} - {trigger["properties"]["destReference"]}',
+                f'Trigger destination not found = {trigger["prop-destMapName"]} - {trigger["prop-destReference"]}',
                 "ERROR")
 
     ########################################################
@@ -240,27 +240,27 @@ class ServerMap(engine.map.Map):
         if sprite["type"] != "player":
             return  # only players can trigger pop up text.
 
-        # find dest based on object named trigger["properties"]["destReference"] on layer"reference"
-        dest = self.findObject(name=trigger["properties"]["textReference"], objectList=self.reference)
+        # find dest based on object named trigger["prop-destReference"] on layer"reference"
+        dest = self.findObject(name=trigger["prop-textReference"], objectList=self.reference)
         if dest:
             popUpText = self.checkObject(
                 {
                     "height": dest["height"],
-                    "text": { "text": trigger["properties"]["text"] },
+                    "text": { "text": trigger["prop-text"] },
                     "type": "popUpText",
                     "width": dest["width"],
                     "x": dest["x"],
                     "y": dest["y"]
                     })
             
-            if "textColor" in trigger["properties"]:
-                popUpText["text"]["textColor"] = trigger["properties"]["textColor"]
-            if "textSize" in trigger["properties"]:
-                popUpText["text"]["pixelsize"] = trigger["properties"]["textSize"]
-
+            for k,v in trigger.items():
+                if k.startswith("prop-text-"):
+                    textpropName = k[10:]
+                    popUpText["text"][textpropName] = trigger[k]
+            
             self.addObject(popUpText, objectList=self.overlay)
         else:
-            log(f'Could not find name=f{trigger["properties"]["textReference"]} on reference layer.', "WARNING")
+            log(f'Could not find name=f{trigger["prop-textReference"]} on reference layer.', "WARNING")
 
     def delPopUpText(self):
         # popUpText only lasts one step so it's to be added every step to be seen by player.

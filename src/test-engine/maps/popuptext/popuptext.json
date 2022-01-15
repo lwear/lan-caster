@@ -118,7 +118,7 @@
                          "value":"This is some 36 point popUpText"
                         }, 
                         {
-                         "name":"textSize",
+                         "name":"text-pixelsize",
                          "type":"int",
                          "value":36
                         }],

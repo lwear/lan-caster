@@ -67,14 +67,14 @@ class ClientTileset(engine.tileset.Tileset):
             '''
             # if tileObject is currently moving
             if 'speed' in tileObject:
-                property = 'moving'
+                property = 'prop-moving'
             else:
-                property = 'stationary'
+                property = 'prop-stationary'
             # add direction label to end of property, result will be something like 'stationaryLeft'.
             property = property + geo.angleLable(tileObject['direction'])
 
-            if property in self.tiles[tileNumber]["properties"]:
-                tileNumber = self.tiles[tileNumber]["properties"][property]
+            if property in self.tiles[tileNumber]:
+                tileNumber = self.tiles[tileNumber][property]
 
         # ANIMATED TILE
         # if tileNumber is animated then select the correct tileNumber based on time.

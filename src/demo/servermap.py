@@ -141,8 +141,8 @@ class ServerMap(engine.servermap.ServerMap):
         self.actionDrop(sprite)
         self.setObjectDest(
             throwable,
-            throwable["anchorX"] + throwarea["properties"]["deltaX"],
-            throwable["anchorY"] + throwarea["properties"]["deltaY"],
+            throwable["anchorX"] + throwarea["prop-deltaX"],
+            throwable["anchorY"] + throwarea["prop-deltaY"],
             self.THROWSPEED
             )
 
@@ -207,7 +207,7 @@ class ServerMap(engine.servermap.ServerMap):
     def triggerSpeedMultiplier(self, trigger, sprite):
         if "speed" in sprite and sprite["type"] != "saw":
             sprite["normalSpeed"] = sprite["speed"]
-            sprite["speed"] *= trigger["properties"]["speedMultiplier"]
+            sprite["speed"] *= trigger["prop-speedMultiplier"]
 
     ########################################################
     # STEP MOVE

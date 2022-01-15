@@ -132,15 +132,16 @@ class Map:
             if layer["type"] == "objectgroup":
                 for object in layer['objects']:
                     '''
-                    convert tiled object properties into a more useful form.
-                    from: {{name: name1, value: value1},...}
-                    to: {name1: value1,...}
+                    convert tiled object properties into an easier to access form.
+                    from: {object["properties"][{name: name1, value: value1}],[...]}
+                    to: {object["prop-name1"]=value1,...}
+
+                    Note, duplicate property names is not supported!
                     '''
                     if "properties" in object:
-                        newprops = {}
                         for prop in object["properties"]:
-                            newprops[prop["name"]] = prop["value"]
-                        object["properties"] = newprops
+                            object["prop-" + prop["name"]] = prop["value"]
+                        del object["properties"]
 
                     # if this is a tiled "tile object"
                     if "gid" in object:

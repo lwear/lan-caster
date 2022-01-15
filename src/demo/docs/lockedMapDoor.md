@@ -11,7 +11,7 @@ changes to opened and lets the user through.
 ## Requirements
 Locked Mapdoor requires an object on the trigger layer with:
 trigger['type'] == "lockedMapDoor".
-trigger["properties"]["unlocks"] == <name of holdable object that unlocks door>
+trigger["prop-unlocks"] == <name of holdable object that unlocks door>
 
 A layer with the graphic of only the locked door.
 A layer with the graphic of only the unlocked door.

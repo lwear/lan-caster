@@ -303,16 +303,15 @@ class ClientMap(engine.map.Map):
 
     def blitLabelText(self, destImage, object):
         validUntil = sys.float_info.max
-        # If properties -> labelText is present then render it under the tile. Normally used to display player names.
-        if "properties" in object and "labelText" in object["properties"]:
-
+        # If labelText is present then render it under the tile. Normally used to display player names.
+        if "labelText" in object:
             textObject = {
                     'x': object['x'] + object['width'] / 2 - 64,
                     'y': object['y'] + object['height'],
                     'width': 128,
                     'height': 0,
                     'text': {
-                        'text': object["properties"]["labelText"]
+                        'text': object["labelText"]
                         }
                     }
 
@@ -323,7 +322,6 @@ class ClientMap(engine.map.Map):
 
             validUntil = self.blitTextObject(destImage, textObject)
         return validUntil
-
 
     def blitTextObject(self, destImage, textObject):
         text = textObject["text"]["text"]

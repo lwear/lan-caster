@@ -23,7 +23,7 @@ class ServerMap(demo.servermap.ServerMap):
 
     def triggerLockedMapDoor(self, trigger, sprite):
         # if the sprite is holding the correct thing to unlock the door.
-        if "holding" in sprite and sprite["holding"]["name"] == trigger["properties"]["unlocks"]:
+        if "holding" in sprite and sprite["holding"]["name"] == trigger["prop-unlocks"]:
 
             # unlock door (change type to normal mapDoor)
             trigger["type"] = "mapDoor"

@@ -21,10 +21,8 @@ class Player():
         self.sprite["playerNumber"] = playerNumber
         self.sprite["mapName"] = mapName
 
-        # add playerDisplaName to sprite properties as "labelText" so client can display it.
-        if not "properties" in self.sprite:
-            self.sprite["properties"] = {}
-        self.sprite["properties"]["labelText"] = playerDisplayName
+        # add playerDisplaName to sprite as "labelText" so client can display it.
+        self.sprite["labelText"] = playerDisplayName
 
         # The changed displayName may be visible so we need to set this map to changed.
         engine.server.SERVER.maps[mapName].setMapChanged()

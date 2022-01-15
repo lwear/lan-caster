@@ -63,20 +63,20 @@ class ServerMap(demo.servermap.ServerMap):
         for saw in self.findObject(type="saw", returnAll=True):
             # if saw has stopped then reverse their direction.
             if "destX" not in saw:
-                if saw["properties"]["speed"] > 0:
+                if saw["prop-speed"] > 0:
                     self.setObjectDest(
                         saw,
-                        saw["properties"]["maxX"],
+                        saw["prop-maxX"],
                         saw["anchorY"],
-                        saw["properties"]["speed"])
+                        saw["prop-speed"])
                 else:
                     self.setObjectDest(
                         saw,
-                        saw["properties"]["minX"],
+                        saw["prop-minX"],
                         saw["anchorY"],
-                        saw["properties"]["speed"] * -1)
+                        saw["prop-speed"] * -1)
                 # change direction saw will go the next time is stops.
-                saw["properties"]["speed"] *= -1
+                saw["prop-speed"] *= -1
 
             # animate the spinning of the saw blade
             saw["gid"] += 1
@@ -100,7 +100,7 @@ class ServerMap(demo.servermap.ServerMap):
                 del saw["stopSawSpeed"]
 
     def triggerStopSaw(self, trigger, sprite):
-        saw = self.findObject(name=trigger["properties"]["sawName"])
+        saw = self.findObject(name=trigger["prop-sawName"])
         if "destX" in saw:
             saw["stopSawDestX"] = saw["destX"]
             saw["stopSawDestY"] = saw["destY"]

@@ -242,9 +242,8 @@ class Server:
         '''
         for ipport in self.players:
             sprite = self.players[ipport].sprite
-            if "holding" in sprite and "properties" in sprite["holding"] and \
-                    "endGame" in sprite["holding"]["properties"]:
-                if sprite["holding"]["properties"]["endGame"] == "won":
+            if "holding" in sprite and "prop-endGame" in sprite["holding"]:
+                if sprite["holding"]["prop-endGame"] == "won":
                     for ipport2 in self.players:
                         self.socket.sendMessage(
                             msg={'type': 'gameWon'},
@@ -253,7 +252,7 @@ class Server:
                             )
                     log("Game Won!!!")
                     quit()
-                elif sprite["holding"]["properties"]["endGame"] == "lost":
+                elif sprite["holding"]["prop-endGame"] == "lost":
                     for ipport2 in self.players:
                         self.socket.sendMessage(
                             msg={'type': 'gameLost'},
