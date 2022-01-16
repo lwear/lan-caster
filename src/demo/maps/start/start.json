@@ -313,39 +313,6 @@
                  "y":94
                 }, 
                 {
-                 "height":64.6666666666666,
-                 "id":20,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"deltaX",
-                         "type":"int",
-                         "value":-100
-                        }, 
-                        {
-                         "name":"deltaY",
-                         "type":"int",
-                         "value":0
-                        }],
-                 "rotation":0,
-                 "type":"throwArea",
-                 "visible":true,
-                 "width":30,
-                 "x":439.333333333333,
-                 "y":413.333333333333
-                }, 
-                {
-                 "height":21.3333333333333,
-                 "id":21,
-                 "name":"door2LockedText",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":172.666666666667,
-                 "x":256,
-                 "y":2
-                }, 
-                {
                  "height":95.3333333333333,
                  "id":22,
                  "name":"bridge2InBounds",
@@ -355,39 +322,6 @@
                  "width":30.6666666666667,
                  "x":96.6666666666667,
                  "y":335.333333333333
-                }, 
-                {
-                 "height":79.3333333333333,
-                 "id":24,
-                 "name":"",
-                 "rotation":0,
-                 "type":"bombArea",
-                 "visible":true,
-                 "width":93.3333333333334,
-                 "x":240.666666666666,
-                 "y":290
-                }, 
-                {
-                 "height":64.6667,
-                 "id":68,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"deltaX",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"deltaY",
-                         "type":"int",
-                         "value":0
-                        }],
-                 "rotation":0,
-                 "type":"throwArea",
-                 "visible":true,
-                 "width":30.6666333333333,
-                 "x":365.33335,
-                 "y":412.999983333333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -482,14 +416,9 @@
                          "value":"door2"
                         }, 
                         {
-                         "name":"text",
+                         "name":"lockedText",
                          "type":"string",
                          "value":"The door is locked."
-                        }, 
-                        {
-                         "name":"textReference",
-                         "type":"string",
-                         "value":"door2LockedText"
                         }, 
                         {
                          "name":"unlocks",
@@ -541,6 +470,61 @@
                  "width":64,
                  "x":274.333,
                  "y":396.5
+                }, 
+                {
+                 "height":79.3333,
+                 "id":72,
+                 "name":"",
+                 "rotation":0,
+                 "type":"bombArea",
+                 "visible":true,
+                 "width":93.3333,
+                 "x":240.667,
+                 "y":290
+                }, 
+                {
+                 "height":64.6667,
+                 "id":73,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"deltaX",
+                         "type":"int",
+                         "value":100
+                        }, 
+                        {
+                         "name":"deltaY",
+                         "type":"int",
+                         "value":0
+                        }],
+                 "rotation":0,
+                 "type":"throwArea",
+                 "visible":true,
+                 "width":30.6666,
+                 "x":365.333,
+                 "y":413
+                }, 
+                {
+                 "height":64.6667,
+                 "id":74,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"deltaX",
+                         "type":"int",
+                         "value":-100
+                        }, 
+                        {
+                         "name":"deltaY",
+                         "type":"int",
+                         "value":0
+                        }],
+                 "rotation":0,
+                 "type":"throwArea",
+                 "visible":true,
+                 "width":32.3622,
+                 "x":436.971,
+                 "y":413.333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -967,7 +951,7 @@
          "y":0
         }],
  "nextlayerid":25,
- "nextobjectid":72,
+ "nextobjectid":75,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

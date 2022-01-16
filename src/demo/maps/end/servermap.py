@@ -10,26 +10,21 @@ class ServerMap(demo.servermap.ServerMap):
     '''
 
     ########################################################
-    # ACTION DISPATCHER
-    ########################################################
-    def stepAction(self, sprite):
-        # if sprite has requested an action while holding the magic wand and standing in a magicArea.
-        if "action" in sprite and "holding" in sprite:
-            if sprite["holding"]["name"] == "magic wand" and self.findObject(
-                    x=sprite["anchorX"], y=sprite["anchorY"], type="magicArea", objectList=self.reference):
-                self.actionMagic(sprite)
-                del sprite["action"]
-                return
-
-        super().stepAction(sprite)
-
-    ########################################################
     # ACTION USE - LEVER
     ########################################################
 
-    def actionUse(self, sprite, useable):
-        # if the sprite is using the lever
-        if useable["name"] == "lever":
+    def triggerMagicArea(self, magicArea, sprite):
+        if "holding" in sprite and sprite["holding"]["name"] == "magic wand":
+            if "action" in sprite:
+                self.triggerUseable(self.findObject(name="lever"), sprite)
+            else:
+                sprite["actionText"] = f"Available Action: Cast spell with {sprite['holding']['name']}."
+        else:
+            sprite["speachText"] = f"This place seems magical but I feel like I need something to help cast a spell."
+
+
+    def triggerUseable(self, useable, sprite):
+        if useable["name"] == "lever" and "action" in sprite:
             start = engine.server.SERVER.maps["start"]
 
             # hard coding of gids is specific to this map and it's assignment of gids.
@@ -70,50 +65,8 @@ class ServerMap(demo.servermap.ServerMap):
                 self.addObject(
                     self.findObject(name="bridge3InBounds", objectList=self.reference),
                     objectList=self.inBounds)
-        else:
-            super().actionUse(sprite, useable)
 
-    ########################################################
-    # ACTION MAGIC (trigger lever if use magic wand in magic area)
-    ########################################################
-
-    def actionMagic(self, sprite):
-        # find the lever and use it.
-        lever = self.findObject(name="lever")
-        self.actionUse(sprite, lever)
-
-    ########################################################
-    # SPEACHTEXT
-    ########################################################
-
-    def stepSpeachText(self, sprite):
-        # these speach texts are only for players to say (not things like chickens, or keys)
-        if sprite["type"] == "player":
-            if "holding" not in sprite or sprite['holding']['name'] != "magic wand":
-                    magicArea = self.findObject(
-                        x=sprite["anchorX"], 
-                        y=sprite["anchorY"], 
-                        type="magicArea", 
-                        objectList=self.reference)
-                    if magicArea:
-                        sprite["speachText"] = f"This place seems magical but I feel like I need something to help cast a spell."
-                        return
-
-        super().stepSpeachText(sprite)
-
-    ########################################################
-    # ACTIONTEXT (custom text for using magic wand in magic area)
-    ########################################################
-
-    def stepActionText(self, sprite):
-        if sprite["type"] != "player":
-            return  # only players can see their action text.
-
-        # if sprite is holding the magic wand and standing in a magicArea.
-        if "holding" in sprite:
-            if sprite["holding"]["name"] == "magic wand" and self.findObject(
-                    x=sprite["anchorX"], y=sprite["anchorY"], type="magicArea", objectList=self.reference):
-                sprite["actionText"] = f"Available Action: Cast spell with {sprite['holding']['name']}."
-                return
-
-        super().stepActionText(sprite)
+            self.delSpriteAction(sprite)
+            
+        super().triggerUseable(useable, sprite)
+                

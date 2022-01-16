@@ -8,16 +8,6 @@ class ServerMap(demo.servermap.ServerMap):
     '''
 
     ########################################################
-    # TRIGGER DISPATCHER
-    ########################################################
-
-    def stepProcessTrigger(self, trigger, sprite):
-        if trigger['type'] == "lockedMapDoor":
-            self.triggerLockedMapDoor(trigger, sprite)
-        else:
-            super().stepProcessTrigger(trigger, sprite)
-
-    ########################################################
     # TRIGGER LOCKED MAPDOOR
     ########################################################
 
@@ -31,6 +21,5 @@ class ServerMap(demo.servermap.ServerMap):
             # hide door layer and show unlocked door layer.
             self.setLayerVisablitybyName("doorClosed", False)
             self.setLayerVisablitybyName("doorOpen", True)
-        else:
-            # while the door is locked function as a popUpText trigger.
-            self.triggerPopUpText(trigger, sprite)
+        elif sprite["type"] == "player":
+            sprite["speachText"] = trigger["prop-lockedText"]

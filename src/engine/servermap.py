@@ -59,6 +59,64 @@ class ServerMap(engine.map.Map):
             do something with sprite['gid']
     '''
 
+    def __init__(self, tilesets, mapDir):
+        super().__init__(tilesets, mapDir)
+
+        '''
+        some trigger types must be processed before others for a given sprite
+        lower number triggers will be processed before higher number triggers.
+        '''
+        '''
+        If an action has been requested then see if an action can be run.
+        Perform at most one action and then clear the action request.
+        Order of action priority is: pickup, use, drop.
+        If an action has been requested but none is available then just clear the action flag.
+        '''
+        self.TRIGGER_PRIORITY = {
+            'mapDoor': 1,  # do map door first since player may move and other tiggers should not run.
+            'default': 50,
+            'holdable': 60,
+            'useable': 61
+        }
+
+        # useable and holdable sprites need to be triggers so things can
+        # be done when another sprite interacts with them.
+        # copy (by refernece) sprites to triggers
+        for useable in self.findObject(type="useable", returnAll=True):
+            self.addObject(useable, objectList=self.triggers)
+        for holdable in self.findObject(type="holdable", returnAll=True):
+            self.addObject(holdable, objectList=self.triggers)
+
+    ########################################################
+    # SPRITE DATA METHODS
+    ########################################################
+    
+    def setSpriteAction(self, sprite):
+        # flag a sprite as waiting to perform an action.
+        # Normally set in a player sprite after the server receives an playerAction message from client.
+        sprite["action"] = True
+
+    def delSpriteAction(self, sprite):
+        # clear sprite flag from sprite.
+        if "action" in sprite:
+            del sprite["action"]
+
+    def setObjectDest(self, object, destX, destY, speed):
+        # flag a sprite as wanting to move to a new location at a specific speed.
+        # Normally set in a player sprite after the server receives a playerMove message from the client.
+        object["destX"] = destX
+        object["destY"] = destY
+        object["speed"] = speed
+
+    def stopObject(self, object):
+        # stop a sprite from moving
+        if "destX" in object:
+            del object["destX"]
+        if "destY" in object:
+            del object["destY"]
+        if "speed" in object:
+            del object["speed"]
+
     ########################################################
     # STEP DISPATCHER (Order of steps matters!)
     ########################################################
@@ -67,13 +125,9 @@ class ServerMap(engine.map.Map):
         # move the map forward one step in time.
 
         self.stepMapStart()
-        self.stepSprites()
-        self.stepMapEnd()
 
-    def stepSprites(self):
-        # process any actions that sprites are waiting to perform.
         for sprite in self.sprites:
-            self.stepAction(sprite)
+            self.stepSpriteStart(sprite)
 
         # process all triggers that have sprites inside them.
         for sprite in self.sprites:
@@ -83,16 +137,13 @@ class ServerMap(engine.map.Map):
         for sprite in self.sprites:
             self.stepMove(sprite)
 
-        # update sprite speachText
         for sprite in self.sprites:
-            self.stepSpeachText(sprite)
+            self.stepSpriteEnd(sprite)
 
-        # update sprite actionText
-        for sprite in self.sprites:
-            self.stepActionText(sprite)
+        self.stepMapEnd()
 
     ############################################################
-    # STEP MAP GENERAL PROCESSING
+    # STEP MAP START/END PROCESSING
     ############################################################
     def stepMapStart(self):
         # Logic needed at the start of the step that is not related to any specific sprite.
@@ -102,89 +153,49 @@ class ServerMap(engine.map.Map):
         # Logic needed at the end of the step that is not related to any specific sprite.
         pass
 
-    ########################################################
-    # ACTION DISPATCHER
-    ########################################################
+    ############################################################
+    # STEP SPRITE START/END PROCESSING
+    ############################################################
+    def stepSpriteStart(self, sprite):
+        # Logic needed at the start of the step for a sprite
 
-    def stepAction(self, sprite):
-        '''
-        If an action has been requested then see if an action can be run.
-        Perform at most one action and then clear the action request.
-        Order of action priority is: pickup, use, drop.
-        If an action has been requested but none is available then just clear the action flag.
-        '''
+        # remove speachText from last step
+        if "speachText" in sprite:
+            del sprite["speachText"]
 
-        # Pick Up
-        if "action" in sprite and "holding" not in sprite:
-            holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
-            if holdable:
-                self.actionPickUp(sprite, holdable)
-                self.delSpriteAction(sprite)
+        # remove actionText from last step
+        if "actionText" in sprite:
+            del sprite["actionText"]
 
-        # Use
-        if "action" in sprite:
-            useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
-            if useable:
-                self.actionUse(sprite, useable)
-                self.delSpriteAction(sprite)
+    def stepSpriteEnd(self, sprite):
+        # Logic needed at the end of the step for a sprite.
+        
+        # The Drop action is not a trigger so we need to do it here.
+        self.actionDrop(sprite)
+        
+        # if an action was requested by no possible action was found then just delete it.
+        self.delSpriteAction(sprite)
 
-        # Drop
-        if "action" in sprite and "holding" in sprite:
-            self.actionDrop(sprite)
-            self.delSpriteAction(sprite)
-
-        # No available action found.
-        if "action" in sprite:
-            # did not find any available action so just clear action request.
-            self.delSpriteAction(sprite)
-
-    def setSpriteAction(self, sprite):
-        # flag a sprite as waiting to perform an action.
-        # Normally set in a player sprite after the server receives an playerAction message from client.
-        sprite["action"] = True
-
-    def delSpriteAction(self, sprite):
-        # clear sprite flag from sprite.
-        del sprite["action"]
-
-    ########################################################
-    # ACTION - DROP
-    ########################################################
-
-    def actionPickUp(self, sprite, holdable):
-        # sprite picks up holdable
-        self.removeObject(holdable)
-        sprite["holding"] = holdable
-
-    ########################################################
-    # ACTION USE - MapDoor
-    ########################################################
-
-    def actionUse(self, sprite, useable):
-        '''
-        simple example that let's an object of type useable act as a
-        mapdoor assuming, it has same properties as a mapdoor.
-        More interesting things can be done with use in sub-classes.
-        '''
-        if "prop-trigger" in useable:
-            if useable["prop-trigger"] == "mapDoor":
-                self.triggerMapDoor(useable, sprite)  # assume usable has the properties required by a mapDoor trigger
-
-    ########################################################
-    # ACTION DROP
-    ########################################################
+        # remove actionText from non-players, since they will never see it.
+        if sprite["type"] != "player" and "actionText" in sprite:
+            del sprite["actionText"]
 
     def actionDrop(self, sprite):
-        # Assumes sprite is holding something
+        if "holding" in sprite:
+            if "action" in sprite:
+                # Remove object that sprite is holding.
+                dropping = sprite["holding"]
+                del sprite["holding"]
 
-        # Remove object that sprite is holding.
-        dropping = sprite["holding"]
-        del sprite["holding"]
+                # put the dropped item at the feet of the sprite that was holding it.
+                self.setObjectLocationByAnchor(dropping, sprite["anchorX"], sprite["anchorY"])
+                self.stopObject(dropping)
+                self.addObject(dropping, objectList=self.sprites)
+                self.addObject(dropping, objectList=self.triggers)
 
-        # put the dropped item at the feet of the sprite that was holding it.
-        self.setObjectLocationByAnchor(dropping, sprite["anchorX"], sprite["anchorY"])
-        self.stopObject(dropping)
-        self.addObject(dropping)
+                self.delSpriteAction(sprite)
+            elif "actionText" not in sprite:
+                sprite["actionText"] = f"Available Action: Drop {sprite['holding']['name']}"
 
     ########################################################
     # TRIGGER DISPATCHER
@@ -192,22 +203,66 @@ class ServerMap(engine.map.Map):
 
     def stepTrigger(self, sprite):
         # find all triggers that contain this sprite's anchor and process each one.
+        # make sure to exclude sprite since objects may be on the sprite and trigger layer at the same time.
         triggers = self.findObject(
             x=sprite["anchorX"],
             y=sprite["anchorY"],
             objectList=self.triggers,
             returnAll=True,
             exclude=sprite)
+        # if trigger is not in priority list then add it with the default priority
         for trigger in triggers:
-            self.stepProcessTrigger(trigger, sprite)
+            if trigger['type'] not in self.TRIGGER_PRIORITY:
+                self.TRIGGER_PRIORITY[trigger['type']] = self.TRIGGER_PRIORITY["default"]
+        # sort triggers by priority (lower first)
+        triggers.sort(key=lambda o: self.TRIGGER_PRIORITY[o["type"]])
+        # call each triggers method. e.g. trigger['mapDoor'] will call triggerMapDoor(trigger, sprite)
+        for trigger in triggers:
+            # generate the triggers method name
+            triggerMehodName = "trigger" + trigger['type'][:1].capitalize() + trigger['type'][1:]
+            # try to get the method object from self
+            triggerMethod = getattr(self, triggerMehodName, None)
+            # if getattr returned a valid callable method
+            if callable(triggerMethod):
+                stopOtherTriggers = triggerMethod(trigger, sprite)
+                if stopOtherTriggers:
+                    break # do not process any more triggers for this sprite on this step.
+            else:
+                log(f"ServerMap does not have method named {triggerMehodName} to call for trigger type {trigger['type']}.", "ERROR")
 
-    def stepProcessTrigger(self, trigger, sprite):
-        if trigger['type'] == "mapDoor":
-            self.triggerMapDoor(trigger, sprite)
-        elif trigger['type'] == "popUpText":
-            self.triggerPopUpText(trigger, sprite)
-        else:
-            log(f"Trigger is of unsupported type = {trigger['type']}", "ERROR")
+    ########################################################
+    # Trigger Holdable
+    ########################################################
+
+    def triggerHoldable(self, holdable, sprite):
+        if "holding" not in sprite:
+            if "action" in sprite:
+                # sprite picks up holdable
+                self.removeObject(holdable, objectList=self.sprites)
+                self.removeObject(holdable, objectList=self.triggers)
+                sprite["holding"] = holdable
+                self.delSpriteAction(sprite)
+            elif "actionText" not in sprite:
+                sprite["actionText"] = f"Available Action: Pick Up {holdable['name']}"
+
+    ########################################################
+    # Trigger Useable
+    ########################################################
+
+    def triggerUseable(self, useable, sprite):
+        '''
+        simple example that let's an object of type useable act as a
+        mapdoor assuming, it has same properties as a mapdoor.
+        More interesting things can be done with use in sub-classes.
+        '''
+        if "action" in sprite:
+            if "prop-trigger" in useable:
+                if useable["prop-trigger"] == "mapDoor":
+                    self.triggerMapDoor(useable, sprite)  # assume usable has the properties required by a mapDoor trigger
+            self.delSpriteAction(sprite)
+        elif "actionText" not in sprite:
+            sprite["actionText"] = f"Available Action: Use {useable['name']}"
+
 
     ########################################################
     # TRIGGER MAPDOOR
@@ -225,6 +280,7 @@ class ServerMap(engine.map.Map):
             destMap.setObjectLocationByAnchor(sprite, dest["anchorX"], dest["anchorY"])
             destMap.stopObject(sprite)
             destMap.addObject(sprite)
+            return True  # stop the processing of other triggers since sprite has moved.
         else:
             log(
                 f'Trigger destination not found = {trigger["prop-destMapName"]} - {trigger["prop-destReference"]}',
@@ -346,64 +402,3 @@ class ServerMap(engine.map.Map):
                 (geo.objectsContains(self.inBounds, x, y) or (not geo.objectsContains(self.outOfBounds, x, y))):
             return True
         return False
-
-    def setObjectDest(self, object, destX, destY, speed):
-        # flag a sprite as wanting to move to a new location at a specific speed.
-        # Normally set in a player sprite after the server receives a playerMove message from the client.
-        object["destX"] = destX
-        object["destY"] = destY
-        object["speed"] = speed
-
-    def stopObject(self, object):
-        # stop a sprite from moving
-        if "destX" in object:
-            del object["destX"]
-        if "destY" in object:
-            del object["destY"]
-        if "speed" in object:
-            del object["speed"]
-
-    ########################################################
-    # SPEACHTEXT
-    ########################################################
-
-    def stepSpeachText(self, sprite):
-        if "speachText" in sprite:
-            del sprite["speachText"]
-
-    ########################################################
-    # ACTIONTEXT
-    ########################################################
-
-    def stepActionText(self, sprite):
-        # if sprite is a player and inside another sprite that is either holdable or useable then
-        # add action text to the sprite that can inform the user of what action can be performed.
-
-        if sprite["type"] != "player":
-            return  # only players can see their action text.
-
-        holdable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="holdable", exclude=sprite)
-        useable = self.findObject(x=sprite["anchorX"], y=sprite["anchorY"], type="useable", exclude=sprite)
-
-        if "actionText" in sprite:
-            old = sprite["actionText"]
-        else:
-            old = False
-
-        # priority has to match the Use mechanic: Pick Up, Use, Drop
-        if holdable and not "holding" in sprite:
-            sprite["actionText"] = f"Available Action: Pick Up {holdable['name']}"
-        elif useable:
-            sprite["actionText"] = f"Available Action: Use {useable['name']}"
-        elif "holding" in sprite:
-            sprite["actionText"] = f"Available Action: Drop {sprite['holding']['name']}"
-        elif "actionText" in sprite:
-            del sprite["actionText"]
-
-        if "actionText" in sprite:
-            new = sprite["actionText"]
-        else:
-            new = False
-
-        if new != old:
-            self.setMapChanged()

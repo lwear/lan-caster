@@ -17,39 +17,6 @@ class ServerMap(demo.servermap.ServerMap):
     def __init__(self, tilesets, mapDir):
         super().__init__(tilesets, mapDir)
 
-        self.initSaws()
-
-    ############################################################
-    # STEP MAP GENERAL PROCESSING
-    ############################################################
-
-    def stepMapStart(self):
-        super().stepMapStart()
-
-        self.animateSaws()
-
-    def stepMapEnd(self):
-        self.delStopSaw()
-
-        super().stepMapEnd()
-
-    ########################################################
-    # TRIGGER DISPATCHER
-    ########################################################
-
-    def stepProcessTrigger(self, trigger, sprite):
-        if trigger['type'] == "saw":
-            self.triggerSaw(trigger, sprite)
-        elif trigger['type'] == "stopSaw":
-            self.triggerStopSaw(trigger, sprite)
-        else:
-            super().stepProcessTrigger(trigger, sprite)
-
-    ########################################################
-    # TRIGGER SAW
-    ########################################################
-
-    def initSaws(self):
         '''
         Saw Mechanic init.
         copy (by reference) all tile objects with name saw from the sprite layer to the trigger layer.
@@ -59,29 +26,48 @@ class ServerMap(demo.servermap.ServerMap):
         for saw in self.findObject(type="saw", returnAll=True):
             self.triggers.append(saw)
 
-    def animateSaws(self):
-        for saw in self.findObject(type="saw", returnAll=True):
-            # if saw has stopped then reverse their direction.
-            if "destX" not in saw:
-                if saw["prop-speed"] > 0:
-                    self.setObjectDest(
-                        saw,
-                        saw["prop-maxX"],
-                        saw["anchorY"],
-                        saw["prop-speed"])
-                else:
-                    self.setObjectDest(
-                        saw,
-                        saw["prop-minX"],
-                        saw["anchorY"],
-                        saw["prop-speed"] * -1)
-                # change direction saw will go the next time is stops.
-                saw["prop-speed"] *= -1
+    ############################################################
+    # STEP SPRITE START/END PROCESSING
+    ############################################################
+    def stepSpriteStart(self, sprite):
+        super().stepSpriteStart(sprite)
 
-            # animate the spinning of the saw blade
-            saw["gid"] += 1
-            if saw["gid"] == self.tsFirstGid["sawtrap"] + 5:
-                saw["gid"] = self.tsFirstGid["sawtrap"]
+        if sprite["type"] == "saw":
+            self.animateSaw(sprite)
+
+    def stepSpriteEnd(self, sprite):
+        if sprite["type"] == "saw":
+            self.delStopSaw(sprite)
+
+        super().stepSpriteEnd(sprite)
+
+
+    ########################################################
+    # TRIGGER SAW
+    ########################################################
+
+    def animateSaw(self, sprite):
+        # if saw has stopped then reverse direction.
+        if "destX" not in sprite:
+            if sprite["prop-speed"] > 0:
+                self.setObjectDest(
+                    sprite,
+                    sprite["prop-maxX"],
+                    sprite["anchorY"],
+                    sprite["prop-speed"])
+            else:
+                self.setObjectDest(
+                    sprite,
+                    sprite["prop-minX"],
+                    sprite["anchorY"],
+                    sprite["prop-speed"] * -1)
+            # change direction sprite will go the next time is stops.
+            sprite["prop-speed"] *= -1
+
+        # animate the spinning of the sprite blade
+        sprite["gid"] += 1
+        if sprite["gid"] == self.tsFirstGid["sawtrap"] + 5:
+            sprite["gid"] = self.tsFirstGid["sawtrap"]
 
     def triggerSaw(self, trigger, sprite):
         # For a saw hitting a sprite to work, the sprite had to previously had a respawn point set.
@@ -91,15 +77,16 @@ class ServerMap(demo.servermap.ServerMap):
     # TRIGGER STOP SAW
     ########################################################
 
-    def delStopSaw(self):
-        for saw in self.sprites:
-            if "stopSawDestX" in saw:
-                self.setObjectDest(saw, saw["stopSawDestX"], saw["stopSawDestY"], saw["stopSawSpeed"])
-                del saw["stopSawDestX"]
-                del saw["stopSawDestY"]
-                del saw["stopSawSpeed"]
+    def delStopSaw(self, sprite):
+        # assume sprite is a saw
+        if "stopSawDestX" in sprite:
+            self.setObjectDest(sprite, sprite["stopSawDestX"], sprite["stopSawDestY"], sprite["stopSawSpeed"])
+            del sprite["stopSawDestX"]
+            del sprite["stopSawDestY"]
+            del sprite["stopSawSpeed"]
 
     def triggerStopSaw(self, trigger, sprite):
+        # find saw that trigger stops
         saw = self.findObject(name=trigger["prop-sawName"])
         if "destX" in saw:
             saw["stopSawDestX"] = saw["destX"]

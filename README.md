@@ -221,6 +221,7 @@ servermap class
     client user input, set dest message
 
 LABELTEXT
+SPEACHTEXT
 ```
 
 * Demo overview
@@ -268,3 +269,5 @@ LABELTEXT
 
 
 ```
+
+Add trigger for layerVisibleToggle (defalutVisible can be added else taken from file.)

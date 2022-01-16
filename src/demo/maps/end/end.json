@@ -281,6 +281,72 @@
                  "width":52,
                  "x":517.333333333333,
                  "y":578.666683333333
+                }, 
+                {
+                 "height":28.9266,
+                 "id":57,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"deltaX",
+                         "type":"int",
+                         "value":0
+                        }, 
+                        {
+                         "name":"deltaY",
+                         "type":"int",
+                         "value":-100
+                        }],
+                 "rotation":0,
+                 "type":"throwArea",
+                 "visible":true,
+                 "width":30.6666,
+                 "x":64.6667,
+                 "y":337.74
+                }, 
+                {
+                 "height":22.6667,
+                 "id":58,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"deltaX",
+                         "type":"int",
+                         "value":0
+                        }, 
+                        {
+                         "name":"deltaY",
+                         "type":"int",
+                         "value":100
+                        }],
+                 "rotation":0,
+                 "type":"throwArea",
+                 "visible":true,
+                 "width":30.6666,
+                 "x":62.6667,
+                 "y":271
+                }, 
+                {
+                 "height":29.3334,
+                 "id":59,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"deltaX",
+                         "type":"int",
+                         "value":0
+                        }, 
+                        {
+                         "name":"deltaY",
+                         "type":"int",
+                         "value":100
+                        }],
+                 "rotation":0,
+                 "type":"magicArea",
+                 "visible":true,
+                 "width":64,
+                 "x":288,
+                 "y":352.333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -366,28 +432,6 @@
                  "y":566
                 }, 
                 {
-                 "height":29.3333666666667,
-                 "id":22,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"deltaX",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"deltaY",
-                         "type":"int",
-                         "value":100
-                        }],
-                 "rotation":0,
-                 "type":"magicArea",
-                 "visible":true,
-                 "width":63.9999666666667,
-                 "x":288.000016666667,
-                 "y":352.333316666667
-                }, 
-                {
                  "height":94.6666666666667,
                  "id":23,
                  "name":"bridge1InBounds",
@@ -396,7 +440,7 @@
                  "visible":true,
                  "width":32,
                  "x":64,
-                 "y":271.333333333333
+                 "y":269.768358950473
                 }, 
                 {
                  "height":32.6666666666667,
@@ -419,50 +463,6 @@
                  "width":91.3333333333333,
                  "x":291.333333333333,
                  "y":74
-                }, 
-                {
-                 "height":22.6667,
-                 "id":55,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"deltaX",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"deltaY",
-                         "type":"int",
-                         "value":100
-                        }],
-                 "rotation":0,
-                 "type":"throwArea",
-                 "visible":true,
-                 "width":30.6666,
-                 "x":62.6666999999999,
-                 "y":270.999983333333
-                }, 
-                {
-                 "height":22.6667,
-                 "id":56,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"deltaX",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"deltaY",
-                         "type":"int",
-                         "value":-100
-                        }],
-                 "rotation":0,
-                 "type":"throwArea",
-                 "visible":true,
-                 "width":30.6666,
-                 "x":64.6667,
-                 "y":343.999983333333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -763,12 +763,12 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }],
  "nextlayerid":19,
- "nextobjectid":57,
+ "nextobjectid":60,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",
