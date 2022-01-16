@@ -1,6 +1,7 @@
 from engine.log import log
 import engine.map
 import engine.geometry as geo
+import time
 
 import engine.server
 
@@ -79,6 +80,9 @@ class ServerMap(engine.map.Map):
             'useable': 61
         }
 
+        # list of object keys that support ValidUntil
+        self.OBJECT_VALIDUNTIL_KEYS = ("actionText", "speachText")
+
         # useable and holdable sprites need to be triggers so things can
         # be done when another sprite interacts with them.
         # copy (by refernece) sprites to triggers
@@ -122,8 +126,10 @@ class ServerMap(engine.map.Map):
     ########################################################
 
     def stepMap(self):
-        # move the map forward one step in time.
 
+        self.validUntil()
+
+        # move the map forward one step in time.
         self.stepMapStart()
 
         for sprite in self.sprites:
@@ -142,6 +148,35 @@ class ServerMap(engine.map.Map):
 
         self.stepMapEnd()
 
+    def validUntil(self):
+        # Set visibility to true/false for any layers with expired "showUntil"/"hideUntil".
+        # Also, remove any objects on object layers that have expired "validUntil".
+        currentTime = time.perf_counter()
+        for layer in self.layers:
+            if "showUntil" in layer and layer["showUntil"] < currentTime:
+                # hide the layer
+                self.setLayerVisablitybyName(layer["name"], False)
+                del layer["showUntil"]
+            if "hideUntil" in layer and layer["hideUntil"] < currentTime:
+                # show the layer
+                self.setLayerVisablitybyName(layer["name"], True)
+                del layer["hideUntil"]
+            if layer["type"] == "objectgroup":
+                for object in layer['objects']:
+                    if "validUntil" in object and object["validUntil"] < currentTime:
+                        # remove expired object
+                        self.removeObject(object)
+                    else:
+                        for key in self.OBJECT_VALIDUNTIL_KEYS:
+                            keyValidUntil = key + "ValidUntil"
+                            if keyValidUntil not in object or object[keyValidUntil] <= currentTime:
+                                # remove expired object[key+"ValidUntil"] and object[key]
+                                if keyValidUntil in object:
+                                    del object[keyValidUntil];
+                                if key in object:
+                                    del object[key]
+                                    self.setMapChanged()
+
     ############################################################
     # STEP MAP START/END PROCESSING
     ############################################################
@@ -158,14 +193,8 @@ class ServerMap(engine.map.Map):
     ############################################################
     def stepSpriteStart(self, sprite):
         # Logic needed at the start of the step for a sprite
-
-        # remove speachText from last step
-        if "speachText" in sprite:
-            del sprite["speachText"]
-
-        # remove actionText from last step
-        if "actionText" in sprite:
-            del sprite["actionText"]
+        pass
+        
 
     def stepSpriteEnd(self, sprite):
         # Logic needed at the end of the step for a sprite.

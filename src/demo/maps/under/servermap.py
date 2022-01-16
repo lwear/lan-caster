@@ -1,6 +1,6 @@
 from engine.log import log
 import demo.servermap
-
+import time
 
 class ServerMap(demo.servermap.ServerMap):
     '''
@@ -72,6 +72,8 @@ class ServerMap(demo.servermap.ServerMap):
     def triggerSaw(self, trigger, sprite):
         # For a saw hitting a sprite to work, the sprite had to previously had a respawn point set.
         self.setSpriteLocationByRespawnPoint(sprite)
+        sprite["speachText"] = "^$#$^*&$"
+        sprite["speachTextValidUntil"] = time.perf_counter() + 1  # show text for only 1 sec.
 
     ########################################################
     # TRIGGER STOP SAW
