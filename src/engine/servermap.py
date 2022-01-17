@@ -80,7 +80,7 @@ class ServerMap(engine.map.Map):
             'useable': 61
         }
 
-        # list of object keys that support ValidUntil
+        # list of object keys that support DelAfter
         self.OBJECT_VALIDUNTIL_KEYS = ("actionText", "speachText")
 
         # useable and holdable sprites need to be triggers so things can
@@ -127,7 +127,7 @@ class ServerMap(engine.map.Map):
 
     def stepMap(self):
 
-        self.validUntil()
+        self.stepTimers()
 
         # move the map forward one step in time.
         self.stepMapStart()
@@ -148,31 +148,35 @@ class ServerMap(engine.map.Map):
 
         self.stepMapEnd()
 
-    def validUntil(self):
-        # Set visibility to true/false for any layers with expired "showUntil"/"hideUntil".
-        # Also, remove any objects on object layers that have expired "validUntil".
+    ########################################################
+    # STEP TIMERS
+    ########################################################
+
+    def stepTimers(self):
+        # Set visibility to true/false for any layers with expired "hideAfter"/"showAfter".
+        # Also, del any objects on object layers that have expired "delAfter".
         currentTime = time.perf_counter()
         for layer in self.layers:
-            if "showUntil" in layer and layer["showUntil"] < currentTime:
+            if "hideAfter" in layer and layer["hideAfter"] > currentTime:
                 # hide the layer
                 self.setLayerVisablitybyName(layer["name"], False)
-                del layer["showUntil"]
-            if "hideUntil" in layer and layer["hideUntil"] < currentTime:
+                del layer["hideAfter"]
+            if "showAfter" in layer and layer["showAfter"] > currentTime:
                 # show the layer
                 self.setLayerVisablitybyName(layer["name"], True)
-                del layer["hideUntil"]
+                del layer["showAfter"]
             if layer["type"] == "objectgroup":
                 for object in layer['objects']:
-                    if "validUntil" in object and object["validUntil"] < currentTime:
+                    if "delAfter" in object and object["delAfter"] > currentTime:
                         # remove expired object
-                        self.removeObject(object)
+                        self.removeObject(object, objectList=layer["objects"])
                     else:
                         for key in self.OBJECT_VALIDUNTIL_KEYS:
-                            keyValidUntil = key + "ValidUntil"
-                            if keyValidUntil not in object or object[keyValidUntil] <= currentTime:
-                                # remove expired object[key+"ValidUntil"] and object[key]
-                                if keyValidUntil in object:
-                                    del object[keyValidUntil];
+                            keyDelAfter = key + "DelAfter"
+                            if keyDelAfter not in object or object[keyDelAfter] > currentTime:
+                                # remove expired object[key+"DelAfter"] and object[key]
+                                if keyDelAfter in object:
+                                    del object[keyDelAfter];
                                 if key in object:
                                     del object[key]
                                     self.setMapChanged()
