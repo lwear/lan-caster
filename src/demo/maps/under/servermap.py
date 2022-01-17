@@ -1,3 +1,4 @@
+import random
 from engine.log import log
 import demo.servermap
 import engine.time as time
@@ -72,8 +73,8 @@ class ServerMap(demo.servermap.ServerMap):
     def triggerSaw(self, trigger, sprite):
         # For a saw hitting a sprite to work, the sprite had to previously had a respawn point set.
         self.setSpriteLocationByRespawnPoint(sprite)
-        sprite["speachText"] = "^$#$^*&$"
-        sprite["speachTextValidUntil"] = time.perf_counter() + 1  # show text for only 1 sec.
+        text = random.choice(("ARRRH!", "*&^@%", "Bad Idea!", "Good thing I have public health care."))
+        self.setSpriteSpeechText(sprite, text, time.perf_counter() + 1)  # show text for only 1 sec.
 
     ########################################################
     # TRIGGER STOP SAW

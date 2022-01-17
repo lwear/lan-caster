@@ -80,9 +80,6 @@ class ServerMap(engine.map.Map):
             'useable': 61
         }
 
-        # list of object keys that support DelAfter
-        self.OBJECT_VALIDUNTIL_KEYS = ("actionText", "speachText")
-
         # useable and holdable sprites need to be triggers so things can
         # be done when another sprite interacts with them.
         # copy (by refernece) sprites to triggers
@@ -105,21 +102,47 @@ class ServerMap(engine.map.Map):
         if "action" in sprite:
             del sprite["action"]
 
-    def setSpriteDest(self, object, destX, destY, speed):
+    def setSpriteDest(self, sprite, destX, destY, speed):
         # flag a sprite as wanting to move to a new location at a specific speed.
         # Normally set in a player sprite after the server receives a playerMove message from the client.
-        object["destX"] = destX
-        object["destY"] = destY
-        object["speed"] = speed
+        sprite["destX"] = destX
+        sprite["destY"] = destY
+        sprite["speed"] = speed
 
-    def delSpriteDest(self, object):
+    def delSpriteDest(self, sprite):
         # stop a sprite from moving
-        if "destX" in object:
-            del object["destX"]
-        if "destY" in object:
-            del object["destY"]
-        if "speed" in object:
-            del object["speed"]
+        if "destX" in sprite:
+            del sprite["destX"]
+        if "destY" in sprite:
+            del sprite["destY"]
+        if "speed" in sprite:
+            del sprite["speed"]
+
+    def setSpriteActionText(self, sprite, actionText, actionTextDelAfter=0):
+        if sprite["type"] == "player" and "actionText" not in sprite:
+            sprite["actionText"] = actionText
+            if actionTextDelAfter > 0:
+                sprite["actionTextDelAfter"] = actionTextDelAfter
+
+    def delSpriteActionText(self, sprite):
+        if "actionText" in sprite:
+            if "actionTextDelAfter" not in sprite or ("actionTextDelAfter" in sprite and sprite["actionTextDelAfter"] < time.perf_counter()):
+                del sprite["actionText"]
+                if "actionTextDelAfter" in sprite:
+                    del sprite["actionTextDelAfter"]
+
+    def setSpriteSpeechText(self, sprite, speechText, speechTextDelAfter=0):
+        self.delSpriteSpeechText(sprite)
+        sprite["speechText"] = speechText
+        if speechTextDelAfter > 0:
+            sprite["speechTextDelAfter"] = speechTextDelAfter
+
+    def delSpriteSpeechText(self, sprite):
+        if "speechText" in sprite:
+            if "speechTextDelAfter" not in sprite or ("speechTextDelAfter" in sprite and sprite["speechTextDelAfter"] < time.perf_counter()):
+                del sprite["speechText"]
+                if "speechTextDelAfter" in sprite:
+                    del sprite["speechTextDelAfter"]
 
     ########################################################
     # STEP DISPATCHER (Order of steps matters!)
@@ -153,40 +176,41 @@ class ServerMap(engine.map.Map):
     ########################################################
 
     def stepTimers(self):
-        # Set visibility to true/false for any layers with expired "hideAfter"/"showAfter".
-        # Also, del any objects on object layers that have expired "delAfter".
-        currentTime = time.perf_counter()
         for layer in self.layers:
-            if "hideAfter" in layer and layer["hideAfter"] > currentTime:
-                # hide the layer
-                self.setLayerVisablitybyName(layer["name"], False)
-                del layer["hideAfter"]
-            if "showAfter" in layer and layer["showAfter"] > currentTime:
-                # show the layer
-                self.setLayerVisablitybyName(layer["name"], True)
-                del layer["showAfter"]
+            self.stepTimersLayer(layer)
             if layer["type"] == "objectgroup":
                 for object in layer['objects']:
-                    if "delAfter" in object and object["delAfter"] > currentTime:
-                        # remove expired object
-                        self.removeObject(object, objectList=layer["objects"])
-                    else:
-                        for key in self.OBJECT_VALIDUNTIL_KEYS:
-                            keyDelAfter = key + "DelAfter"
-                            if keyDelAfter not in object or object[keyDelAfter] > currentTime:
-                                # remove expired object[key+"DelAfter"] and object[key]
-                                if keyDelAfter in object:
-                                    del object[keyDelAfter];
-                                if key in object:
-                                    del object[key]
-                                    self.setMapChanged()
+                    self.stepTimersObject(object, layer['objects'])
+                    self.delSpriteActionText(object)
+                    self.delSpriteSpeechText(object)
+
+
+    def stepTimersLayer(self, layer):
+        # Set visibility to true/false for any layers with expired "hideAfter"/"showAfter".
+        currentTime = time.perf_counter()
+        if "hideAfter" in layer and layer["hideAfter"] < currentTime:
+            # hide the layer
+            self.setLayerVisablitybyName(layer["name"], False)
+            del layer["hideAfter"]
+        if "showAfter" in layer and layer["showAfter"] < currentTime:
+            # show the layer
+            self.setLayerVisablitybyName(layer["name"], True)
+            del layer["showAfter"]
+
+    def stepTimersObject(self, object, objectList):
+        # Also, del any objects on object layers that have expired "delAfter".
+        currentTime = time.perf_counter()
+        if "delAfter" in object and object["delAfter"] > currentTime:
+            # remove expired object
+            self.removeObject(object, objectList=layer["objects"])
+
 
     ############################################################
     # STEP MAP START/END PROCESSING
     ############################################################
     def stepMapStart(self):
         # Logic needed at the start of the step that is not related to any specific sprite.
-        self.delPopUpText()
+        pass
 
     def stepMapEnd(self):
         # Logic needed at the end of the step that is not related to any specific sprite.
@@ -209,9 +233,6 @@ class ServerMap(engine.map.Map):
         # if an action was requested by no possible action was found then just delete it.
         self.delSpriteAction(sprite)
 
-        # remove actionText from non-players, since they will never see it.
-        if sprite["type"] != "player" and "actionText" in sprite:
-            del sprite["actionText"]
 
     def actionDrop(self, sprite):
         if "holding" in sprite:
@@ -227,8 +248,8 @@ class ServerMap(engine.map.Map):
                 self.addObject(dropping, objectList=self.triggers)
 
                 self.delSpriteAction(sprite)
-            elif "actionText" not in sprite:
-                sprite["actionText"] = f"Available Action: Drop {sprite['holding']['name']}"
+            else:
+                self.setSpriteActionText(sprite, f"Available Action: Drop {sprite['holding']['name']}")
 
     ########################################################
     # TRIGGER DISPATCHER
@@ -243,18 +264,23 @@ class ServerMap(engine.map.Map):
             objectList=self.triggers,
             returnAll=True,
             exclude=sprite)
+
         # if trigger is not in priority list then add it with the default priority
         for trigger in triggers:
             if trigger['type'] not in self.TRIGGER_PRIORITY:
                 self.TRIGGER_PRIORITY[trigger['type']] = self.TRIGGER_PRIORITY["default"]
+
         # sort triggers by priority (lower first)
         triggers.sort(key=lambda o: self.TRIGGER_PRIORITY[o["type"]])
-        # call each triggers method. e.g. trigger['mapDoor'] will call triggerMapDoor(trigger, sprite)
+
+        # call each triggers method. e.g. trigger['type'] == 'mapDoor' will call triggerMapDoor(trigger, sprite)
         for trigger in triggers:
             # generate the triggers method name
             triggerMehodName = "trigger" + trigger['type'][:1].capitalize() + trigger['type'][1:]
+
             # try to get the method object from self
             triggerMethod = getattr(self, triggerMehodName, None)
+
             # if getattr returned a valid callable method
             if callable(triggerMethod):
                 stopOtherTriggers = triggerMethod(trigger, sprite)
@@ -275,8 +301,8 @@ class ServerMap(engine.map.Map):
                 self.removeObject(holdable, objectList=self.triggers)
                 sprite["holding"] = holdable
                 self.delSpriteAction(sprite)
-            elif "actionText" not in sprite:
-                sprite["actionText"] = f"Available Action: Pick Up {holdable['name']}"
+            else:
+                self.setSpriteActionText(sprite, f"Available Action: Pick Up {holdable['name']}")
 
     ########################################################
     # Trigger Useable
@@ -293,8 +319,8 @@ class ServerMap(engine.map.Map):
                 if useable["prop-trigger"] == "mapDoor":
                     self.triggerMapDoor(useable, sprite)  # assume usable has the properties required by a mapDoor trigger
             self.delSpriteAction(sprite)
-        elif "actionText" not in sprite:
-            sprite["actionText"] = f"Available Action: Use {useable['name']}"
+        else:
+            self.setSpriteActionText(sprite, f"Available Action: Use {useable['name']}")
 
 
     ########################################################
@@ -318,44 +344,6 @@ class ServerMap(engine.map.Map):
             log(
                 f'Trigger destination not found = {trigger["prop-destMapName"]} - {trigger["prop-destReference"]}',
                 "ERROR")
-
-    ########################################################
-    # TRIGGER POPUPTEXT
-    ########################################################
-
-    def triggerPopUpText(self, trigger, sprite):
-        # add text to overlay layer.
-
-        if sprite["type"] != "player":
-            return  # only players can trigger pop up text.
-
-        # find dest based on object named trigger["prop-destReference"] on layer"reference"
-        dest = self.findObject(name=trigger["prop-textReference"], objectList=self.reference)
-        if dest:
-            popUpText = self.checkObject(
-                {
-                    "height": dest["height"],
-                    "text": { "text": trigger["prop-text"] },
-                    "type": "popUpText",
-                    "width": dest["width"],
-                    "x": dest["x"],
-                    "y": dest["y"]
-                    })
-            
-            for k,v in trigger.items():
-                if k.startswith("prop-text-"):
-                    textpropName = k[10:]
-                    popUpText["text"][textpropName] = trigger[k]
-            
-            self.addObject(popUpText, objectList=self.overlay)
-        else:
-            log(f'Could not find name=f{trigger["prop-textReference"]} on reference layer.', "WARNING")
-
-    def delPopUpText(self):
-        # popUpText only lasts one step so it's to be added every step to be seen by player.
-        # Remove all popUpText. It will get added in the triggers below. see triggerPopUpText()
-        for popUpText in self.findObject(type="popUpText", objectList=self.overlay, returnAll=True):
-            self.removeObject(popUpText, objectList=self.overlay)
 
     ########################################################
     # STEP MOVE

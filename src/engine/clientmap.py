@@ -48,7 +48,7 @@ class ClientMap(engine.map.Map):
             }
 
 
-        # speachText defaults that differ from DEFAULTTEXT
+        # speechText defaults that differ from DEFAULTTEXT
         self.SPEACHTEXT = {
             "valign": "bottom",
             "halign": "center"
@@ -125,8 +125,8 @@ class ClientMap(engine.map.Map):
         # add the overlay layer from the server
         validUntil.append(self.blitObjectList(destImage, overlay))
 
-        # blit the sprite speach text from the server on top of everything.
-        validUntil.append(self.blitObjectListSpeachText(destImage, sprites))
+        # blit the sprite speech text from the server on top of everything.
+        validUntil.append(self.blitObjectListSpeechText(destImage, sprites))
 
         return min(validUntil)
 
@@ -271,25 +271,25 @@ class ClientMap(engine.map.Map):
     # BLIT TEXT
     #####################################################
 
-    def blitObjectListSpeachText(self, destImage, objectList):
+    def blitObjectListSpeechText(self, destImage, objectList):
         validUntil = sys.float_info.max
         vu = validUntil
         for object in objectList:
-            vu = self.blitSpeachText(destImage, object)
+            vu = self.blitSpeechText(destImage, object)
             validUntil = min(validUntil, vu)
         return validUntil
 
-    def blitSpeachText(self, destImage, object):
+    def blitSpeechText(self, destImage, object):
         validUntil = sys.float_info.max
-        # If speachText is present then render it above the tile.
-        if "speachText" in object:
+        # If speechText is present then render it above the tile.
+        if "speechText" in object:
             textObject = {
                     'x': object['x'] + object['width'] / 2 - 64,
                     'y': object['y'],
                     'width': 128,
                     'height': 0,
                     'text': {
-                        'text': object["speachText"]
+                        'text': object["speechText"]
                         }
                     }
 

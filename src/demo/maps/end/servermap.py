@@ -18,9 +18,9 @@ class ServerMap(demo.servermap.ServerMap):
             if "action" in sprite:
                 self.triggerUseable(self.findObject(name="lever"), sprite)
             else:
-                sprite["actionText"] = f"Available Action: Cast spell with {sprite['holding']['name']}."
-        else:
-            sprite["speachText"] = f"This place seems magical but I feel like I need something to help cast a spell."
+                self.setSpriteActionText(sprite, f"Available Action: Cast spell with {sprite['holding']['name']}.")
+        elif sprite["type"] == "player":
+            self.setSpriteSpeechText(sprite, f"This place seems magical but I feel like I need something to help cast a spell.")
 
 
     def triggerUseable(self, useable, sprite):

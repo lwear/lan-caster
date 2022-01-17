@@ -114,15 +114,15 @@ class ServerMap(engine.servermap.ServerMap):
                 under.triggers.append(under.ladder1MapDoor)
                 under.inBounds.append(under.ladder1InBounds)
                 self.delSpriteAction(sprite)
-            elif "actionText" not in sprite:
-                sprite["actionText"] = f"Available Action: Set off {sprite['holding']['name']}."
+            else:
+                self.setSpriteActionText(sprite, f"Available Action: Set off {sprite['holding']['name']}.")
         elif sprite["type"] == "player":  # if sprite is a player and is not holding bomb
             # if the rock has not been blown up yet.
             start = engine.server.SERVER.maps["start"]
             if start.getLayerVisablitybyName("rockOnStairs"):
-                sprite["speachText"] = f"Hmmm I wonder if I could blow this up?"
+                self.setSpriteSpeechText(sprite, f"Hmmm I wonder if I could blow this up?")
             else:
-                sprite["speachText"] = f"That done blow up good!"
+                self.setSpriteSpeechText(sprite, f"That done blow up good!")
 
     ########################################################
     # TRIGGER THROWAREA
@@ -141,10 +141,10 @@ class ServerMap(engine.servermap.ServerMap):
                     self.THROWSPEED
                     )
                 self.delSpriteAction(sprite)
-            elif "actionText" not in sprite:
-                sprite["actionText"] = f"Available Action: Throw {sprite['holding']['name']}"
+            else:
+                self.setSpriteActionText(sprite, f"Available Action: Throw {sprite['holding']['name']}")
         elif sprite["type"] == "player":
-            sprite["speachText"] = f"I could throw something from here."
+            self.setSpriteSpeechText(sprite, f"I could throw something from here.")
 
     ########################################################
     # TRIGGER SAVE RESPAWN POINT

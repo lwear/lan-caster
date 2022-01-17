@@ -22,4 +22,4 @@ class ServerMap(demo.servermap.ServerMap):
             self.setLayerVisablitybyName("doorClosed", False)
             self.setLayerVisablitybyName("doorOpen", True)
         elif sprite["type"] == "player":
-            sprite["speachText"] = trigger["prop-lockedText"]
+            self.setSpriteSpeechText(sprite, trigger["prop-lockedText"])
