@@ -35,7 +35,7 @@ class Messages:
         self.messageDefinitions = {
             # msg type             other required msg fields
             'joinRequest': {'game': ['str', 1, 16], 'playerDisplayName': ['str', 1, 16]},
-            'joinReply': {'playerNumber': 'int'},
+            'joinReply': {'playerNumber': 'int', 'serverSec': 'float'},
             'gameWon': {},
             'gameLost': {},
             'playerMove': {'destX': 'int', 'destY': 'int'},

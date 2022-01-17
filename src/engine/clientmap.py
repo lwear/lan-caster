@@ -1,6 +1,6 @@
 import pygame
 from pygame.locals import *
-import time
+import engine.time as time
 import os
 import sys
 

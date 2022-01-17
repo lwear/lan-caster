@@ -1,6 +1,6 @@
 import socket
 import random
-import time
+import engine.time as time
 import re
 import argparse
 import msgpack

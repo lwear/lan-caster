@@ -1,7 +1,7 @@
 from engine.log import log
 import engine.map
 import engine.geometry as geo
-import time
+import engine.time as time
 
 import engine.server
 

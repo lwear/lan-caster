@@ -1,5 +1,5 @@
 import signal
-import time
+import engine.time as time
 import random
 import os
 
@@ -171,7 +171,11 @@ class Server:
 
         if result == "OK":
             # send the new client back their player number
-            return {'type': "joinReply", 'playerNumber': self.players[ipport].sprite["playerNumber"]}
+            return {
+                'type': "joinReply", 
+                'playerNumber': self.players[ipport].sprite["playerNumber"],
+                'serverSec': time.perf_counter()
+                }
         else:
             return {'type': 'Error', 'result': result}
 

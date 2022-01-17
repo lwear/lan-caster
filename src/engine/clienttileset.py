@@ -1,5 +1,5 @@
 import pygame
-import time
+import engine.time as time
 import sys
 
 import engine.log

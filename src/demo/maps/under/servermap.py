@@ -1,6 +1,6 @@
 from engine.log import log
 import demo.servermap
-import time
+import engine.time as time
 
 class ServerMap(demo.servermap.ServerMap):
     '''

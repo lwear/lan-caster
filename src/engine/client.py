@@ -1,5 +1,5 @@
 import signal
-import time
+import engine.time as time
 
 import pygame
 from pygame.locals import *
@@ -91,6 +91,8 @@ class Client:
                 log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
                 quit()
             self.playerNumber = reply["playerNumber"]
+            # set the time so client engine.time.perf_counter() will return secs in sync (very close) to server.
+            time.set(reply['serverSec'])
         except engine.network.SocketException as e:
             log("Is server running at" + serverIP + ":" + str(serverPort) + "?")
             log(str(e), "FAILURE")
