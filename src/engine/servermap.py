@@ -105,14 +105,14 @@ class ServerMap(engine.map.Map):
         if "action" in sprite:
             del sprite["action"]
 
-    def setObjectDest(self, object, destX, destY, speed):
+    def setSpriteDest(self, object, destX, destY, speed):
         # flag a sprite as wanting to move to a new location at a specific speed.
         # Normally set in a player sprite after the server receives a playerMove message from the client.
         object["destX"] = destX
         object["destY"] = destY
         object["speed"] = speed
 
-    def stopObject(self, object):
+    def delSpriteDest(self, object):
         # stop a sprite from moving
         if "destX" in object:
             del object["destX"]
@@ -222,7 +222,7 @@ class ServerMap(engine.map.Map):
 
                 # put the dropped item at the feet of the sprite that was holding it.
                 self.setObjectLocationByAnchor(dropping, sprite["anchorX"], sprite["anchorY"])
-                self.stopObject(dropping)
+                self.delSpriteDest(dropping)
                 self.addObject(dropping, objectList=self.sprites)
                 self.addObject(dropping, objectList=self.triggers)
 
@@ -311,7 +311,7 @@ class ServerMap(engine.map.Map):
         if dest:
             self.removeObject(sprite)
             destMap.setObjectLocationByAnchor(sprite, dest["anchorX"], dest["anchorY"])
-            destMap.stopObject(sprite)
+            destMap.delSpriteDest(sprite)
             destMap.addObject(sprite)
             return True  # stop the processing of other triggers since sprite has moved.
         else:
@@ -401,16 +401,16 @@ class ServerMap(engine.map.Map):
             if inBounds:
                 if geo.distance(sprite["anchorX"], sprite["anchorY"], newAnchorX, newAnchorY) < 0.1:
                     # if sprite is only going to move less than 0.1 pixel then stop it.
-                    self.stopObject(sprite)
+                    self.delSpriteDest(sprite)
                 elif geo.distance(newAnchorX, newAnchorY, sprite["destX"], sprite["destY"]) < stepSpeed:
                     # if sprite is close to destination then stop it.
-                    self.stopObject(sprite)
+                    self.delSpriteDest(sprite)
 
                 # move sprite to new location
                 self.setObjectLocationByAnchor(sprite, newAnchorX, newAnchorY)
             else:
                 # sprite cannot move.
-                self.stopObject(sprite)
+                self.delSpriteDest(sprite)
 
     def objectInBounds(self, object, x=False, y=False):
         '''

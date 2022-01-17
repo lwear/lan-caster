@@ -130,7 +130,7 @@ class Server:
             sprite = self.players[ipport].sprite
             map = self.maps[sprite["mapName"]]
             if msg['type'] == 'playerMove':
-                map.setObjectDest(sprite, msg["destX"], msg["destY"], self.players[ipport].speed)
+                map.setSpriteDest(sprite, msg["destX"], msg["destY"], self.players[ipport].speed)
                 reply = False
             elif msg['type'] == 'playerAction':
                 map.setSpriteAction(sprite)

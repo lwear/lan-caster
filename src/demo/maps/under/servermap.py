@@ -50,13 +50,13 @@ class ServerMap(demo.servermap.ServerMap):
         # if saw has stopped then reverse direction.
         if "destX" not in sprite:
             if sprite["prop-speed"] > 0:
-                self.setObjectDest(
+                self.setSpriteDest(
                     sprite,
                     sprite["prop-maxX"],
                     sprite["anchorY"],
                     sprite["prop-speed"])
             else:
-                self.setObjectDest(
+                self.setSpriteDest(
                     sprite,
                     sprite["prop-minX"],
                     sprite["anchorY"],
@@ -82,7 +82,7 @@ class ServerMap(demo.servermap.ServerMap):
     def delStopSaw(self, sprite):
         # assume sprite is a saw
         if "stopSawDestX" in sprite:
-            self.setObjectDest(sprite, sprite["stopSawDestX"], sprite["stopSawDestY"], sprite["stopSawSpeed"])
+            self.setSpriteDest(sprite, sprite["stopSawDestX"], sprite["stopSawDestY"], sprite["stopSawSpeed"])
             del sprite["stopSawDestX"]
             del sprite["stopSawDestY"]
             del sprite["stopSawSpeed"]
@@ -94,4 +94,4 @@ class ServerMap(demo.servermap.ServerMap):
             saw["stopSawDestX"] = saw["destX"]
             saw["stopSawDestY"] = saw["destY"]
             saw["stopSawSpeed"] = saw["speed"]
-            self.stopObject(saw)
+            self.delSpriteDest(saw)

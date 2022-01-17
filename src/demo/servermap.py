@@ -65,9 +65,9 @@ class ServerMap(engine.servermap.ServerMap):
                         player = p
                         playerDistance = pDis
                 if player and playerDistance > 50:
-                    self.setObjectDest(sprite, player["anchorX"], player["anchorY"], self.CHICKENSPEED)
+                    self.setSpriteDest(sprite, player["anchorX"], player["anchorY"], self.CHICKENSPEED)
                 else:
-                    self.stopObject(sprite)
+                    self.delSpriteDest(sprite)
 
     ########################################################
     # TRIGGER BOMBAREA
@@ -134,7 +134,7 @@ class ServerMap(engine.servermap.ServerMap):
             if "action" in sprite:
                 throwable = sprite["holding"]
                 self.actionDrop(sprite)
-                self.setObjectDest(
+                self.setSpriteDest(
                     throwable,
                     throwable["anchorX"] + throwArea["prop-deltaX"],
                     throwable["anchorY"] + throwArea["prop-deltaY"],
@@ -168,7 +168,7 @@ class ServerMap(engine.servermap.ServerMap):
                 self.removeObject(sprite)
                 destMap.addObject(sprite)
             destMap.setObjectLocationByAnchor(sprite, sprite["respawnX"], sprite["respawnY"])
-            destMap.stopObject(sprite)
+            destMap.delSpriteDest(sprite)
         # else this object never went through a respawn point. Perhaps it is something the player carried into over
         # the respawn area. Let's hope it's OK to leave it where it is.
 
