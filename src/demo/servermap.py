@@ -10,7 +10,6 @@ The objects in object layers have the following keys added for this subclass:
 dynamic keys (only in object while in use): normalSpeed, respawnX, respawnY, respawnMapName
 '''
 
-
 class ServerMap(engine.servermap.ServerMap):
     '''
     This class implements the Chicken, Throw, SpeedMultiplier (mud), Bomb, and RespawnPoint mechanics.
@@ -91,7 +90,6 @@ class ServerMap(engine.servermap.ServerMap):
                     self.THROWSPEED
                     )
                 self.delSpriteAction(sprite)
-                log(throwable)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Throw {sprite['holding']['name']}")
         elif sprite["type"] == "player":

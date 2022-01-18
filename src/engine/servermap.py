@@ -7,7 +7,7 @@ import engine.server
 
 
 class ServerMap(engine.stepmap.StepMap):
-     '''
+    '''
     The ServerMap class is responsible for implementing several basic game mechanics.
     '''
 
@@ -15,7 +15,7 @@ class ServerMap(engine.stepmap.StepMap):
     # MECHANIC TEMPLATE
     ########################################################
     '''
-    
+
     def initName():
         pass
 
