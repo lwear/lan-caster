@@ -12,19 +12,19 @@ def loadModule(moduleName, game, mapName=False):
 
     fortext = ""
     if mapName:
-        fortext = f" for map {mapName}"
+        fortext = f"Map {mapName}: "
 
     if game and mapName and os.path.isfile(f"src/{game}/maps/{mapName}/{moduleName}.py"):
-        log(f"Importing {game}.maps.{mapName}.{moduleName}{fortext}.")
+        log(f"{fortext}Importing {game}.maps.{mapName}.{moduleName}")
         module = importlib.import_module(f"{game}.maps.{mapName}.{moduleName}")
     elif game and os.path.isfile(f"src/{game}/{moduleName}.py"):
-        log(f"Importing {game}.{moduleName}{fortext}.")
+        log(f"{fortext}Importing {game}.{moduleName}")
         module = importlib.import_module(f"{game}.{moduleName}")
     elif os.path.isfile(f"src/engine/{moduleName}.py"):
-        log(f"Importing engine.{moduleName}{fortext}.")
+        log(f"{fortext}Importing engine.{moduleName}")
         module = importlib.import_module(f"engine.{moduleName}")
     else:
-        log(f"Module name {moduleName} not found{fortext}.", "FAILURE")
+        log(f"{fortext}Module name {moduleName} not found.", "FAILURE")
         exit()
 
     return module

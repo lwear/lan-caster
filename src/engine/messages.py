@@ -38,14 +38,13 @@ class Messages:
             'joinReply': {'playerNumber': 'int', 'serverSec': 'float'},
             'gameWon': {},
             'gameLost': {},
-            'playerMove': {'destX': 'int', 'destY': 'int'},
+            'playerMove': {'moveDestX': 'int', 'moveDestY': 'int'},
             'playerAction': {},
             'step': {
                 'gameSec': 'float',
                 'mapName': 'str',
                 'layerVisabilityMask': 'int',
-                'sprites': 'list',
-                'overlay': 'list'
+                'sprites': 'list'
                 },
             'Error': {'result': 'str'}
             }

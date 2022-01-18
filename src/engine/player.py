@@ -15,7 +15,7 @@ class Player():
     def __init__(self, sprite, ip, port, playerNumber, playerDisplayName, mapName):
         self.ip = ip
         self.port = port
-        self.speed = 120  # pixels per second.
+        self.moveSpeed = 120  # pixels per second.
 
         self.sprite = sprite
         self.sprite["playerNumber"] = playerNumber

@@ -189,7 +189,7 @@ class Client:
             map.setLayerVisablityMask(self.step["layerVisabilityMask"])
 
             # draw the map.
-            self.screenValidUntil = map.blitMap(self.screen, self.step["sprites"], self.step["overlay"])
+            self.screenValidUntil = map.blitMap(self.screen, self.step["sprites"])
 
             # add on the player and gui specific items.
             self.updateInterface()
@@ -243,5 +243,5 @@ class Client:
             if event.key == pygame.K_SPACE:
                 self.socket.sendMessage({'type': 'playerAction'})
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            destX, destY = pygame.mouse.get_pos()
-            self.socket.sendMessage({'type': 'playerMove', 'destX': destX, 'destY': destY})
+            moveDestX, moveDestY = pygame.mouse.get_pos()
+            self.socket.sendMessage({'type': 'playerMove', 'moveDestX': moveDestX, 'moveDestY': moveDestY})

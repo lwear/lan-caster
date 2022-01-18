@@ -16,10 +16,13 @@ class ServerMap(demo.servermap.ServerMap):
         if "holding" in sprite and sprite["holding"]["name"] == trigger["prop-unlocks"]:
 
             # unlock door (change type to normal mapDoor)
+            # sprite will most likely trigger the mapDoor on the next step.
             trigger["type"] = "mapDoor"
 
-            # hide door layer and show unlocked door layer.
-            self.setLayerVisablitybyName("doorClosed", False)
-            self.setLayerVisablitybyName("doorOpen", True)
+            # hide door locked layer and show unlocked door layer.
+            if trigger["prop-hideLayer"]:
+                self.setLayerVisablitybyName(trigger["prop-hideLayer"], False)
+            if trigger["prop-showLayer"]:
+                self.setLayerVisablitybyName(trigger["prop-showLayer"], True)
         elif sprite["type"] == "player":
             self.setSpriteSpeechText(sprite, trigger["prop-lockedText"])

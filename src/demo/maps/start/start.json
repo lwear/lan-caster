@@ -416,9 +416,19 @@
                          "value":"door2"
                         }, 
                         {
+                         "name":"hideLayer",
+                         "type":"string",
+                         "value":"doorClosed"
+                        }, 
+                        {
                          "name":"lockedText",
                          "type":"string",
                          "value":"The door is locked."
+                        }, 
+                        {
+                         "name":"showLayer",
+                         "type":"string",
+                         "value":"doorOpen"
                         }, 
                         {
                          "name":"unlocks",

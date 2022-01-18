@@ -175,7 +175,6 @@ tile layers
 object layers
 well defined (known or spcial) layers
   sprites
-  overlay
 layer order (using black layer to help)
 ```
 

@@ -130,7 +130,7 @@ class Server:
             sprite = self.players[ipport].sprite
             map = self.maps[sprite["mapName"]]
             if msg['type'] == 'playerMove':
-                map.setSpriteDest(sprite, msg["destX"], msg["destY"], self.players[ipport].speed)
+                map.setSpriteDest(sprite, msg["moveDestX"], msg["moveDestY"], self.players[ipport].moveSpeed)
                 reply = False
             elif msg['type'] == 'playerAction':
                 map.setSpriteAction(sprite)
@@ -191,8 +191,7 @@ class Server:
                     'gameSec': time.perf_counter(),
                     'mapName': mapName,
                     'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
-                    'sprites': self.maps[mapName].sprites,
-                    'overlay': self.maps[mapName].overlay
+                    'sprites': self.maps[mapName].sprites
                     },
                     destinationIP=self.players[ipport].ip,
                     destinationPort=self.players[ipport].port

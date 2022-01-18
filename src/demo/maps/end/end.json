@@ -109,7 +109,7 @@
                  "id":5,
                  "name":"lever",
                  "rotation":0,
-                 "type":"useable",
+                 "type":"lever",
                  "visible":true,
                  "width":64,
                  "x":289,

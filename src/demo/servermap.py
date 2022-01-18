@@ -1,3 +1,6 @@
+import random
+
+import engine.time as time
 from engine.log import log
 import engine.geometry as geo
 import engine.servermap
@@ -14,63 +17,7 @@ class ServerMap(engine.servermap.ServerMap):
     '''
 
     ########################################################
-    # INIT
-    ########################################################
-
-    def __init__(self, tilesets, mapDir):
-        super().__init__(tilesets, mapDir)
-
-        self.CHICKENSPEED = 10
-        self.THROWSPEED = 360
-        self.initBomb()
-
-    ############################################################
-    # STEP MAP START/END PROCESSING
-    ############################################################
-
-    def stepMapStart(self):
-        super().stepMapStart()
-
-    def stepMapEnd(self):
-        super().stepMapEnd()
-
-    ############################################################
-    # STEP SPRITE START/END PROCESSING
-    ############################################################
-    def stepSpriteStart(self, sprite):
-        super().stepSpriteStart(sprite)
-        self.animateChicken(sprite)
-
-    def stepSpriteEnd(self, sprite):
-        self.delSpeedMultiplier(sprite)
-        super().stepSpriteEnd(sprite)
-        
-
-    ########################################################
-    # CHICKENS
-    ########################################################
-
-    def animateChicken(self, sprite):
-        if sprite["name"] == "chicken":
-            # if this chicken is not being thrown right now then have it walk to closest player.
-            # we know something is being thrown because it's speed will be self.THROWSPEED
-            if ("speed" not in sprite or (
-                    "speed" in sprite and sprite["speed"] != self.THROWSPEED)):
-                player = False
-                playerDistance = 0
-                # find the closet player.
-                for p in self.findObject(type="player", returnAll=True):
-                    pDis = geo.distance(sprite["anchorX"], sprite["anchorY"], p["anchorX"], p["anchorY"])
-                    if pDis < playerDistance or player == False:
-                        player = p
-                        playerDistance = pDis
-                if player and playerDistance > 50:
-                    self.setSpriteDest(sprite, player["anchorX"], player["anchorY"], self.CHICKENSPEED)
-                else:
-                    self.delSpriteDest(sprite)
-
-    ########################################################
-    # TRIGGER BOMBAREA
+    # BOMBAREA (uses action)
     ########################################################
 
     def initBomb(self):
@@ -81,10 +28,10 @@ class ServerMap(engine.servermap.ServerMap):
         It will get put back when the bomb is set off. see actionBomb()
         '''
         if self.name == "start" or self.name == "under":
-            self.ladder1MapDoor = self.findObject(name="ladder1MapDoor", objectList=self.triggers)
-            self.removeObject(self.ladder1MapDoor, objectList=self.triggers)
-            self.ladder1InBounds = self.findObject(name="ladder1InBounds", objectList=self.inBounds)
-            self.removeObject(self.ladder1InBounds, objectList=self.inBounds)
+            self.bombLadder1MapDoor = self.findObject(name="ladder1MapDoor", objectList=self.triggers)
+            self.removeObject(self.bombLadder1MapDoor, objectList=self.triggers)
+            self.bombLadder1InBounds = self.findObject(name="ladder1InBounds", objectList=self.inBounds)
+            self.removeObject(self.bombLadder1InBounds, objectList=self.inBounds)
 
     def triggerBombArea(self, bombArea, sprite):
         # if we are holding a bomb in a bombArea then set it off.
@@ -105,14 +52,14 @@ class ServerMap(engine.servermap.ServerMap):
                 start.setLayerVisablitybyName("rockOnStairs", False)
                 start.setLayerVisablitybyName("rockOnStairs2", False)
                 start.setLayerVisablitybyName("rockOffStairs", True)
-                start.triggers.append(start.ladder1MapDoor)
-                start.inBounds.append(start.ladder1InBounds)
+                start.triggers.append(start.bombLadder1MapDoor)
+                start.inBounds.append(start.bombLadder1InBounds)
 
                 # update under map to after the bomb has done off.
                 under.setLayerVisablitybyName("rockOnStairs", False)
                 under.setLayerVisablitybyName("rockOffStairs", True)
-                under.triggers.append(under.ladder1MapDoor)
-                under.inBounds.append(under.ladder1InBounds)
+                under.triggers.append(under.bombLadder1MapDoor)
+                under.inBounds.append(under.bombLadder1InBounds)
                 self.delSpriteAction(sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Set off {sprite['holding']['name']}.")
@@ -125,15 +72,18 @@ class ServerMap(engine.servermap.ServerMap):
                 self.setSpriteSpeechText(sprite, f"That done blow up good!")
 
     ########################################################
-    # TRIGGER THROWAREA
+    # THROWAREA (uses action)
     ########################################################
+
+    def initThrowArea(self):
+        self.THROWSPEED = 360
 
     def triggerThrowArea(self, throwArea, sprite):
         # if we are holding anything while in a throwArea then throw it.
         if "holding" in sprite:
             if "action" in sprite:
                 throwable = sprite["holding"]
-                self.actionDrop(sprite)
+                self.delHoldable(sprite)  # drop throwable on the ground.
                 self.setSpriteDest(
                     throwable,
                     throwable["anchorX"] + throwArea["prop-deltaX"],
@@ -141,26 +91,95 @@ class ServerMap(engine.servermap.ServerMap):
                     self.THROWSPEED
                     )
                 self.delSpriteAction(sprite)
+                log(throwable)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Throw {sprite['holding']['name']}")
         elif sprite["type"] == "player":
             self.setSpriteSpeechText(sprite, f"I could throw something from here.")
 
+    def objectInBounds(self, object, x, y):
+        # allow things that have bee thrown to go out of bounds so they can be thrown over water.
+        # The way the throw zones are set up ensures that objects can't be thrown off the map.
+        if "moveSpeed" in object and object["moveSpeed"] == self.THROWSPEED:
+            return True
+
+        return super().objectInBounds(object, x, y)
+
     ########################################################
-    # TRIGGER SAVE RESPAWN POINT
+    # SPEED MULTIPLIER
     ########################################################
 
-    def delRespawnPoint(self, object):
-        if "respawnMapName" in object:
-            del object["respawnMapName"]
-        if "respawnX" in object:
-            del object["respawnX"]
-        if "respawnY" in object:
-            del object["respawnY"]
+    def triggerSpeedMultiplier(self, trigger, sprite):
+        # if sprite is moving.
+        if "moveSpeed" in sprite:
+            sprite["speedMultiNormalSpeed"] = sprite["moveSpeed"]
+            sprite["moveSpeed"] *= trigger["prop-speedMultiplier"]
+
+    def stepSpriteEndSpeedMultiplier(self, sprite):
+        if "speedMultiNormalSpeed" in sprite:
+            if "moveSpeed" in sprite:
+                sprite["moveSpeed"] = sprite["speedMultiNormalSpeed"]
+            del sprite["speedMultiNormalSpeed"]
+
+    ########################################################
+    # CHICKEN
+    ########################################################
+
+    def initChichen(self):
+        self.CHICKENSPEED = 10
+
+    def stepSpriteStartChicken(self, sprite):
+        if sprite["name"] == "chicken":
+            # if this chicken is not being thrown right now then have it walk to closest player.
+            # we know something is being thrown because it's moveSpeed will be self.THROWSPEED
+            if ("moveSpeed" not in sprite or (
+                    "moveSpeed" in sprite and sprite["moveSpeed"] != self.THROWSPEED)):
+                player = False
+                playerDistance = 0
+                # find the closet player.
+                for p in self.findObject(type="player", returnAll=True):
+                    pDis = geo.distance(sprite["anchorX"], sprite["anchorY"], p["anchorX"], p["anchorY"])
+                    if pDis < playerDistance or player == False:
+                        player = p
+                        playerDistance = pDis
+                if player and playerDistance > 50:
+                    self.setSpriteDest(sprite, player["anchorX"], player["anchorY"], self.CHICKENSPEED)
+                else:
+                    self.delSpriteDest(sprite)
+
+            if random.randint(0, 5000) == 0:
+                # chicken sounds from https://www.chickensandmore.com/chicken-sounds/
+                text = random.choice((
+                    "cluck cluck", 
+                    "Life is good, I'm having a good time.", 
+                    "Take cover I think I see a hawk!",
+                    "buk, buk, buk, ba-gawk"
+                    ))
+                self.setSpriteSpeechText(sprite, text, time.perf_counter() + 2)
+
+    ########################################################
+    # RESPAWN POINT
+    ########################################################
+
+    def setRespawnPoint(self, sprite):
+        '''
+        Remember sprites location as the last safe point the sprite was at. In case the sprite
+        is killed then they can be respawned back to this point.
+        '''
+        sprite["respawnMapName"] = sprite["mapName"]
+        sprite["respawnX"] = sprite["anchorX"]
+        sprite["respawnY"] = sprite["anchorY"]
+
+    def delRespawnPoint(self, sprite):
+        if "respawnMapName" in sprite:
+            del sprite["respawnMapName"]
+        if "respawnX" in sprite:
+            del sprite["respawnX"]
+        if "respawnY" in sprite:
+            del sprite["respawnY"]
 
     def setSpriteLocationByRespawnPoint(self, sprite):
         # Move sprite to respawn point if one was previously stored.
-
         if "respawnX" in sprite:
             destMap = self
             if sprite["respawnMapName"] != self.name:
@@ -169,41 +188,10 @@ class ServerMap(engine.servermap.ServerMap):
                 destMap.addObject(sprite)
             destMap.setObjectLocationByAnchor(sprite, sprite["respawnX"], sprite["respawnY"])
             destMap.delSpriteDest(sprite)
-        # else this object never went through a respawn point. Perhaps it is something the player carried into over
-        # the respawn area. Let's hope it's OK to leave it where it is.
+        else:
+            # else this sprite never went through a respawn point. Perhaps it is something the player carried into over
+            # the respawn area. Let's hope it's OK to leave it where it is.
+            log("Tried to respawn a sprite that does not have a respawn point.", "WARNING")
 
-    def triggerSaveRespawnPoint(self, trigger, object):
-        '''
-        Remember sprites location as the last safe point the sprite was at. In case the sprite
-        is killed then they can be respawned back to this point.
-        '''
-        object["respawnMapName"] = object["mapName"]
-        object["respawnX"] = object["anchorX"]
-        object["respawnY"] = object["anchorY"]
-
-    ########################################################
-    # TRIGGER SPEED MULTIPLIER
-    ########################################################
-
-    def triggerSpeedMultiplier(self, trigger, sprite):
-        if "speed" in sprite and sprite["type"] != "saw":
-            sprite["normalSpeed"] = sprite["speed"]
-            sprite["speed"] *= trigger["prop-speedMultiplier"]
-
-    def delSpeedMultiplier(self, sprite):
-        if "normalSpeed" in sprite:
-            if "speed" in sprite:
-                sprite["speed"] = sprite["normalSpeed"]
-            del sprite["normalSpeed"]
-
-    ########################################################
-    # STEP MOVE / THROW TRIGGER
-    ########################################################
-
-    def objectInBounds(self, object, x, y):
-        # allow things that have bee thrown to go out of bounds so they can be thrown over water.
-        # The way the throw zones are set up ensures that objects can't be thrown off the map.
-        if "speed" in object and object["speed"] == self.THROWSPEED:
-            return True
-
-        return super().objectInBounds(object, x, y)
+    def triggerSaveRespawnPoint(self, trigger, sprite):
+        self.setRespawnPoint(sprite)

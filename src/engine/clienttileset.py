@@ -66,7 +66,7 @@ class ClientTileset(engine.tileset.Tileset):
             For example, 'movingUp'
             '''
             # if tileObject is currently moving
-            if 'speed' in tileObject:
+            if 'moveSpeed' in tileObject:
                 property = 'prop-moving'
             else:
                 property = 'prop-stationary'

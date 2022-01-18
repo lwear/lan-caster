@@ -103,13 +103,12 @@ class Map:
 
         # set up quick reference to object lists of well known object layers.
         # these can be used directly rather than searching for these layers over and over.
-        # it also ensure all these layers exist in case they were not in the Tiled file.
+        # it also ensures all these layers exist (via these refernces) in case they were not in the Tiled file.
         self.triggers = []
         self.sprites = []
         self.reference = []
         self.inBounds = []
         self.outOfBounds = []
-        self.overlay = []
         for l in self.layers:
             if l["type"] == "objectgroup":
                 if l["name"] == "triggers":
@@ -122,8 +121,6 @@ class Map:
                     self.inBounds = l['objects']
                 elif l["name"] == "outOfBounds":
                     self.outOfBounds = l['objects']
-                elif l["name"] == "overlay":
-                    self.overlay = l['objects']
 
         '''
         objects loaded from tiled need some data conversion and clean up to be useful

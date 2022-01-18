@@ -24,7 +24,6 @@ class ClientMap(engine.map.Map):
         # Layers with these names will never be rendered to the screen, even if they are set to visible.
         self.HIDELAYERS = (
             "sprites",
-            "overlay",
             "inBounds",
             "outOfBounds",
             "triggers",
@@ -103,11 +102,10 @@ class ClientMap(engine.map.Map):
     # BLIT MAP
     #####################################################
 
-    def blitMap(self, destImage, sprites, overlay):
+    def blitMap(self, destImage, sprites):
 
-        # sort sprites and overlay for right-down render order.
+        # sort sprites for right-down render order.
         geo.sortRightDown(sprites, self.pixelWidth)
-        geo.sortRightDown(overlay, self.pixelWidth)
 
         validUntil = []
         # start with all visible layers below the sprites.
@@ -122,9 +120,6 @@ class ClientMap(engine.map.Map):
         # add all visible layers above the sprites
         validUntil.append(self.blitTopImage(destImage))
 
-        # add the overlay layer from the server
-        validUntil.append(self.blitObjectList(destImage, overlay))
-
         # blit the sprite speech text from the server on top of everything.
         validUntil.append(self.blitObjectListSpeechText(destImage, sprites))
 
@@ -136,7 +131,7 @@ class ClientMap(engine.map.Map):
         self.bottomImage. self.bottomImage can then be used for faster screen updates
         rather than doing all the work of blitting these layers together every frame.
 
-        Note object layers named "sprites" and "overlay" will not be rendered since
+        Note object layer "sprites" will not be rendered since
         they are provided by the server and must be rendered separately with a direct
         call to blitObjectList()
         '''
@@ -166,7 +161,7 @@ class ClientMap(engine.map.Map):
         self.topImage. self.topImage can then be used for faster screen updates
         rather than doing all the work of blitting these layers together every frame.
 
-        Note object layers named "sprites" and "overlay" will not be rendered since
+        Note object layer named "sprites" will not be rendered since
         they are provided by the server and must be rendered separately with a direct
         call to blitObjectList()
         '''

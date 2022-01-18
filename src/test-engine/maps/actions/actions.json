@@ -71,7 +71,7 @@
                          "value":"mapDoor"
                         }],
                  "rotation":0,
-                 "type":"useable",
+                 "type":"portkey",
                  "visible":true,
                  "width":32,
                  "x":539.193292966931,
