@@ -44,7 +44,8 @@ class Messages:
                 'gameSec': 'float',
                 'mapName': 'str',
                 'layerVisabilityMask': 'int',
-                'sprites': 'list'
+                'sprites': 'list',
+                'marquee_o': 'str'
                 },
             'Error': {'result': 'str'}
             }

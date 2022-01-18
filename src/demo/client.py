@@ -19,57 +19,32 @@ class Client(engine.client.Client):
         self.showOpeningText = True
         self.showWinText = False
 
+        newMarqueeText = {
+            'pixelsize': 36,
+            "fontfamily": "Old London",
+            "color": "#1d232b",
+            "bgcolor": "#fafacd",
+            "bgbordercolor": "#47361e",
+            "bgborderThickness": 6,
+            "bgroundCorners": 12
+            }
+        for k,v in newMarqueeText.items():
+            self.MARQUEETEXT[k] = v
+
     def msgGameWon(self, msg):
         log("Game Won!!!")
         self.showWinText = True
-        self.stepChanged = True  # this will cause screen to update again.
+        self.screenValidUntil = 0  # this will cause screen to update again.
 
     def updateInterface(self):
         super().updateInterface()
 
         # render open and ending text on top of (after) everything else.
         if self.showOpeningText:
-            self.maps[self.step["mapName"]].blitTextObject(
-                self.screen,
-                {
-                    'x': self.screen.get_width() / 4,
-                    'y': self.screen.get_height() / 4 * 3,
-                    'width': self.screen.get_width() / 2,
-                    'height': self.screen.get_height() / 4,
-                    'text': {
-                        'text': "All players must gather in the stone circle to win!",
-                        'pixelsize': 36,
-                        'valign': "top",
-                        'halign': "center",
-                        "fontfamily": "Old London",
-                        "color": "#1d232b",
-                        "bgcolor": "#fafacd",
-                        "bgbordercolor": "#47361e",
-                        "bgborderThickness": 3,
-                        "bgroundCorners": 6
-                        }
-                    })
+            self.blitMarqueeText("All players must gather in the stone circle to win!")
+
         if self.showWinText:
-            self.maps[self.step["mapName"]].blitTextObject(
-                self.screen,
-                {
-                    'x': self.screen.get_width() / 4,
-                    'y': self.screen.get_height() / 4 * 3,
-                    'width': self.screen.get_width() / 2,
-                    'height': self.screen.get_height() / 4,
-                    'text': {
-                        'text': "Game Won! Good teamwork everyone.",
-                        'pixelsize': 36,
-                        'valign': "top",
-                        'halign': "center",
-                        "fontfamily": "Old London",
-                        "color": "#1d232b",
-                        "bgcolor": "#fafacd",
-                        "bgbordercolor": "#47361e",
-                        "bgborderThickness": 3,
-                        "bgroundCorners": 6
-                        }
-                    })
+            self.blitMarqueeText("Game Won! Good teamwork everyone.")
 
     def processEvent(self, event):
         # show the opening text until the players gives a mouse click or key press.

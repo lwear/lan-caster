@@ -47,6 +47,12 @@ class Client:
             "valign": "bottom"
             }
 
+        # marqueeText defaults that differ from DEFAULTTEXT
+        self.MARQUEETEXT = {
+            "halign": "center",
+            "valign": "center"
+            }
+
         self.playerNumber = -1  # set to a real number from the joinReply msg sent from the server
         self.step = False  # Currently displayed step. Empty until we get first step msg from server. = {}
 
@@ -199,6 +205,7 @@ class Client:
 
     def updateInterface(self):
         # render any non-map items, such as player specific data or gui elements.
+        # these are relative to the screen, not the map. (eg bottom of screen, not bottom of map)
 
         # find the player of this client and render actionText if they have any.
         for sprite in self.step["sprites"]:
@@ -207,16 +214,18 @@ class Client:
                     self.blitActionText(sprite)
                 break
 
+        # render marquee text if included in step msg.
+        if 'marquee' in self.step:
+            self.blitMarqueeText(self.step["marquee"])
+
     def blitActionText(self, sprite):
         textObject = {
-                        'x': 0,
-                        'y': 0,
-                        'width': self.screen.get_width(),
-                        'height': self.screen.get_height(),
-                        'text': {
-                            'text': sprite["actionText"] + " (spacebar)"
-                        }
-                    }
+            'x': 0,
+            'y': 0,
+            'width': self.screen.get_width(),
+            'height': self.screen.get_height(),
+            'text': { 'text': sprite["actionText"] + " (spacebar)" }
+            }
 
         # add actiontext defaults if they are missing
         for k, v in self.ACTIONTEXT.items():
@@ -225,6 +234,28 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
+
+        # WARNING, This renders in map coords assumes they are the same as screen coords!
+        map.blitTextObject(self.screen, textObject)
+
+    def blitMarqueeText(self, marqueeText):
+        textObject = {
+            'x': self.screen.get_height()/4,
+            'y': self.screen.get_height()/4,
+            'width': self.screen.get_width()/2,
+            'height': self.screen.get_height()/2,
+            'text': { 'text': marqueeText }
+            }
+
+        # add marqueetext defaults if they are missing
+        for k, v in self.MARQUEETEXT.items():
+            if k not in textObject["text"]:
+                textObject["text"][k] = v
+
+        # find the map that the server wants us to render.
+        map = self.maps[self.step["mapName"]]
+        
+        # WARNING, This renders in map coords assumes they are the same as screen coords!
         map.blitTextObject(self.screen, textObject)
 
     ########################################################
