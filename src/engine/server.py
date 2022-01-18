@@ -36,8 +36,7 @@ class Server:
         self.game = game
         self.fps = fps
 
-        self.playerModule = engine.loaders.loadModule("player", game=self.game)
-        self.players = {}  # dict of player object indexed by their ipport (eg. '192.168.3.4:20013')
+        self.players = {}  # dict of players indexed by their ipport (eg. '192.168.3.4:20013')
         self.socket = None  # set up below
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -127,10 +126,10 @@ class Server:
         if msg['type'] == 'joinRequest':
             reply = self.msgJoinRequest(ip, port, ipport, msg)
         elif ipport in self.players:  # if this is a player who has already joined the game
-            sprite = self.players[ipport].sprite
+            sprite = self.players[ipport]["sprite"]
             map = self.maps[sprite["mapName"]]
             if msg['type'] == 'playerMove':
-                map.setSpriteDest(sprite, msg["moveDestX"], msg["moveDestY"], self.players[ipport].moveSpeed)
+                map.setSpriteDest(sprite, msg["moveDestX"], msg["moveDestY"], self.players[ipport]["moveSpeed"])
                 reply = False
             elif msg['type'] == 'playerAction':
                 map.setSpriteAction(sprite)
@@ -158,33 +157,47 @@ class Server:
                 log("Player from " + ipport + " tried to join full game.")
             else:
                 # add the client to the game.
-                sprite, mapName = self.unassignedPlayerSprites.pop()
-                self.players[ipport] = self.playerModule.Player(
-                    sprite,
-                    ip,
-                    port,
-                    len(self.players) + 1,
-                    msg['playerDisplayName'],
-                    mapName)
+                self.addPlayer(ip, port, ipport, msg)
                 result = "OK"
-                log("Player from " + ipport + " joined the game.")
 
         if result == "OK":
             # send the new client back their player number
             return {
                 'type': "joinReply", 
-                'playerNumber': self.players[ipport].sprite["playerNumber"],
+                'playerNumber': self.players[ipport]["sprite"]["playerNumber"],
                 'serverSec': time.perf_counter()
                 }
         else:
             return {'type': 'Error', 'result': result}
+
+    def addPlayer(self, ip, port, ipport, msg):
+        # add the client to the game.
+        sprite, mapName = self.unassignedPlayerSprites.pop()
+
+        # add player data to sprite
+        sprite["playerNumber"] = len(self.players) + 1
+        sprite["mapName"] = mapName
+        # add playerDisplaName to sprite as "labelText" so client can display it.
+        sprite["labelText"] = msg['playerDisplayName']
+        # The changed displayName may be visible so we need to set this map to changed.
+        self.maps[mapName].setMapChanged()
+
+        # add sprite and other values to list of players
+        self.players[ipport] = {
+            'ip': ip,
+            'port': port,
+            'moveSpeed': 120,  # default move speed in pixels per second.
+            'sprite': sprite
+        }
+
+        log(f"Player named {msg['playerDisplayName']} from {ipport} joined the game.")
 
     def sendStepMsgs(self):
         # For each map that is marked as changed, send a step message to all players on that map.
 
         for ipport in self.players:
             # find name of map player is on
-            mapName = self.players[ipport].sprite["mapName"]
+            mapName = self.players[ipport]["sprite"]["mapName"]
             if self.maps[mapName].changed:
                 self.socket.sendMessage(msg={
                     'type': 'step',
@@ -193,8 +206,8 @@ class Server:
                     'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
                     'sprites': self.maps[mapName].sprites
                     },
-                    destinationIP=self.players[ipport].ip,
-                    destinationPort=self.players[ipport].port
+                    destinationIP=self.players[ipport]["ip"],
+                    destinationPort=self.players[ipport]["port"]
                     )
         # All players have updated step msg so we can reset all the map changed flags to False
         for mapName in self.maps:
@@ -216,7 +229,7 @@ class Server:
         # find mapNames that have at least one player on them.
         mapNames = []
         for ipport in self.players:
-            mapNames.append(self.players[ipport].sprite["mapName"])
+            mapNames.append(self.players[ipport]["sprite"]["mapName"])
 
         # set() removes duplicates and sorted() ensures we process maps in the same order each time.
         mapNames = sorted(set(mapNames))
@@ -244,14 +257,14 @@ class Server:
         game.
         '''
         for ipport in self.players:
-            sprite = self.players[ipport].sprite
+            sprite = self.players[ipport]["sprite"]
             if "holding" in sprite and "prop-endGame" in sprite["holding"]:
                 if sprite["holding"]["prop-endGame"] == "won":
                     for ipport2 in self.players:
                         self.socket.sendMessage(
                             msg={'type': 'gameWon'},
-                            destinationIP=self.players[ipport2].ip,
-                            destinationPort=self.players[ipport2].port
+                            destinationIP=self.players[ipport2]["ip"],
+                            destinationPort=self.players[ipport2]["port"]
                             )
                     log("Game Won!!!")
                     quit()
@@ -259,8 +272,8 @@ class Server:
                     for ipport2 in self.players:
                         self.socket.sendMessage(
                             msg={'type': 'gameLost'},
-                            destinationIP=self.players[ipport2].ip,
-                            destinationPort=self.players[ipport2].port
+                            destinationIP=self.players[ipport2]["ip"],
+                            destinationPort=self.players[ipport2]["port"]
                             )
                     log("Game Lost!!!")
                     quit()
