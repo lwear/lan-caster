@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 
 from engine.log import log
 from engine.log import setLogLevel
@@ -14,7 +15,6 @@ except BaseException:
 
 import engine.network
 import engine.loaders
-
 
 def startClient():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -36,7 +36,12 @@ def startClient():
                         default=False, help='Print DEBUG level log messages.')
     parser.add_argument('-verbose', dest='verbose', action='store_true',
                         default=False, help='Print VERBOSE level log messages. Note, -debug includes -verbose.')
+    parser.add_argument('-pause', metavar='secs', dest='pause', type=int,
+                        default=0, help='Duration to pause in seconds before starting client (for testing).')
     args = parser.parse_args()
+
+    log(f"Pausing for {args.pause} seconds before starting client.")
+    time.sleep(args.pause)
 
     setLogLevel(args.debug, args.verbose)
 
