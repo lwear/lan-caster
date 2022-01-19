@@ -209,8 +209,13 @@ class ServerMap(engine.stepmap.StepMap):
                 self.setSpriteActionText(sprite, f"Available Action: Drop {sprite['holding']['name']}")
 
     ########################################################
-    # Portkey (uses action)
+    # Portkey (uses action, and mapdoor)
     ########################################################
+
+    '''
+    A portkey is a map door that is a visable sprite and requires the player to request an action before
+    they will go through the mapDoor.
+    '''
     def initPortkey(self):
         # portkey sprites need to be triggers so things can
         # be done when another sprite interacts with them.

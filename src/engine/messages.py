@@ -36,8 +36,7 @@ class Messages:
             # msg type             other required msg fields
             'joinRequest': {'game': ['str', 1, 16], 'playerDisplayName': ['str', 1, 16]},
             'joinReply': {'playerNumber': 'int', 'serverSec': 'float'},
-            'gameWon': {},
-            'gameLost': {},
+            'quitting': {},
             'playerMove': {'moveDestX': 'int', 'moveDestY': 'int'},
             'playerAction': {},
             'step': {

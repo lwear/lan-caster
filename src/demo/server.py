@@ -7,13 +7,7 @@ import engine.geometry as geo
 class Server(engine.server.Server):
 
     def stepServerStart(self):
-        '''
-        Send gameWon messages and quit if all 3 players are inside stone circle.
-
-        Don't call super().
-        This completely replace the engine.server.checkForEndGame() since our ending
-        conditions are totally different than the default.
-        '''
+        super().stepServerStart()
 
         end = self.maps["end"]
         endGame = end.findObject(name="endGame", objectList=end.reference)
@@ -31,7 +25,7 @@ class Server(engine.server.Server):
 
         for ipport in self.players:
             self.socket.sendMessage(
-                msg={'type': 'gameWon'},
+                msg={'type': 'quiting'},
                 destinationIP=self.players[ipport]["ip"],
                 destinationPort=self.players[ipport]["port"]
                 )

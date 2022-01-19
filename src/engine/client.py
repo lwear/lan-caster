@@ -162,10 +162,8 @@ class Client:
 
         if msg['type'] == 'step':
             self.msgStep(msg)
-        elif msg['type'] == 'gameWon':
-            self.msgGameWon(msg)
-        elif msg['type'] == 'gameLost':
-            self.msgGameLost(msg)
+        elif msg['type'] == 'quitting':
+            self.quitting(msg)
 
         return None
 
@@ -173,12 +171,9 @@ class Client:
         self.step = msg  # store the new step
         self.screenValidUntil = 0  # flag that we need to redraw the screen.
 
-    def msgGameWon(self, msg):
-        log("Game Won!!!")
-        quit()
-
-    def msgGameLost(self, msg):
-        log("Game Lost!!!")
+    def msgQuitting(self, msg):
+        # the serer is quitting so we should as well
+        log("Server sent quitting msg. Client quitting as well.")
         quit()
 
     ########################################################

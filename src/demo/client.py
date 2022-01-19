@@ -29,20 +29,23 @@ class Client(engine.client.Client):
             "bgroundCorners": 12
             })
 
-    def msgGameWon(self, msg):
+    def msgQuitting(self, msg):
         log("Game Won!!!")
         self.showWinText = True
         self.screenValidUntil = 0  # this will cause screen to update again.
+        super().msgQuittin(msg)
 
     def updateInterface(self):
         super().updateInterface()
 
         # render open and ending text on top of (after) everything else.
+        '''
         if self.showOpeningText:
             self.blitMarqueeText("All players must gather in the stone circle to win!")
 
         if self.showWinText:
             self.blitMarqueeText("Game Won! Good teamwork everyone.")
+        '''
 
     def processEvent(self, event):
         # show the opening text until the players gives a mouse click or key press.

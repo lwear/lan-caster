@@ -257,39 +257,7 @@ class Server:
         '''
         perform any game logic for the start of a step that is not map specific.
         '''
-
-        '''
-        if game is won or lost then tell players and quit.
-        We do this by simply checking if any player is holding
-        a sprite that has type gameWon or gameLose. This assumes
-        that if one player wins or loses then so do all players!
-
-        This will normally be overwritten by the sub-class
-        and there is no need to call super since this method
-        is just an example and will not apply to any specific
-        game.
-        '''
-        for ipport in self.players:
-            sprite = self.players[ipport]["sprite"]
-            if "holding" in sprite and "prop-endGame" in sprite["holding"]:
-                if sprite["holding"]["prop-endGame"] == "won":
-                    for ipport2 in self.players:
-                        self.socket.sendMessage(
-                            msg={'type': 'gameWon'},
-                            destinationIP=self.players[ipport2]["ip"],
-                            destinationPort=self.players[ipport2]["port"]
-                            )
-                    log("Game Won!!!")
-                    quit()
-                elif sprite["holding"]["prop-endGame"] == "lost":
-                    for ipport2 in self.players:
-                        self.socket.sendMessage(
-                            msg={'type': 'gameLost'},
-                            destinationIP=self.players[ipport2]["ip"],
-                            destinationPort=self.players[ipport2]["port"]
-                            )
-                    log("Game Lost!!!")
-                    quit()
+        pass
 
     def stepServerEnd(self):
         '''
