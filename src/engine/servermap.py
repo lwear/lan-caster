@@ -189,8 +189,8 @@ class ServerMap(engine.stepmap.StepMap):
     def triggerHoldable(self, holdable, sprite):
         if "holding" not in sprite:
             if "action" in sprite:
-                self.setHoldable(holdable, sprite)
                 self.delSpriteAction(sprite)
+                self.setHoldable(holdable, sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Pick Up {holdable['name']}")
 
@@ -199,8 +199,8 @@ class ServerMap(engine.stepmap.StepMap):
         # during end of step sprite processing, after all triggers have had a chance to see that an action is requested.
         if "holding" in sprite:
             if "action" in sprite:
-                self.delHoldable(sprite)
                 self.delSpriteAction(sprite)
+                self.delHoldable(sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Drop {sprite['holding']['name']}")
 
@@ -225,8 +225,8 @@ class ServerMap(engine.stepmap.StepMap):
         Requires the same properties as a mapdoor.
         '''
         if "action" in sprite:
-            self.triggerMapDoor(portkey, sprite)  # assume portkey has the properties required by a mapDoor trigger
             self.delSpriteAction(sprite)
+            self.triggerMapDoor(portkey, sprite)  # assume portkey has the properties required by a mapDoor trigger
         else:
             self.setSpriteActionText(sprite, f"Available Action: Touch {portkey['name']}")
 

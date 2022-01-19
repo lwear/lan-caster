@@ -38,6 +38,7 @@ class ServerMap(demo.servermap.ServerMap):
             lever = trigger
             self.setSpriteActionText(sprite, f"Available Action: Heave {sprite['name']}")
             if "action" in sprite:
+                self.delSpriteAction(sprite)
                 start = engine.server.SERVER.maps["start"]
 
                 # hard coding of gids is specific to this map and it's assignment of gids.
@@ -79,8 +80,6 @@ class ServerMap(demo.servermap.ServerMap):
                         self.findObject(name="bridge3InBounds", objectList=self.reference),
                         objectList=self.inBounds)
 
-                self.delSpriteAction(sprite)
-            
 
             
                 

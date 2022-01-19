@@ -41,6 +41,7 @@ class ServerMap(engine.servermap.ServerMap):
         '''
         if "holding" in sprite and sprite["holding"]["name"] == "bomb":
             if "action" in sprite:
+                self.delSpriteAction(sprite)
                 del sprite["holding"]  # remove bomb and delete it from game completely
 
                 # find maps at top and bottom of ladder.
@@ -59,7 +60,6 @@ class ServerMap(engine.servermap.ServerMap):
                 under.setLayerVisablitybyName("rockOffStairs", True)
                 under.triggers.append(under.bombLadder1MapDoor)
                 under.inBounds.append(under.bombLadder1InBounds)
-                self.delSpriteAction(sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Set off {sprite['holding']['name']}.")
         elif sprite["type"] == "player":  # if sprite is a player and is not holding bomb
@@ -81,6 +81,7 @@ class ServerMap(engine.servermap.ServerMap):
         # if we are holding anything while in a throwArea then throw it.
         if "holding" in sprite:
             if "action" in sprite:
+                self.delSpriteAction(sprite)
                 throwable = sprite["holding"]
                 self.delHoldable(sprite)  # drop throwable on the ground.
                 self.setSpriteDest(
@@ -89,7 +90,6 @@ class ServerMap(engine.servermap.ServerMap):
                     throwable["anchorY"] + throwArea["prop-deltaY"],
                     self.THROWSPEED
                     )
-                self.delSpriteAction(sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Throw {sprite['holding']['name']}")
         elif sprite["type"] == "player":
