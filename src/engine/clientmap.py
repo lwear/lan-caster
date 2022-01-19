@@ -23,7 +23,7 @@ class ClientMap(engine.map.Map):
 
         # Layers with these names will never be rendered to the screen, even if they are set to visible.
         self.HIDELAYERS = (
-            "sprites",
+            "sprites", # the sprites in the arg list of stepMap will be rendered but not the self.layers["sprites"]
             "inBounds",
             "outOfBounds",
             "triggers",
@@ -278,20 +278,15 @@ class ClientMap(engine.map.Map):
         validUntil = sys.float_info.max
         # If speechText is present then render it above the tile.
         if "speechText" in object:
+            text = self.SPEACHTEXT.copy()
+            text["text"] = object["speechText"]
             textObject = {
                     'x': object['x'] + object['width'] / 2 - 64,
                     'y': object['y'],
                     'width': 128,
                     'height': 0,
-                    'text': {
-                        'text': object["speechText"]
-                        }
+                    'text': text
                     }
-
-            # add labeltext defaults if they are missing
-            for k, v in self.SPEACHTEXT.items():
-                if k not in textObject["text"]:
-                    textObject["text"][k] = v
             
             validUntil = self.blitTextObject(destImage, textObject)
         return validUntil
@@ -308,32 +303,26 @@ class ClientMap(engine.map.Map):
         validUntil = sys.float_info.max
         # If labelText is present then render it under the tile. Normally used to display player names.
         if "labelText" in object:
+            text = self.LABELTEXT.copy()
+            text["text"] = object["labelText"]
             textObject = {
                     'x': object['x'] + object['width'] / 2 - 64,
                     'y': object['y'] + object['height'],
                     'width': 128,
                     'height': 0,
-                    'text': {
-                        'text': object["labelText"]
-                        }
+                    'text': text
                     }
-
-            # add labeltext defaults if they are missing
-            for k, v in self.LABELTEXT.items():
-                if k not in textObject["text"]:
-                    textObject["text"][k] = v
 
             validUntil = self.blitTextObject(destImage, textObject)
         return validUntil
 
     def blitTextObject(self, destImage, textObject):
-        text = textObject["text"]["text"]
         maxWidth = textObject['width']
-
+        
         # add text defaults if they are missing
-        for k, v in self.DEFAULTTEXT.items():
-            if k not in textObject["text"]:
-                textObject["text"][k] = v
+        text = self.DEFAULTTEXT.copy()
+        text.update(textObject["text"])
+        textObject["text"] = text
 
         fontFilename = f'src/{self.game}/fonts/{textObject["text"]["fontfamily"]}.ttf'
         if not os.path.isfile(fontFilename):
@@ -353,7 +342,7 @@ class ClientMap(engine.map.Map):
 
         lines = []
         if textObject["text"]["wrap"]:
-            words = text.split()
+            words = textObject["text"]["text"].split()
             pixelWidth = 0
             maxLineHeight = 0
             while len(words) > 0:
@@ -379,7 +368,7 @@ class ClientMap(engine.map.Map):
             r = font.get_rect(text)
             pixelWidth = r.width
             maxLineHeight = r.height
-            lines.append((r.width, r.height, text))
+            lines.append((r.width, r.height, textObject["text"]["text"]))
 
         pixelHeight = maxLineHeight * len(lines)
         pixelWidth += 4

@@ -219,18 +219,15 @@ class Client:
             self.blitMarqueeText(self.step["marquee"])
 
     def blitActionText(self, sprite):
+        text = self.ACTIONTEXT.copy()
+        text["text"] = sprite["actionText"] + " (spacebar)"
         textObject = {
             'x': 0,
             'y': 0,
             'width': self.screen.get_width(),
             'height': self.screen.get_height(),
-            'text': { 'text': sprite["actionText"] + " (spacebar)" }
+            'text': text
             }
-
-        # add actiontext defaults if they are missing
-        for k, v in self.ACTIONTEXT.items():
-            if k not in textObject["text"]:
-                textObject["text"][k] = v
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
@@ -239,22 +236,19 @@ class Client:
         map.blitTextObject(self.screen, textObject)
 
     def blitMarqueeText(self, marqueeText):
+        text = self.MARQUEETEXT.copy()
+        text["text"] = marqueeText
         textObject = {
             'x': self.screen.get_height()/4,
             'y': self.screen.get_height()/4,
             'width': self.screen.get_width()/2,
             'height': self.screen.get_height()/2,
-            'text': { 'text': marqueeText }
+            'text': text
             }
-
-        # add marqueetext defaults if they are missing
-        for k, v in self.MARQUEETEXT.items():
-            if k not in textObject["text"]:
-                textObject["text"][k] = v
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-        
+
         # WARNING, This renders in map coords assumes they are the same as screen coords!
         map.blitTextObject(self.screen, textObject)
 

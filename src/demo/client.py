@@ -19,7 +19,7 @@ class Client(engine.client.Client):
         self.showOpeningText = True
         self.showWinText = False
 
-        newMarqueeText = {
+        self.MARQUEETEXT.update({
             'pixelsize': 36,
             "fontfamily": "Old London",
             "color": "#1d232b",
@@ -27,9 +27,7 @@ class Client(engine.client.Client):
             "bgbordercolor": "#47361e",
             "bgborderThickness": 6,
             "bgroundCorners": 12
-            }
-        for k,v in newMarqueeText.items():
-            self.MARQUEETEXT[k] = v
+            })
 
     def msgGameWon(self, msg):
         log("Game Won!!!")
