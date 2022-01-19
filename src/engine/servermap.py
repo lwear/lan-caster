@@ -71,7 +71,11 @@ class ServerMap(engine.stepmap.StepMap):
             # compute a new angle in radians which moves directly towards destination
             # sprite["direction"] is stored and never removed so client will know the last
             # direction the sprite was facing.
-            sprite["direction"] = geo.angle(sprite["anchorX"], sprite["anchorY"], sprite["moveDestX"], sprite["moveDestY"])
+            sprite["direction"] = geo.angle(
+                sprite["anchorX"],
+                sprite["anchorY"],
+                sprite["moveDestX"],
+                sprite["moveDestY"])
 
             # compute a new anchor x,y which moves directly towards destination for this step
             newAnchorX, newAnchorY = geo.project(
@@ -174,7 +178,8 @@ class ServerMap(engine.stepmap.StepMap):
         self.setObjectLocationByAnchor(dropping, sprite["anchorX"], sprite["anchorY"])
         self.delSpriteDest(dropping)
         self.addObject(dropping, objectList=self.sprites)
-        self.addObject(dropping, objectList=self.triggers)  # add holdable type object back as a trigger so it can be picked up again.
+        # add holdable type object back as a trigger so it can be picked up again.
+        self.addObject(dropping, objectList=self.triggers)
 
     def initHoldable(self):
         # holdable sprites need to be triggers so things can
@@ -182,7 +187,7 @@ class ServerMap(engine.stepmap.StepMap):
         # copy (by refernece) sprites to triggers
         for holdable in self.findObject(type="holdable", returnAll=True):
             self.addObject(holdable, objectList=self.triggers)
-    
+
         self.addStepMethodPriority("trigger", "triggerHoldable", 10)
         self.addStepMethodPriority("stepSpriteEnd", "stepSpriteEndHoldable", 89)
 
@@ -212,6 +217,7 @@ class ServerMap(engine.stepmap.StepMap):
     A portkey is a map door that is a visable sprite and requires the player to request an action before
     they will go through the mapDoor.
     '''
+
     def initPortkey(self):
         # portkey sprites need to be triggers so things can
         # be done when another sprite interacts with them.
@@ -288,7 +294,8 @@ class ServerMap(engine.stepmap.StepMap):
             del sprite["speechTextDelAfter"]
 
     def stepSpriteStartSpeechTextTimers(self, sprite):
-        if "speechTextDelAfter" not in sprite or ("speechTextDelAfter" in sprite and sprite["speechTextDelAfter"] < time.perf_counter()):
+        if "speechTextDelAfter" not in sprite or (
+                "speechTextDelAfter" in sprite and sprite["speechTextDelAfter"] < time.perf_counter()):
             self.delSpriteSpeechText(sprite)
 
     ########################################################

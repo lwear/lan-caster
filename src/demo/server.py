@@ -16,11 +16,11 @@ class Server(engine.server.Server):
         self.mode = "waitingForPlayers"
 
     def processMsg(self, ip, port, ipport, msg, callbackData):
-        
+
         # only process joinRequests until all players have joined game.
         if msg['type'] != 'joinRequest' and self.mode == "waitingForPlayers":
             return
-        
+
         # clear start marqueeText if player has moved and game is ongoing.
         if msg["type"] == 'playerMove' and self.mode == "gameOn":
             self.players[ipport]['marqueeText'] = False
@@ -55,7 +55,7 @@ class Server(engine.server.Server):
             # if all players have made it to the end.
             if playersIn == len(self.players):
                 self.mode = "gameOver"
-                self.quitAfter = time.perf_counter()+10
+                self.quitAfter = time.perf_counter() + 10
                 log("Game Over. Quiting in 10 seconds")
                 for ipport in self.players:
                     self.players[ipport]['marqueeText'] = "Game Won! Good teamwork everyone."

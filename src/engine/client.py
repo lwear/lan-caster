@@ -229,10 +229,10 @@ class Client:
         text = self.MARQUEETEXT.copy()
         text["text"] = marqueeText
         textObject = {
-            'x': self.screen.get_height()/4,
-            'y': self.screen.get_height()/4,
-            'width': self.screen.get_width()/2,
-            'height': self.screen.get_height()/2,
+            'x': self.screen.get_height() / 4,
+            'y': self.screen.get_height() / 4,
+            'width': self.screen.get_width() / 2,
+            'height': self.screen.get_height() / 2,
             'text': text
             }
 

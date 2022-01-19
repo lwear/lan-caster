@@ -37,7 +37,7 @@ class Server:
         self.fps = fps
 
         self.players = {}  # dict of players indexed by their ipport (eg. '192.168.3.4:20013')
-        self.playersByNum = {} # same as above but indexed by playerNumber
+        self.playersByNum = {}  # same as above but indexed by playerNumber
         self.socket = None  # set up below
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -164,7 +164,7 @@ class Server:
         if result == "OK":
             # send the new client back their player number
             return {
-                'type': "joinReply", 
+                'type': "joinReply",
                 'playerNumber': self.players[ipport]["sprite"]["playerNumber"],
                 'serverSec': time.perf_counter()
                 }
@@ -177,7 +177,7 @@ class Server:
             # find name of map player is on
             mapName = self.players[ipport]["sprite"]["mapName"]
             if self.maps[mapName].changed or self.getPlayerChanged(self.players[ipport]):
-                msg={
+                msg = {
                     'type': 'step',
                     'gameSec': time.perf_counter(),
                     'mapName': mapName,
@@ -202,7 +202,6 @@ class Server:
         # reset the change detection on all maps
         for mapName in self.maps:
             self.maps[mapName].setMapChanged(False)
-        
 
     ########################################################
     # GAME LOGIC
@@ -242,7 +241,6 @@ class Server:
         '''
         pass
 
-
     ########################################################
     # PLAYER
     ########################################################
@@ -266,7 +264,7 @@ class Server:
             'lastActionText': False,
             'marqueeText': False,
             'lastMarqueeText': False
-        }
+            }
         # Also add player to self.playersByNum with the playerNumber so we can look up either way.
         self.playersByNum[sprite["playerNumber"]] = self.players[ipport]
 

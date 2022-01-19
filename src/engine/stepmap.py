@@ -42,27 +42,31 @@ class StepMap(engine.map.Map):
         self.stepMethods = {}
 
         # Find init* methods in this instance (methods could be from this class or a subclass)
-        # Note, one important job of init methods is to add to self.stepMethodPriority before the step methods are found and sorted below.
-        initMethods = [func for func in dir(self) if callable(getattr(self, func)) and func.startswith("init") and len(func) > len("init")]
-        initMethods.sort()
+        # Note, one important job of init methods is to add to
+        # self.stepMethodPriority before the step methods are found and sorted
+        # below.
+        initMethods = sorted([func for func in dir(self) if callable(getattr(self, func))
+                             and func.startswith("init") and len(func) > len("init")])
         methodsText = ""
         for methodName in initMethods:
             methodsText += f"{methodName} "
         log(f"Map {self.name}: Found init methods: {methodsText}")
-        
+
         # call init methods.
         for initMethodName in initMethods:
             initMethod = getattr(self, initMethodName, None)
             initMethod()
-        
-        #find step methods in this instance
+
+        # find step methods in this instance
         for stepMethodType in self.stepMethodTypes:
-            self.stepMethods[stepMethodType] = [func for func in dir(self) if callable(getattr(self, func)) and func.startswith(stepMethodType)]
+            self.stepMethods[stepMethodType] = [func for func in dir(self) if callable(
+                getattr(self, func)) and func.startswith(stepMethodType)]
             # if stepMethod is not in priority list then add it with the default priority
             for methodName in self.stepMethods[stepMethodType]:
                 if methodName not in self.stepMethodPriority[stepMethodType]:
                     self.stepMethodPriority[stepMethodType][methodName] = self.stepMethodPriority[stepMethodType]["default"]
-            self.stepMethods[stepMethodType].sort(key=lambda methodName: self.stepMethodPriority[stepMethodType][methodName])
+            self.stepMethods[stepMethodType].sort(
+                key=lambda methodName: self.stepMethodPriority[stepMethodType][methodName])
             methodsText = ""
             for methodName in self.stepMethods[stepMethodType]:
                 methodsText += f"{methodName}/{self.stepMethodPriority[stepMethodType][methodName]} "
@@ -140,18 +144,20 @@ class StepMap(engine.map.Map):
             triggerMehodName = self.getTriggerMethodName(trigger)
             # if trigger is not in priority list then log error and remove it
             if triggerMehodName not in self.stepMethodPriority['trigger']:
-                log(f"ServerMap does not have method named {triggerMehodName} for trigger type {trigger['type']}.", "ERROR")
+                log(
+                    f"ServerMap does not have method named {triggerMehodName} for trigger type {trigger['type']}.",
+                    "ERROR")
                 triggers.remove(trigger)
-        
+
         # sort triggers by priority (lower first)
         triggers.sort(key=lambda trigger: self.stepMethodPriority['trigger'][self.getTriggerMethodName(trigger)])
-        
+
         # call each triggers method. e.g. trigger['type'] == 'mapDoor' will call triggerMapDoor(trigger, sprite)
         for trigger in triggers:
             triggerMethod = getattr(self, self.getTriggerMethodName(trigger), None)
             stopOtherTriggers = triggerMethod(trigger, sprite)
             if stopOtherTriggers:
-                break # do not process any more triggers for this sprite on this step.
+                break  # do not process any more triggers for this sprite on this step.
 
     def getTriggerMethodName(self, trigger):
         # Convert a trigger type (eg. trigger["type"] == "mapDoor") to method name (eg. "triggerMapDoor")

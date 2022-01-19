@@ -1,10 +1,12 @@
 import time
 
-DELTA=0
+DELTA = 0
+
 
 def set(serverTime):
     global DELTA
     DELTA = serverTime - time.perf_counter()
+
 
 def perf_counter():
     global DELTA

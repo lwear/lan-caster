@@ -10,6 +10,7 @@ The objects in object layers have the following keys added for this subclass:
 dynamic keys (only in object while in use): normalSpeed, respawnX, respawnY, respawnMapName
 '''
 
+
 class ServerMap(engine.servermap.ServerMap):
     '''
     This class implements the Chicken, Throw, SpeedMultiplier (mud), Bomb, and RespawnPoint mechanics.
@@ -34,7 +35,6 @@ class ServerMap(engine.servermap.ServerMap):
 
     def triggerBombArea(self, bombArea, sprite):
         # if we are holding a bomb in a bombArea then set it off.
-
         '''
         this code not in generic and will only work with the one rock in this game
         for the one bomb in this game.
@@ -148,8 +148,8 @@ class ServerMap(engine.servermap.ServerMap):
             if random.randint(0, 5000) == 0:
                 # chicken sounds from https://www.chickensandmore.com/chicken-sounds/
                 text = random.choice((
-                    "cluck cluck", 
-                    "Life is good, I'm having a good time.", 
+                    "cluck cluck",
+                    "Life is good, I'm having a good time.",
                     "Take cover I think I see a hawk!",
                     "buk, buk, buk, ba-gawk"
                     ))

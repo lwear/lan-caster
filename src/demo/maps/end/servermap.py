@@ -18,18 +18,19 @@ class ServerMap(demo.servermap.ServerMap):
             self.setSpriteActionText(sprite, f"Available Action: Cast spell with {sprite['holding']['name']}.")
             if "action" in sprite:
                 self.triggerLever(self.findObject(name="lever"), sprite)
-            
+
         elif sprite["type"] == "player":
-            self.setSpriteSpeechText(sprite, f"This place seems magical but I feel like I need something to help cast a spell.")
+            self.setSpriteSpeechText(
+                sprite, f"This place seems magical but I feel like I need something to help cast a spell.")
 
     ########################################################
     # LEVER (uses action)
     ########################################################
 
     def initLever(self):
-        # make lever sprite also act as a trigger 
+        # make lever sprite also act as a trigger
         self.addObject(
-            self.findObject(type="lever"), 
+            self.findObject(type="lever"),
             objectList=self.triggers
             )
 
@@ -79,7 +80,3 @@ class ServerMap(demo.servermap.ServerMap):
                     self.addObject(
                         self.findObject(name="bridge3InBounds", objectList=self.reference),
                         objectList=self.inBounds)
-
-
-            
-                

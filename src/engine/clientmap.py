@@ -23,7 +23,7 @@ class ClientMap(engine.map.Map):
 
         # Layers with these names will never be rendered to the screen, even if they are set to visible.
         self.HIDELAYERS = (
-            "sprites", # the sprites in the arg list of stepMap will be rendered but not the self.layers["sprites"]
+            "sprites",  # the sprites in the arg list of stepMap will be rendered but not the self.layers["sprites"]
             "inBounds",
             "outOfBounds",
             "triggers",
@@ -45,7 +45,6 @@ class ClientMap(engine.map.Map):
             "bgborderThickness": 0,
             "bgroundCorners": 0
             }
-
 
         # speechText defaults that differ from DEFAULTTEXT
         self.SPEACHTEXT = {
@@ -281,13 +280,13 @@ class ClientMap(engine.map.Map):
             text = self.SPEACHTEXT.copy()
             text["text"] = object["speechText"]
             textObject = {
-                    'x': object['x'] + object['width'] / 2 - 64,
-                    'y': object['y'],
-                    'width': 128,
-                    'height': 0,
-                    'text': text
-                    }
-            
+                'x': object['x'] + object['width'] / 2 - 64,
+                'y': object['y'],
+                'width': 128,
+                'height': 0,
+                'text': text
+                }
+
             validUntil = self.blitTextObject(destImage, textObject)
         return validUntil
 
@@ -306,19 +305,19 @@ class ClientMap(engine.map.Map):
             text = self.LABELTEXT.copy()
             text["text"] = object["labelText"]
             textObject = {
-                    'x': object['x'] + object['width'] / 2 - 64,
-                    'y': object['y'] + object['height'],
-                    'width': 128,
-                    'height': 0,
-                    'text': text
-                    }
+                'x': object['x'] + object['width'] / 2 - 64,
+                'y': object['y'] + object['height'],
+                'width': 128,
+                'height': 0,
+                'text': text
+                }
 
             validUntil = self.blitTextObject(destImage, textObject)
         return validUntil
 
     def blitTextObject(self, destImage, textObject):
         maxWidth = textObject['width']
-        
+
         # add text defaults if they are missing
         text = self.DEFAULTTEXT.copy()
         text.update(textObject["text"])
@@ -411,18 +410,18 @@ class ClientMap(engine.map.Map):
         buffer = textObject["text"]["bgborderThickness"] + textObject["text"]["bgroundCorners"]
         if destX - buffer < 0:
             destX = buffer
-        if destX+ pixelWidth + buffer*2 > self.pixelWidth:
+        if destX + pixelWidth + buffer * 2 > self.pixelWidth:
             destX = self.pixelWidth - pixelWidth - buffer
         if destY - buffer < 0:
             destY = buffer
-        if destY+ pixelHeight + buffer*2 > self.pixelHeight:
+        if destY + pixelHeight + buffer * 2 > self.pixelHeight:
             destY = self.pixelHeight - pixelHeight - buffer
 
-        self.blitRectObject(destImage,{
-                'x': destX - buffer,
-                'y': destY - buffer,
-                'width': pixelWidth + buffer*2,
-                'height': pixelHeight + buffer*2
+        self.blitRectObject(destImage, {
+            'x': destX - buffer,
+            'y': destY - buffer,
+            'width': pixelWidth + buffer * 2,
+            'height': pixelHeight + buffer * 2
             },
             fillColor=textObject["text"]["bgcolor"],
             borderColor=textObject["text"]["bgbordercolor"],
@@ -455,7 +454,7 @@ class ClientMap(engine.map.Map):
         return validUntil
 
     def blitRoundObject(self, destImage, roundObject, fillColor=(0, 0, 0, 0),
-                       borderColor=(0, 0, 0, 255), borderThickness=1):
+                        borderColor=(0, 0, 0, 255), borderThickness=1):
         width = roundObject['width']
         height = roundObject['height']
         # points are drawn as small circles

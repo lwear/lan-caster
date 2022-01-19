@@ -16,6 +16,7 @@ except BaseException:
 import engine.network
 import engine.loaders
 
+
 def startClient():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-game', metavar='Game', dest='game', type=str, nargs='?',

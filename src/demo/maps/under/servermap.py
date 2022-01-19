@@ -3,6 +3,7 @@ from engine.log import log
 import demo.servermap
 import engine.time as time
 
+
 class ServerMap(demo.servermap.ServerMap):
     '''
     This class implements the Saw, StopSaw, and modified spreedMultipler mechanics
@@ -50,8 +51,8 @@ class ServerMap(demo.servermap.ServerMap):
 
         # That saw probably hurt so they should say something.
         text = random.choice((
-            "ARRRH!", 
-            "*&^@%", "Bad Idea!", 
+            "ARRRH!",
+            "*&^@%", "Bad Idea!",
             "Good thing I have public health care."
             ))
         self.setSpriteSpeechText(sprite, text, time.perf_counter() + 1)  # show text for only 1 sec.
