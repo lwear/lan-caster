@@ -202,45 +202,45 @@ class Client:
         # render any non-map items, such as player specific data or gui elements.
         # these are relative to the screen, not the map. (eg bottom of screen, not bottom of map)
 
-        self.blitActionText()
-        self.blitMarqueeText()
-
-    def blitActionText(self):
         if "actionText" in self.step:
-            text = self.ACTIONTEXT.copy()
-            text["text"] = self.step["actionText"] + " (spacebar)"
-            textObject = {
-                'x': 0,
-                'y': 0,
-                'width': self.screen.get_width(),
-                'height': self.screen.get_height(),
-                'text': text
-                }
+            self.blitActionText(self.step["actionText"])
 
-            # find the map that the server wants us to render.
-            map = self.maps[self.step["mapName"]]
-
-            # WARNING, This renders in map coords assumes they are the same as screen coords!
-            map.blitTextObject(self.screen, textObject)
-
-    def blitMarqueeText(self):
         if 'marqueeText' in self.step:
             self.blitMarqueeText(self.step["marqueeText"])
-            text = self.MARQUEETEXT.copy()
-            text["text"] = marqueeText
-            textObject = {
-                'x': self.screen.get_height()/4,
-                'y': self.screen.get_height()/4,
-                'width': self.screen.get_width()/2,
-                'height': self.screen.get_height()/2,
-                'text': text
-                }
 
-            # find the map that the server wants us to render.
-            map = self.maps[self.step["mapName"]]
+    def blitActionText(self, actionText):
+        text = self.ACTIONTEXT.copy()
+        text["text"] = actionText + " (spacebar)"
+        textObject = {
+            'x': 0,
+            'y': 0,
+            'width': self.screen.get_width(),
+            'height': self.screen.get_height(),
+            'text': text
+            }
 
-            # WARNING, This renders in map coords assumes they are the same as screen coords!
-            map.blitTextObject(self.screen, textObject)
+        # find the map that the server wants us to render.
+        map = self.maps[self.step["mapName"]]
+
+        # WARNING, This renders in map coords assumes they are the same as screen coords!
+        map.blitTextObject(self.screen, textObject)
+
+    def blitMarqueeText(self, marqueeText):
+        text = self.MARQUEETEXT.copy()
+        text["text"] = marqueeText
+        textObject = {
+            'x': self.screen.get_height()/4,
+            'y': self.screen.get_height()/4,
+            'width': self.screen.get_width()/2,
+            'height': self.screen.get_height()/2,
+            'text': text
+            }
+
+        # find the map that the server wants us to render.
+        map = self.maps[self.step["mapName"]]
+
+        # WARNING, This renders in map coords assumes they are the same as screen coords!
+        map.blitTextObject(self.screen, textObject)
 
     ########################################################
     # USER INPUT HANDLING
