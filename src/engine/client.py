@@ -163,7 +163,7 @@ class Client:
         if msg['type'] == 'step':
             self.msgStep(msg)
         elif msg['type'] == 'quitting':
-            self.quitting(msg)
+            self.msgQuitting(msg)
 
         return None
 
@@ -173,7 +173,7 @@ class Client:
 
     def msgQuitting(self, msg):
         # the serer is quitting so we should as well
-        log("Server sent quitting msg. Client quitting as well.")
+        log("Received quitting msg from server.")
         quit()
 
     ########################################################

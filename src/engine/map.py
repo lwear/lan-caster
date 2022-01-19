@@ -55,7 +55,7 @@ class Map:
         self.mapDir = mapDir
 
         # Flag to say something on this map has changed
-        self.changed = False
+        self.setMapChanged()
 
         # Maps are named based on their mapDirectory
         self.name = mapDir.split("/")[-1]

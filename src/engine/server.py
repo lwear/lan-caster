@@ -171,38 +171,12 @@ class Server:
         else:
             return {'type': 'Error', 'result': result}
 
-    def addPlayer(self, ip, port, ipport, msg):
-        # add the client to the game.
-        sprite, mapName = self.unassignedPlayerSprites.pop()
-
-        # add player data to sprite
-        sprite["playerNumber"] = len(self.unassignedPlayerSprites) + 1
-        sprite["mapName"] = mapName
-        # add playerDisplaName to sprite as "labelText" so client can display it.
-        sprite["labelText"] = msg['playerDisplayName']
-        # The changed displayName may be visible so we need to set this map to changed.
-        self.maps[mapName].setMapChanged()
-
-        self.players[ipport] = {
-            'ip': ip,
-            'port': port,
-            'moveSpeed': 120,  # default move speed in pixels per second.
-            'sprite': sprite,
-            'actionText': False,
-            'marqueeText': False
-        }
-        # Also add player to self.playersByNum with the playerNumber so we can look up either way.
-        self.playersByNum[sprite["playerNumber"]] = self.players[ipport]
-
-        log(f"Player named {msg['playerDisplayName']} from {ipport} joined the game.")
-
     def sendStepMsgs(self):
-        # For each map that is marked as changed, send a step message to all players on that map.
-
+        # If the player has changed or map the player is on has changed then send that player a step message.
         for ipport in self.players:
             # find name of map player is on
             mapName = self.players[ipport]["sprite"]["mapName"]
-            if self.maps[mapName].changed: # ALSO NEED TO DETECT PLAYER TEXT CHANGING
+            if self.maps[mapName].changed or self.getPlayerChanged(self.players[ipport]):
                 msg={
                     'type': 'step',
                     'gameSec': time.perf_counter(),
@@ -222,9 +196,13 @@ class Server:
                     destinationIP=self.players[ipport]["ip"],
                     destinationPort=self.players[ipport]["port"]
                     )
-        # All players have updated step msg so we can reset all the map changed flags to False
+            # reset the change detection on player.
+            self.resetPlayerChanged(self.players[ipport])
+
+        # reset the change detection on all maps
         for mapName in self.maps:
             self.maps[mapName].setMapChanged(False)
+        
 
     ########################################################
     # GAME LOGIC
@@ -257,10 +235,51 @@ class Server:
         '''
         perform any game logic for the start of a step that is not map specific.
         '''
-        pass
 
     def stepServerEnd(self):
         '''
         perform any game logic for the end of a step that is not map specific.
         '''
         pass
+
+
+    ########################################################
+    # PLAYER
+    ########################################################
+
+    def addPlayer(self, ip, port, ipport, msg):
+        # add the client to the game.
+        sprite, mapName = self.unassignedPlayerSprites.pop()
+
+        # add player data to sprite
+        sprite["playerNumber"] = len(self.unassignedPlayerSprites) + 1
+        sprite["mapName"] = mapName
+        # add playerDisplaName to sprite as "labelText" so client can display it.
+        sprite["labelText"] = msg['playerDisplayName']
+
+        self.players[ipport] = {
+            'ip': ip,
+            'port': port,
+            'moveSpeed': 120,  # default move speed in pixels per second.
+            'sprite': sprite,
+            'actionText': False,
+            'lastActionText': False,
+            'marqueeText': False,
+            'lastMarqueeText': False
+        }
+        # Also add player to self.playersByNum with the playerNumber so we can look up either way.
+        self.playersByNum[sprite["playerNumber"]] = self.players[ipport]
+
+        # The sprite so the map needs to be sent to all players
+        self.maps[mapName].setMapChanged()
+
+        log(f"Player named {msg['playerDisplayName']} from {ipport} joined the game.")
+
+    def resetPlayerChanged(self, player):
+        player["lastActionText"] = player["actionText"]
+        player["lastMarqueeText"] = player["marqueeText"]
+
+    def getPlayerChanged(self, player):
+        if player["lastActionText"] != player["actionText"] or player["lastMarqueeText"] != player["marqueeText"]:
+            return True
+        return False

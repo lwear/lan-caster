@@ -256,7 +256,7 @@ class ServerMap(engine.stepmap.StepMap):
     ########################################################
 
     def setSpriteActionText(self, sprite, actionText):
-        # only allow setting actionText if something else has not already done so.
+        # only allow setting actionText if something else has not already done so this step.
         if sprite["type"] == "player" and "playerNumber" in sprite:
             player = engine.server.SERVER.playersByNum[sprite["playerNumber"]]
             if not player["actionText"]:
