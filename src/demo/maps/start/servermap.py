@@ -8,7 +8,7 @@ class ServerMap(demo.servermap.ServerMap):
     '''
 
     ########################################################
-    # TRIGGER LOCKED MAPDOOR
+    # TRIGGER LOCKED MAPDOOR (uses mapdoor)
     ########################################################
 
     def triggerLockedMapDoor(self, trigger, sprite):

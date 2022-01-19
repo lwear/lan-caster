@@ -12,7 +12,7 @@ class ServerMap(demo.servermap.ServerMap):
     '''
 
     ########################################################
-    # TRIGGER SAW
+    # TRIGGER SAW (uses RespawnPoint)
     ########################################################
     def initSaws(self):
         '''
@@ -65,7 +65,7 @@ class ServerMap(demo.servermap.ServerMap):
             super().triggerSpeedMultiplier(trigger, sprite)
 
     ########################################################
-    # TRIGGER STOP SAW
+    # TRIGGER STOP SAW (uses Move)
     ########################################################
 
     def setStopSawDest(self, sprite):

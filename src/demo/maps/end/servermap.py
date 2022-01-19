@@ -10,7 +10,7 @@ class ServerMap(demo.servermap.ServerMap):
     '''
 
     ########################################################
-    # MAGIC AREA (uses action)
+    # MAGIC AREA (uses action and lever)
     ########################################################
 
     def triggerMagicArea(self, magicArea, sprite):
