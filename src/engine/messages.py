@@ -45,7 +45,8 @@ class Messages:
                 'mapName': 'str',
                 'layerVisabilityMask': 'int',
                 'sprites': 'list',
-                'marquee_o': 'str'
+                'actionText_o': 'str',
+                'marqueeText_o': 'str'
                 },
             'Error': {'result': 'str'}
             }

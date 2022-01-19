@@ -175,20 +175,24 @@ class Server:
         sprite, mapName = self.unassignedPlayerSprites.pop()
 
         # add player data to sprite
-        sprite["playerNumber"] = len(self.players) + 1
+        sprite["playerNumber"] = len(self.unassignedPlayerSprites) + 1
         sprite["mapName"] = mapName
         # add playerDisplaName to sprite as "labelText" so client can display it.
         sprite["labelText"] = msg['playerDisplayName']
         # The changed displayName may be visible so we need to set this map to changed.
         self.maps[mapName].setMapChanged()
 
-        # add sprite and other values to list of players
         self.players[ipport] = {
             'ip': ip,
             'port': port,
             'moveSpeed': 120,  # default move speed in pixels per second.
-            'sprite': sprite
+            'sprite': sprite,
+            'actionText': False,
+            'marqueeText': False
         }
+        # Also add player to self.players with there playerNumber so we can look up either way.
+        # playerNumber (int) and ipport (str) will never conflict and are references back to the same thing.
+        self.players[sprite["playerNumber"]] = self.players[ipport]
 
         log(f"Player named {msg['playerDisplayName']} from {ipport} joined the game.")
 
@@ -198,14 +202,23 @@ class Server:
         for ipport in self.players:
             # find name of map player is on
             mapName = self.players[ipport]["sprite"]["mapName"]
-            if self.maps[mapName].changed:
-                self.socket.sendMessage(msg={
+            if self.maps[mapName].changed: # ALSO NEED TO DETECT PLAYER TEXT CHANGING
+                msg={
                     'type': 'step',
                     'gameSec': time.perf_counter(),
                     'mapName': mapName,
                     'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
                     'sprites': self.maps[mapName].sprites
-                    },
+                    }
+
+                if self.players[ipport]["actionText"]:
+                    msg["actionText"] = self.players[ipport]["actionText"]
+
+                if self.players[ipport]["marqueeText"]:
+                    msg["marqueeText"] = self.players[ipport]["marqueeText"]
+
+                self.socket.sendMessage(
+                    msg,
                     destinationIP=self.players[ipport]["ip"],
                     destinationPort=self.players[ipport]["port"]
                     )

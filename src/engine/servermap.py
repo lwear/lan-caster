@@ -255,14 +255,17 @@ class ServerMap(engine.stepmap.StepMap):
     ########################################################
 
     def setSpriteActionText(self, sprite, actionText):
-        # only allow setting actionText for players and only if something else has not already done so.
-        if sprite["type"] == "player" and "actionText" not in sprite:
-            self.delSpriteActionText(sprite)
-            sprite["actionText"] = actionText
+        # only allow setting actionText if something else has not already done so.
+        if sprite["type"] == "player" and "playerNumber" in sprite:
+            player = engine.server.SERVER.players[sprite["playerNumber"]]
+            if not player["actionText"]:
+                player["actionText"] = actionText
 
     def delSpriteActionText(self, sprite):
-        if "actionText" in sprite:
-            del sprite["actionText"]
+        if sprite["type"] == "player" and "playerNumber" in sprite:
+            player = engine.server.SERVER.players[sprite["playerNumber"]]
+            if "actionText" in player:
+                player["actionText"] = False
 
     def stepSpriteStartDelActionText(self, sprite):
         self.delSpriteActionText(sprite)
