@@ -73,6 +73,7 @@ class ClientTileset(engine.tileset.Tileset):
             # add direction label to end of property, result will be something like 'stationaryLeft'.
             property = property + geo.angleLable(tileObject['direction'])
 
+            # if that property is in the tile properties then use it rather than the default tileNumber.
             if property in self.tiles[tileNumber]:
                 tileNumber = self.tiles[tileNumber][property]
 

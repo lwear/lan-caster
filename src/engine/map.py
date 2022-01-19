@@ -371,3 +371,21 @@ class Map:
             object["x"] = anchorX - object["width"] / 2
             object["y"] = anchorY - object["height"] / 2
         self.setMapChanged()
+
+    def checkKeys(self, object, props):
+        # returns true if all props are in object keys. Tries to give a smart warning message.
+        result = True
+        for p in props:
+            if p not in object:
+                result = False
+                name = "object"
+                if object["name"]:
+                    name = f"object with name={object['name']}"
+                elif object["type"]:
+                    name = f"object with type={object['type']}"
+                if p.startswith('prop-'):
+                    tiledProp = p[5:]
+                    log(f"Missing Tiled property {tiledProp} in {name}", "WARNING")
+                else:
+                    log(f"Missing key {p} in {name}", "WARNING")
+        return result

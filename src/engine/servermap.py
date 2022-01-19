@@ -144,6 +144,10 @@ class ServerMap(engine.stepmap.StepMap):
     def triggerMapDoor(self, trigger, sprite):
         # Move sprite based on trigger. This may include moving to a new map.
 
+        if not self.checkKeys(trigger, ("prop-destMapName", "prop-destReference")):
+            log("Cannot process mapDoor trigger.", "ERROR")
+            return
+
         # find destination based on object named trigger["prop-destReference"] on
         # layer "reference" of map trigger["prop-destMapName"]
         destMap = engine.server.SERVER.maps[trigger["prop-destMapName"]]
