@@ -279,6 +279,7 @@ class ServerMap(engine.stepmap.StepMap):
                 player["actionText"] = False
 
     def stepSpriteStartDelActionText(self, sprite):
+        # delete actionText at the start of a step. It will be set again during the step if an action is available.
         self.delSpriteActionText(sprite)
 
     ########################################################
@@ -286,10 +287,13 @@ class ServerMap(engine.stepmap.StepMap):
     ########################################################
 
     def setSpriteSpeechText(self, sprite, speechText, speechTextDelAfter=0):
+        old = sprite["speechText"]
         self.delSpriteSpeechText(sprite)
         sprite["speechText"] = speechText
         if speechTextDelAfter > 0:
             sprite["speechTextDelAfter"] = speechTextDelAfter
+        if old != sprite["speechText"]:
+            self.setMapChanged()
 
     def delSpriteSpeechText(self, sprite):
         if "speechText" in sprite:
@@ -307,19 +311,13 @@ class ServerMap(engine.stepmap.StepMap):
     ########################################################
 
     def setLayerShowAfter(self, layer, showAfter=0):
-        if showAfter > 0:
-            layer["showAfter"] = showAfter
-        else:
-            self.delLayerHideAfter(layer)
+        layer["showAfter"] = showAfter
 
     def delLayerShowAfter(self, layer):
         del layer["showAfter"]
 
     def setLayerHideAfter(self, layer, hideAfter=0):
-        if hideAfter > 0:
-            layer["hideAfter"] = hideAfter
-        else:
-            self.delLayerHideAfter(layer)
+        layer["hideAfter"] = hideAfter
 
     def delLayerHideAfter(self, layer):
         del layer["hideAfter"]
