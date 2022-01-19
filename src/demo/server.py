@@ -27,22 +27,26 @@ class Server(engine.server.Server):
         super().stepServerStart()
 
         # check for game won
-        end = self.maps["end"]
-        endGame = end.findObject(name="endGame", objectList=end.reference)
-        playersIn = 0
-        for ipport in self.players:
-            sprite = self.players[ipport]["sprite"]
-            if sprite["mapName"] == "end" and geo.objectContains(endGame, sprite["anchorX"], sprite["anchorY"]):
-                playersIn += 1
-        if playersIn == 3:
-            self.quitAfter = time.perf_counter()+10
+        # if all players have joined game
+        if len(self.unassignedPlayerSprites) == 0:
+            end = self.maps["end"]
+            endGame = end.findObject(name="endGame", objectList=end.reference)
+            playersIn = 0
             for ipport in self.players:
-                self.players[ipport]['marqueeText'] = "Game Won! Good teamwork everyone."
+                sprite = self.players[ipport]["sprite"]
+                if sprite["mapName"] == "end" and geo.objectContains(endGame, sprite["anchorX"], sprite["anchorY"]):
+                    playersIn += 1
+            # if all players have made it to the end.
+            if playersIn == len(self.players):
+                self.quitAfter = time.perf_counter()+10
+                for ipport in self.players:
+                    self.players[ipport]['marqueeText'] = "Game Won! Good teamwork everyone."
 
         if self.quitAfter < time.perf_counter():
-            self.socket.sendMessage(
-                msg={'type': 'quiting'},
-                destinationIP=self.players[ipport]["ip"],
-                destinationPort=self.players[ipport]["port"]
-                )
+            for ipport in self.players:
+                self.socket.sendMessage(
+                    msg={'type': 'quiting'},
+                    destinationIP=self.players[ipport]["ip"],
+                    destinationPort=self.players[ipport]["port"]
+                    )
             engine.server.SERVER.quit()

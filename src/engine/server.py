@@ -37,6 +37,7 @@ class Server:
         self.fps = fps
 
         self.players = {}  # dict of players indexed by their ipport (eg. '192.168.3.4:20013')
+        self.playersByNum = {} # same as above but indexed by playerNumber
         self.socket = None  # set up below
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -190,9 +191,8 @@ class Server:
             'actionText': False,
             'marqueeText': False
         }
-        # Also add player to self.players with there playerNumber so we can look up either way.
-        # playerNumber (int) and ipport (str) will never conflict and are references back to the same thing.
-        self.players[sprite["playerNumber"]] = self.players[ipport]
+        # Also add player to self.playersByNum with the playerNumber so we can look up either way.
+        self.playersByNum[sprite["playerNumber"]] = self.players[ipport]
 
         log(f"Player named {msg['playerDisplayName']} from {ipport} joined the game.")
 

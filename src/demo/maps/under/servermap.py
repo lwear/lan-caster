@@ -71,7 +71,7 @@ class ServerMap(demo.servermap.ServerMap):
     def setStopSawDest(self, sprite):
         # assume sprite is a saw
         if "moveDestX" in sprite:
-            sprite["stopSawDestX"] = sprite["moevDestX"]
+            sprite["stopSawDestX"] = sprite["moveDestX"]
             sprite["stopSawDestY"] = sprite["moveDestY"]
             sprite["stopSawSpeed"] = sprite["moveSpeed"]
 

@@ -95,13 +95,13 @@ class ServerMap(engine.servermap.ServerMap):
         elif sprite["type"] == "player":
             self.setSpriteSpeechText(sprite, f"I could throw something from here.")
 
-    def objectInBounds(self, object, x, y):
+    def checkMove(self, object, x, y):
         # allow things that have bee thrown to go out of bounds so they can be thrown over water.
         # The way the throw zones are set up ensures that objects can't be thrown off the map.
         if "moveSpeed" in object and object["moveSpeed"] == self.THROWSPEED:
             return True
 
-        return super().objectInBounds(object, x, y)
+        return super().checkMove(object, x, y)
 
     ########################################################
     # SPEED MULTIPLIER

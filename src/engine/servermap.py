@@ -85,14 +85,14 @@ class ServerMap(engine.stepmap.StepMap):
             inBounds = False
 
             # if sprite can move directly towards destination
-            if self.objectInBounds(sprite, newAnchorX, newAnchorY):
+            if self.checkMove(sprite, newAnchorX, newAnchorY):
                 inBounds = True
             # elif sprite is moving along X then try to stay at the same Y and move along only along X
-            elif newAnchorX != sprite["anchorX"] and self.objectInBounds(sprite, newAnchorX, sprite["anchorY"]):
+            elif newAnchorX != sprite["anchorX"] and self.checkMove(sprite, newAnchorX, sprite["anchorY"]):
                 newAnchorY = sprite["anchorY"]
                 inBounds = True
             # elif sprite is moving along Y then try to stay at the same X and move along only along Y
-            elif newAnchorY != sprite["anchorY"] and self.objectInBounds(sprite, sprite["anchorX"], newAnchorY):
+            elif newAnchorY != sprite["anchorY"] and self.checkMove(sprite, sprite["anchorX"], newAnchorY):
                 newAnchorX = sprite["anchorX"]
                 inBounds = True
 
@@ -110,7 +110,7 @@ class ServerMap(engine.stepmap.StepMap):
                 # sprite cannot move.
                 self.delSpriteDest(sprite)
 
-    def objectInBounds(self, object, x=False, y=False):
+    def checkMove(self, object, x, y):
         '''
         return True if object's anchor point is inbounds considering the map size, inBounds layer, and
         outOfBounds layer; else return False.
@@ -125,10 +125,6 @@ class ServerMap(engine.stepmap.StepMap):
         4) else it IS inbounds.
 
         '''
-        if x == False:
-            x = object["anchorX"]
-        if y == False:
-            y = object["anchorY"]
         if geo.objectContains({"x": 0, "y": 0, "width": self.pixelWidth, "height": self.pixelHeight}, x, y) and \
                 (geo.objectsContains(self.inBounds, x, y) or (not geo.objectsContains(self.outOfBounds, x, y))):
             return True
@@ -262,13 +258,13 @@ class ServerMap(engine.stepmap.StepMap):
     def setSpriteActionText(self, sprite, actionText):
         # only allow setting actionText if something else has not already done so.
         if sprite["type"] == "player" and "playerNumber" in sprite:
-            player = engine.server.SERVER.players[sprite["playerNumber"]]
+            player = engine.server.SERVER.playersByNum[sprite["playerNumber"]]
             if not player["actionText"]:
                 player["actionText"] = actionText
 
     def delSpriteActionText(self, sprite):
         if sprite["type"] == "player" and "playerNumber" in sprite:
-            player = engine.server.SERVER.players[sprite["playerNumber"]]
+            player = engine.server.SERVER.playersByNum[sprite["playerNumber"]]
             if "actionText" in player:
                 player["actionText"] = False
 

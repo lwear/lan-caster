@@ -79,7 +79,7 @@ class ServerMap(demo.servermap.ServerMap):
                         self.findObject(name="bridge3InBounds", objectList=self.reference),
                         objectList=self.inBounds)
 
-                    self.delSpriteAction(sprite)
+                self.delSpriteAction(sprite)
             
 
             

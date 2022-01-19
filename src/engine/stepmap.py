@@ -137,22 +137,22 @@ class StepMap(engine.map.Map):
             exclude=sprite)
 
         for trigger in triggers:
-            triggerMehodName = self.triggerMethodName(trigger)
+            triggerMehodName = self.getTriggerMethodName(trigger)
             # if trigger is not in priority list then log error and remove it
             if triggerMehodName not in self.stepMethodPriority['trigger']:
                 log(f"ServerMap does not have method named {triggerMehodName} for trigger type {trigger['type']}.", "ERROR")
                 triggers.remove(trigger)
         
         # sort triggers by priority (lower first)
-        triggers.sort(key=lambda trigger: self.stepMethodPriority['trigger'][self.triggerMethodName(trigger)])
+        triggers.sort(key=lambda trigger: self.stepMethodPriority['trigger'][self.getTriggerMethodName(trigger)])
         
         # call each triggers method. e.g. trigger['type'] == 'mapDoor' will call triggerMapDoor(trigger, sprite)
         for trigger in triggers:
-            triggerMethod = getattr(self, self.triggerMethodName(trigger), None)
+            triggerMethod = getattr(self, self.getTriggerMethodName(trigger), None)
             stopOtherTriggers = triggerMethod(trigger, sprite)
             if stopOtherTriggers:
                 break # do not process any more triggers for this sprite on this step.
 
-    def triggerMethodName(self, trigger):
+    def getTriggerMethodName(self, trigger):
         # Convert a trigger type (eg. trigger["type"] == "mapDoor") to method name (eg. "triggerMapDoor")
         return "trigger" + trigger['type'][:1].capitalize() + trigger['type'][1:]
