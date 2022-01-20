@@ -269,4 +269,6 @@ SPEACHTEXT
 
 ```
 
-Add trigger for layerVisibleToggle (defalutVisible can be added else taken from file.)
+Also maps to be rendered with an offset in clientMap.
+Allow client to scroll map so player is near middle and map can be larger than window.
+remake test engine.
