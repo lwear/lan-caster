@@ -12,13 +12,12 @@ class ServerMap(demo.servermap.ServerMap):
     ########################################################
 
     def triggerLockedMapDoor(self, trigger, sprite):
-        # if the sprite is holding the correct thing to unlock the door.
 
-        # only prop-unlocks is required
-        if not self.checkKeys(trigger, ("prop-unlocks")):
+        if not self.checkKeys(trigger, ["prop-unlocks", "prop-lockedText"]):
             log("Cannot process lockedMapDoor trigger.", "ERROR")
             return
 
+        # if the sprite is holding the correct thing to unlock the door.
         if "holding" in sprite and sprite["holding"]["name"] == trigger["prop-unlocks"]:
 
             # unlock door (change type to normal mapDoor)
@@ -26,9 +25,9 @@ class ServerMap(demo.servermap.ServerMap):
             trigger["type"] = "mapDoor"
 
             # hide door locked layer and show unlocked door layer.
-            if trigger["prop-hideLayer"]:
+            if "prop-hideLayer" in trigger:
                 self.setLayerVisablitybyName(trigger["prop-hideLayer"], False)
-            if trigger["prop-showLayer"]:
+            if "prop-showLayer" in trigger:
                 self.setLayerVisablitybyName(trigger["prop-showLayer"], True)
         elif sprite["type"] == "player":
             self.setSpriteSpeechText(sprite, trigger["prop-lockedText"])

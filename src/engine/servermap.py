@@ -129,6 +129,10 @@ class ServerMap(engine.stepmap.StepMap):
         4) else it IS inbounds.
 
         '''
+        # if move player move checking has been turned off then allow all moves for players
+        if object["type"] == 'player' and not engine.server.SERVER.playerMoveCheck:
+            return True
+
         if geo.objectContains({"x": 0, "y": 0, "width": self.pixelWidth, "height": self.pixelHeight}, x, y) and \
                 (geo.objectsContains(self.inBounds, x, y) or (not geo.objectsContains(self.outOfBounds, x, y))):
             return True
@@ -144,7 +148,7 @@ class ServerMap(engine.stepmap.StepMap):
     def triggerMapDoor(self, trigger, sprite):
         # Move sprite based on trigger. This may include moving to a new map.
 
-        if not self.checkKeys(trigger, ("prop-destMapName", "prop-destReference")):
+        if not self.checkKeys(trigger, ["prop-destMapName", "prop-destReference"]):
             log("Cannot process mapDoor trigger.", "ERROR")
             return
 
@@ -212,34 +216,7 @@ class ServerMap(engine.stepmap.StepMap):
                 self.delHoldable(sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Drop {sprite['holding']['name']}")
-
-    ########################################################
-    # Portkey (uses action, and mapdoor)
-    ########################################################
-
-    '''
-    A portkey is a map door that is a visable sprite and requires the player to request an action before
-    they will go through the mapDoor.
-    '''
-
-    def initPortkey(self):
-        # portkey sprites need to be triggers so things can
-        # be done when another sprite interacts with them.
-        # copy (by refernece) sprites to triggers
-        for portkey in self.findObject(type="portkey", returnAll=True):
-            self.addObject(portkey, objectList=self.triggers)
-
-    def triggerPortkey(self, portkey, sprite):
-        '''
-        Portkey acts as a mapdoor but also requires a user to request an action.
-        Requires the same properties as a mapdoor.
-        '''
-        if "action" in sprite:
-            self.delSpriteAction(sprite)
-            self.triggerMapDoor(portkey, sprite)  # assume portkey has the properties required by a mapDoor trigger
-        else:
-            self.setSpriteActionText(sprite, f"Available Action: Touch {portkey['name']}")
-
+    
     ########################################################
     # GENERAL ACTION HANDLING
     ########################################################
@@ -287,11 +264,15 @@ class ServerMap(engine.stepmap.StepMap):
     ########################################################
 
     def setSpriteSpeechText(self, sprite, speechText, speechTextDelAfter=0):
-        old = sprite["speechText"]
+        old = False
+        if "speachText" in sprite:
+            old = sprite["speechText"]
+
         self.delSpriteSpeechText(sprite)
         sprite["speechText"] = speechText
         if speechTextDelAfter > 0:
             sprite["speechTextDelAfter"] = speechTextDelAfter
+            
         if old != sprite["speechText"]:
             self.setMapChanged()
 
@@ -305,61 +286,3 @@ class ServerMap(engine.stepmap.StepMap):
         if "speechTextDelAfter" not in sprite or (
                 "speechTextDelAfter" in sprite and sprite["speechTextDelAfter"] < time.perf_counter()):
             self.delSpriteSpeechText(sprite)
-
-    ########################################################
-    # LAYER (showAfter/hideAfter) TIMERS
-    ########################################################
-
-    def setLayerShowAfter(self, layer, showAfter=0):
-        layer["showAfter"] = showAfter
-
-    def delLayerShowAfter(self, layer):
-        del layer["showAfter"]
-
-    def setLayerHideAfter(self, layer, hideAfter=0):
-        layer["hideAfter"] = hideAfter
-
-    def delLayerHideAfter(self, layer):
-        del layer["hideAfter"]
-
-    def initLayerTimers(self):
-        self.addStepMethodPriority("stepMapStart", "stepMapStartLayerTimers", 10)
-
-    def stepMapStartLayerTimers(self):
-        # Set visibility to true/false for any layers with expired "hideAfter"/"showAfter".
-        currentTime = time.perf_counter()
-        for layer in self.layers:
-            if "hideAfter" in layer and layer["hideAfter"] < currentTime:
-                # hide the layer
-                self.setLayerVisablitybyName(layer["name"], False)
-                self.delLayerHideAfter(layer)
-            if "showAfter" in layer and layer["showAfter"] < currentTime:
-                # show the layer
-                self.setLayerVisablitybyName(layer["name"], True)
-                self.delLayerShowAfter(layer)
-
-    ########################################################
-    # OBJECT (delAfter) TIMERS
-    ########################################################
-
-    def setObjectDelAfter(self, object, delAfter=0):
-        if delAfter > 0:
-            object["delAfter"] = delAfter
-        else:
-            self.delObjectDelAfter(object)
-
-    def delObjectDelAfter(self, object):
-        del object["delAfter"]
-
-    def initObjectTimers(self):
-        self.addStepMethodPriority("stepMapStart", "stepMapStartObjectTimers", 10)
-
-    def stepMapStartObjectTimers(self):
-        currentTime = time.perf_counter()
-        for layer in self.layers:
-            if layer["type"] == "objectgroup":
-                for object in layer['objects']:
-                    # del any objects on object layers that have expired "delAfter".
-                    if "delAfter" in object and object["delAfter"] > currentTime:
-                        # remove expired object
-                        self.removeObject(object, objectList=layer["objects"])

@@ -80,7 +80,7 @@ class ServerMap(engine.servermap.ServerMap):
     def triggerThrowArea(self, throwArea, sprite):
         # if we are holding anything while in a throwArea then throw it.
 
-        if not self.checkKeys(trigger, ("prop-deltaX", "prop-deltaY")):
+        if not self.checkKeys(throwArea, ["prop-deltaX", "prop-deltaY"]):
             log("Cannot process throwArea trigger.", "ERROR")
             return
 
@@ -113,7 +113,7 @@ class ServerMap(engine.servermap.ServerMap):
     ########################################################
 
     def triggerSpeedMultiplier(self, trigger, sprite):
-        if not self.checkKeys(trigger, ("prop-speedMultiplier")):
+        if not self.checkKeys(trigger, ["prop-speedMultiplier"]):
             log("Cannot process speedMultiplier trigger.", "ERROR")
             return
 

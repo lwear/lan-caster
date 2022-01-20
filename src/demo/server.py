@@ -7,8 +7,8 @@ import engine.geometry as geo
 
 class Server(engine.server.Server):
 
-    def __init__(self, game, fps, serverIP, serverPort):
-        super().__init__(game, fps, serverIP, serverPort)
+    def __init__(self, game, fps, serverIP, serverPort, testMode):
+        super().__init__(game, fps, serverIP, serverPort, testMode)
 
         # server will quit after this time.
         self.quitAfter = sys.float_info.max

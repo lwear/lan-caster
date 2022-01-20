@@ -29,12 +29,14 @@ def startServer():
                         default=False, help='Print DEBUG level log messages.')
     parser.add_argument('-verbose', dest='verbose', action='store_true',
                         default=False, help='Print VERBOSE level log messages. Note, -debug includes -verbose.')
+    parser.add_argument('-test', dest='test', action='store_true',
+                        default=False, help='Start server in test mode.')
     args = parser.parse_args()
 
     setLogLevel(args.debug, args.verbose)
 
     module = engine.loaders.loadModule("server", game=args.game)
-    module.Server(args.game, args.fps, args.serverIP, args.serverPort).run()
+    module.Server(args.game, args.fps, args.serverIP, args.serverPort, args.test).run()
 
 
 if __name__ == "__main__":

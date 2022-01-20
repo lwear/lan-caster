@@ -23,13 +23,13 @@ class ServerMap(demo.servermap.ServerMap):
         also move.
         '''
         for saw in self.findObject(type="saw", returnAll=True):
-            self.triggers.append(saw)
+            if not self.checkKeys(saw, ["prop-maxX", "prop-minX", "prop-speed"]):
+                log("Cannot init stepSpriteStartSaw().", "ERROR")
+                saw["type"] = "sawBroken"
+            else:
+                self.triggers.append(saw)
 
     def stepSpriteStartSaw(self, sprite):
-        if not self.checkKeys(sprite, ("prop-maxX", "prop-minX", "prop-speed")):
-            log("Cannot process stepSpriteStartSaw().", "ERROR")
-            return
-
         if sprite["type"] == "saw":
             # if saw has stopped then reverse direction.
             if "moveDestX" not in sprite:
@@ -90,7 +90,7 @@ class ServerMap(demo.servermap.ServerMap):
     def triggerStopSaw(self, trigger, sprite):
         # stop a saw for this step
 
-        if not self.checkKeys(trigger, ("prop-sawName")):
+        if not self.checkKeys(trigger, ["prop-sawName"]):
             log("Cannot process stopSaw trigger.", "ERROR")
             return
 

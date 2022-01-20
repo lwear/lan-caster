@@ -35,7 +35,7 @@ class Messages:
         self.messageDefinitions = {
             # msg type             other required msg fields
             'joinRequest': {'game': ['str', 1, 16], 'playerDisplayName': ['str', 1, 16]},
-            'joinReply': {'playerNumber': 'int', 'serverSec': 'float'},
+            'joinReply': {'playerNumber': 'int', 'serverSec': 'float', 'testMode': 'bool'},
             'quitting': {},
             'playerMove': {'moveDestX': 'int', 'moveDestY': 'int'},
             'playerAction': {},
@@ -47,6 +47,9 @@ class Messages:
                 'actionText_o': 'str',
                 'marqueeText_o': 'str'
                 },
+            'testTogglePlayerMoveChecking': {},
+            'testPlayerNextMap': {},
+            'testPlayerJump': {'moveDestX': 'int', 'moveDestY': 'int'},
             'Error': {'result': 'str'}
             }
 

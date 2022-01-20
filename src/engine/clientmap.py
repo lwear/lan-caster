@@ -43,7 +43,8 @@ class ClientMap(engine.map.Map):
             "bgcolor": "#000000",
             "bgbordercolor": "#000000",
             "bgborderThickness": 0,
-            "bgroundCorners": 0
+            "bgroundCorners": 0,
+            "antialiased": True
             }
 
         # speechText defaults that differ from DEFAULTTEXT
@@ -333,6 +334,7 @@ class ClientMap(engine.map.Map):
 
         font.strong = textObject["text"]["bold"]
         font.underline = textObject["text"]["underline"]
+        font.antialiased = textObject["text"]["antialiased"]
 
         font.fgcolor = pygame.Color(textObject["text"]["color"])
         # Tiled hex colors with alpha are #argb but pygame needs #rgba so now flip alpha to the end.

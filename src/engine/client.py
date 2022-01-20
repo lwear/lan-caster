@@ -40,6 +40,7 @@ class Client:
 
         self.fps = fps
         self.serverIpport = engine.network.formatIpPort(serverIP, serverPort)
+        self.testMode = False  # True is server is in testMode. Server provides this in joinReply message.
 
         # actionText defaults that differ from DEFAULTTEXT
         self.ACTIONTEXT = {
@@ -96,9 +97,16 @@ class Client:
             if reply["type"] != "joinReply":
                 log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
                 quit()
+
             self.playerNumber = reply["playerNumber"]
+
             # set the time so client engine.time.perf_counter() will return secs in sync (very close) to server.
             time.set(reply['serverSec'])
+
+            self.testMode = reply["testMode"]
+            if(self.testMode):
+                log("Server running in TEST MODE.")
+
         except engine.network.SocketException as e:
             log("Is server running at" + serverIP + ":" + str(serverPort) + "?")
             log(str(e), "FAILURE")
@@ -208,6 +216,10 @@ class Client:
         if 'marqueeText' in self.step:
             self.blitMarqueeText(self.step["marqueeText"])
 
+        if(self.testMode):
+            self.blitTestText()
+            
+
     def blitActionText(self, actionText):
         text = self.ACTIONTEXT.copy()
         text["text"] = actionText + " (spacebar)"
@@ -242,6 +254,31 @@ class Client:
         # WARNING, This renders in map coords assumes they are the same as screen coords!
         map.blitTextObject(self.screen, textObject)
 
+    def blitTestText(self):
+        textObject = {
+            'x': 0, 'y': 0,
+            'width': self.screen.get_width(), 'height': self.screen.get_height(),
+            'text': {
+                'text': "TEST MODE: F1=Toggle_Player_Move_Checking F2=Jump_Map RMB=Jump_Location",
+                'pixelsize': 14,
+                'vlaign':'top',
+                'halign':'center',
+                "color": "#00ff00",
+                "fontfamily": 'Courier New',
+                "bgcolor": "#000000",
+                "bgbordercolor": "#000000",
+                "bgborderThickness": 0,
+                "bgroundCorners": 0,
+                "antialiased": True
+                }
+            }
+
+        # find the map that the server wants us to render.
+        map = self.maps[self.step["mapName"]]
+
+        # WARNING, This renders in map coords assumes they are the same as screen coords!
+        map.blitTextObject(self.screen, textObject)
+
     ########################################################
     # USER INPUT HANDLING
     ########################################################
@@ -257,6 +294,14 @@ class Client:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.socket.sendMessage({'type': 'playerAction'})
+            elif event.key == pygame.K_F1:
+                self.socket.sendMessage({'type': 'testTogglePlayerMoveChecking'})
+            elif event.key == pygame.K_F2:
+                self.socket.sendMessage({'type': 'testPlayerNextMap'})
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            btn1, btn2, btn3 = pygame.mouse.get_pressed(num_buttons=3)
             moveDestX, moveDestY = pygame.mouse.get_pos()
-            self.socket.sendMessage({'type': 'playerMove', 'moveDestX': moveDestX, 'moveDestY': moveDestY})
+            msgType = 'playerMove'
+            if btn3:
+                msgType ='testPlayerJump'
+            self.socket.sendMessage({'type': msgType, 'moveDestX': moveDestX, 'moveDestY': moveDestY})

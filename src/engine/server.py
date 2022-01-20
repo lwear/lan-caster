@@ -25,9 +25,10 @@ class Server:
         2) Initiating game logic: step forward, global game logic such as detect end game;
         3) Send updated map data to players for the map they are on;
         4) Receiving messages from players and store the data for processing by the step logic.
+        5) Receive and process test messages from players. (on with -test cmd line flag)
     """
 
-    def __init__(self, game, fps, serverIP, serverPort):
+    def __init__(self, game, fps, serverIP, serverPort, testMode):
         global SERVER
         SERVER = self
         signal.signal(signal.SIGINT, quit)
@@ -35,6 +36,11 @@ class Server:
 
         self.game = game
         self.fps = fps
+
+        self.testMode = testMode
+        self.playerMoveCheck = True
+        if(self.testMode):
+            log("Server running in TEST MODE.")
 
         self.players = {}  # dict of players indexed by their ipport (eg. '192.168.3.4:20013')
         self.playersByNum = {}  # same as above but indexed by playerNumber
@@ -135,8 +141,39 @@ class Server:
             elif msg['type'] == 'playerAction':
                 map.setSpriteAction(sprite)
                 reply = False
+            elif msg['type'] == 'testTogglePlayerMoveChecking':
+                if self.testMode:
+                    self.playerMoveCheck = not self.playerMoveCheck
+                    if self.playerMoveCheck:
+                        log(f"TEST: playerMoveCheck turned ON by {self.players[ipport]['sprite']['labelText']} {ipport}")
+                    else:
+                        log(f"TEST: playerMoveCheck turned OFF by {self.players[ipport]['sprite']['labelText']} {ipport}")
+                reply = False
+            elif msg['type'] == 'testPlayerNextMap':
+                if self.testMode:
+                    log(f"TEST: Player Changed Maps: {self.players[ipport]['sprite']['labelText']} {ipport}")
+                    map.removeObject(sprite)
+                    mapNames = []
+                    for mapName in self.maps.keys():
+                        mapNames.append(mapName)
+                    mapNames.sort
+                    destMap = self.maps[mapNames[0]]
+                    for i in range(len(mapNames)):
+                        if self.maps[mapNames[i]] == map and i != len(mapNames)-1:
+                            destMap = self.maps[mapNames[i+1]]
+                            break
+                    destMap.addObject(sprite)
+                    destMap.delSpriteDest(sprite)
+                reply = False
+            elif msg['type'] == 'testPlayerJump':
+                if self.testMode:
+                    log(f"TEST: Player Jumped: {self.players[ipport]['sprite']['labelText']} {ipport}")
+                    map.setObjectLocationByAnchor(sprite, msg["moveDestX"], msg["moveDestY"])
+                    map.delSpriteDest(sprite)
+                reply = False
             else:
                 log(f"Player at {ipport} sent a message of type = {msg['type']} which can't be processed.", "WARNING")
+                reply = {'type': 'Error', 'result': "Player sent msg of type = {msg['type']} which can't be processed."}
         else:
             reply = {'type': 'Error', 'result': "Players that have not joined game may only send joinRequest msg type."}
 
@@ -166,7 +203,8 @@ class Server:
             return {
                 'type': "joinReply",
                 'playerNumber': self.players[ipport]["sprite"]["playerNumber"],
-                'serverSec': time.perf_counter()
+                'serverSec': time.perf_counter(),
+                'testMode': self.testMode
                 }
         else:
             return {'type': 'Error', 'result': result}
