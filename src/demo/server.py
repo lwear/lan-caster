@@ -15,17 +15,23 @@ class Server(engine.server.Server):
 
         self.mode = "waitingForPlayers"
 
-    def processMsg(self, ip, port, ipport, msg, callbackData):
-
-        # only process joinRequests until all players have joined game.
-        if msg['type'] != 'joinRequest' and self.mode == "waitingForPlayers":
+    def msgPlayerMove(self, ip, port, ipport, msg):
+        # ignore playerMove msgs until all players have joined game.
+        if self.mode == "waitingForPlayers":
             return
 
         # clear start marqueeText if player has moved and game is ongoing.
-        if msg["type"] == 'playerMove' and self.mode == "gameOn":
+        if self.mode == "gameOn":
             self.players[ipport]['marqueeText'] = False
 
-        return super().processMsg(ip, port, ipport, msg, callbackData)
+        return super().msgPlayerMove(ip, port, ipport, msg)
+
+    def msgPlayerAction(self, ip, port, ipport, msg):
+        # ignore playerAction msgs until all players have joined game.
+        if self.mode == "waitingForPlayers":
+            return
+
+        return super().msgPlayerAction(ip, port, ipport, msg)
 
     def addPlayer(self, ip, port, ipport, msg):
         super().addPlayer(ip, port, ipport, msg)

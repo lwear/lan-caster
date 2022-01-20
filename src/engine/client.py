@@ -80,11 +80,12 @@ class Client:
         # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
         try:
             self.socket = engine.network.Socket(
-                engine.loaders.loadModule("messages", game=game).Messages(),
-                myIP,
-                myPort,
-                serverIP,
-                serverPort
+                messages=engine.loaders.loadModule("messages", game=game).Messages(),
+                msgProcessor=self,
+                sourceIP=myIP,
+                sourcePort=myPort,
+                destinationIP=serverIP,
+                destinationPort=serverPort
                 )
 
             reply = self.socket.sendRecvMessage({
@@ -129,8 +130,8 @@ class Client:
         sleepTime = 0
         nextStepAt = startAt + (1.0 / self.fps)
         while True:
-            # process messages from server (recvReplyMsgs calls processMsg once for each msg received)
-            self.socket.recvReplyMsgs(self.processMsg)
+            # process messages from server (recvReplyMsgs calls msg<msgType> for each msg received)
+            self.socket.recvReplyMsgs()
 
             # update the screen so player can see data that server sent
             self.updateScreen()
@@ -160,27 +161,17 @@ class Client:
     # NETWORK MESSAGE PROCESSING
     ########################################################
 
-    def processMsg(self, ip, port, ipport, msg, callbackData):
-        # This method is called for each msg received.
-
+    def msgStep(self, ip, port, ipport, msg):
         if ipport != self.serverIpport:
-            # Msg recived was NOT from the server. Ignore this message.
             log(f"Msg received but not from server! Msg from ({ipport}).", "WARNING")
-            return None
-
-        if msg['type'] == 'step':
-            self.msgStep(msg)
-        elif msg['type'] == 'quitting':
-            self.msgQuitting(msg)
-
-        return None
-
-    def msgStep(self, msg):
+            return
         self.step = msg  # store the new step
         self.screenValidUntil = 0  # flag that we need to redraw the screen.
 
-    def msgQuitting(self, msg):
-        # the serer is quitting so we should as well
+    def msgQuitting(self, ip, port, ipport, msg):
+        if ipport != self.serverIpport:
+            log(f"Msg received but not from server! Msg from ({ipport}).", "WARNING")
+            return
         log("Received quitting msg from server.")
         quit()
 

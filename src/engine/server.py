@@ -69,9 +69,10 @@ class Server:
         # set up networking
         try:
             self.socket = engine.network.Socket(
-                engine.loaders.loadModule("messages", game=game).Messages(),
-                serverIP,
-                serverPort
+                messages=engine.loaders.loadModule("messages", game=game).Messages(),
+                msgProcessor=self,
+                sourceIP=serverIP,
+                sourcePort=serverPort
                 )
 
         except Exception as e:
@@ -95,8 +96,8 @@ class Server:
         sleepTime = 0
         nextStepAt = startAt + (1.0 / self.fps)
         while True:
-            # process messages from server (recvReplyMsgs calls processMsg once for each msg received)
-            self.socket.recvReplyMsgs(self.processMsg)
+            # process messages from server (recvReplyMsgs calls msg<msgType> for each msg received)
+            self.socket.recvReplyMsgs()
 
             # Run the game logic to move everything forward one step
             self.stepServer()
@@ -126,59 +127,6 @@ class Server:
     # Network Message Processing
     ########################################################
 
-    def processMsg(self, ip, port, ipport, msg, callbackData):
-        # This method is called from self.socket.recvReplyMsgs for each message received from clients.
-
-        # process joinRequests from any ipport but other messages only from players who have joined game successfully.
-        if msg['type'] == 'joinRequest':
-            reply = self.msgJoinRequest(ip, port, ipport, msg)
-        elif ipport in self.players:  # if this is a player who has already joined the game
-            sprite = self.players[ipport]["sprite"]
-            map = self.maps[sprite["mapName"]]
-            if msg['type'] == 'playerMove':
-                map.setSpriteDest(sprite, msg["moveDestX"], msg["moveDestY"], self.players[ipport]["moveSpeed"])
-                reply = False
-            elif msg['type'] == 'playerAction':
-                map.setSpriteAction(sprite)
-                reply = False
-            elif msg['type'] == 'testTogglePlayerMoveChecking':
-                if self.testMode:
-                    self.playerMoveCheck = not self.playerMoveCheck
-                    if self.playerMoveCheck:
-                        log(f"TEST: playerMoveCheck turned ON by {self.players[ipport]['sprite']['labelText']} {ipport}")
-                    else:
-                        log(f"TEST: playerMoveCheck turned OFF by {self.players[ipport]['sprite']['labelText']} {ipport}")
-                reply = False
-            elif msg['type'] == 'testPlayerNextMap':
-                if self.testMode:
-                    log(f"TEST: Player Changed Maps: {self.players[ipport]['sprite']['labelText']} {ipport}")
-                    map.removeObject(sprite)
-                    mapNames = []
-                    for mapName in self.maps.keys():
-                        mapNames.append(mapName)
-                    mapNames.sort
-                    destMap = self.maps[mapNames[0]]
-                    for i in range(len(mapNames)):
-                        if self.maps[mapNames[i]] == map and i != len(mapNames)-1:
-                            destMap = self.maps[mapNames[i+1]]
-                            break
-                    destMap.addObject(sprite)
-                    destMap.delSpriteDest(sprite)
-                reply = False
-            elif msg['type'] == 'testPlayerJump':
-                if self.testMode:
-                    log(f"TEST: Player Jumped: {self.players[ipport]['sprite']['labelText']} {ipport}")
-                    map.setObjectLocationByAnchor(sprite, msg["moveDestX"], msg["moveDestY"])
-                    map.delSpriteDest(sprite)
-                reply = False
-            else:
-                log(f"Player at {ipport} sent a message of type = {msg['type']} which can't be processed.", "WARNING")
-                reply = {'type': 'Error', 'result': "Player sent msg of type = {msg['type']} which can't be processed."}
-        else:
-            reply = {'type': 'Error', 'result': "Players that have not joined game may only send joinRequest msg type."}
-
-        return reply
-
     def msgJoinRequest(self, ip, port, ipport, msg):
         # process joinRequest msg from client.
 
@@ -207,7 +155,58 @@ class Server:
                 'testMode': self.testMode
                 }
         else:
-            return {'type': 'Error', 'result': result}
+            return {'type': 'Error', 'result': "Players that have not joined game may only send joinRequest msg type."}
+
+    def msgPlayerMove(self, ip, port, ipport, msg):
+        if ipport in self.players:  # if this is a player who has already joined the game
+            sprite = self.players[ipport]["sprite"]
+            map = self.maps[sprite["mapName"]]
+            map.setSpriteDest(sprite, msg["moveDestX"], msg["moveDestY"], self.players[ipport]["moveSpeed"])
+        return False
+
+    def msgPlayerAction(self, ip, port, ipport, msg):
+        if ipport in self.players:  # if this is a player who has already joined the game
+            sprite = self.players[ipport]["sprite"]
+            map = self.maps[sprite["mapName"]]
+            map.setSpriteAction(sprite)
+        return False
+
+    def msgTestPlayerJump(self, ip, port, ipport, msg):
+        if ipport in self.players:  # if this is a player who has already joined the game
+            if self.testMode:
+                sprite = self.players[ipport]["sprite"]
+                map = self.maps[sprite["mapName"]]
+                map.setObjectLocationByAnchor(sprite, msg["moveDestX"], msg["moveDestY"])
+                map.delSpriteDest(sprite)
+                log(f"TEST: Player Jumped: {self.players[ipport]['sprite']['labelText']} {ipport}")
+
+    def msgTestTogglePlayerMoveChecking(self, ip, port, ipport, msg):
+        if ipport in self.players:  # if this is a player who has already joined the game
+            if self.testMode:
+                self.playerMoveCheck = not self.playerMoveCheck
+                if self.playerMoveCheck:
+                    log(f"TEST: playerMoveCheck turned ON by {self.players[ipport]['sprite']['labelText']} {ipport}")
+                else:
+                    log(f"TEST: playerMoveCheck turned OFF by {self.players[ipport]['sprite']['labelText']} {ipport}")
+
+    def msgTestPlayerNextMap(self, ip, port, ipport, msg):
+        if ipport in self.players:  # if this is a player who has already joined the game
+            if self.testMode:
+                sprite = self.players[ipport]["sprite"]
+                map = self.maps[sprite["mapName"]]
+                map.removeObject(sprite)
+                mapNames = []
+                for mapName in self.maps.keys():
+                    mapNames.append(mapName)
+                mapNames.sort
+                destMap = self.maps[mapNames[0]]
+                for i in range(len(mapNames)):
+                    if self.maps[mapNames[i]] == map and i != len(mapNames)-1:
+                        destMap = self.maps[mapNames[i+1]]
+                        break
+                destMap.addObject(sprite)
+                destMap.delSpriteDest(sprite)
+                log(f"TEST: Player Changed Maps: {self.players[ipport]['sprite']['labelText']} {ipport}")
 
     def sendStepMsgs(self):
         # If the player has changed or map the player is on has changed then send that player a step message.

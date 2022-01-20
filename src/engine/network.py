@@ -19,7 +19,7 @@ class Socket:
     Socket is based on UDP/IP sockets.
     """
 
-    def __init__(self, messages, sourceIP, sourcePort, destinationIP='127.0.0.1', destinationPort=20000):
+    def __init__(self, messages, msgProcessor, sourceIP, sourcePort, destinationIP='127.0.0.1', destinationPort=20000):
         """
         Create and bind UDP socket and bind it to listen on sourceIP and sourcePort.
 
@@ -35,7 +35,10 @@ class Socket:
         """
 
         self.messages = messages
-
+        self.msgProcessor = msgProcessor
+        self.msgProcessorMethods = [func for func in dir(self.msgProcessor) if callable(
+                getattr(self.msgProcessor, func)) and func.startswith('msg')]
+        
         self.sent = {}  # Number of messages sent to OS socket
         self.recv = {}  # Number of messages recv from OS socket
         self.sendRecvMessageCalls = 0  # Number of calls to sendRecvMessage
@@ -68,7 +71,7 @@ class Socket:
     def __str__(self):
         return engine.log.objectToStr(self)
 
-    def recvReplyMsgs(self, callbackFunc, callbackData=False):
+    def recvReplyMsgs(self):
         # process all messages in socket recv buffer
         # for each msg send it to callbackFunc(ipport, msg, callbackData)
         # if the callback function return a msg then send the msg back
@@ -86,8 +89,15 @@ class Socket:
                 more = False
 
         for msg, ip, port in msgQ:
+            methodName = "msg" + msg["type"][:1].capitalize() + msg["type"][1:]
+            if methodName not in self.msgProcessorMethods:
+                log(f'Cannot process msg of type {msg["type"]}. No {methodName} method is found in msgProcessor.', "WARNING")
+                continue
+
+            callbackFunc = getattr(self.msgProcessor, methodName, None)
+
             ipport = formatIpPort(ip, port)
-            reply = callbackFunc(ip, port, ipport, msg, callbackData)
+            reply = callbackFunc(ip, port, ipport, msg)
             if reply:
                 if 'msgID' in msg:
                     reply['msgID'] = msg['msgID']
