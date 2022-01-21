@@ -205,9 +205,9 @@ class ClientMap(engine.map.Map):
             layer['image'].fill((0, 0, 0, 0))
 
             if layer["type"] == "tilelayer":
-                layer['imageValidUntil'] = self.blitTileGrid(layer['image'], (0,0), layer["data"])
+                layer['imageValidUntil'] = self.blitTileGrid(layer['image'], (0, 0), layer["data"])
             elif layer["type"] == "objectgroup":
-                layer['imageValidUntil'] = self.blitObjectList(layer['image'], (0,0), layer["objects"])
+                layer['imageValidUntil'] = self.blitObjectList(layer['image'], (0, 0), layer["objects"])
 
         destImage.blit(layer['image'], offset)
         return layer['imageValidUntil']
@@ -265,7 +265,12 @@ class ClientMap(engine.map.Map):
         tileset = self.tilesets[tilesetName]
 
         # bit the tile
-        validUntil = tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'] + offset[0], tileObject['y'] + offset[1], tileObject)
+        validUntil = tileset.blitTile(
+            tilesetTileNumber,
+            destImage,
+            tileObject['x'] + offset[0],
+            tileObject['y'] + offset[1],
+            tileObject)
 
         return validUntil
 
@@ -437,7 +442,7 @@ class ClientMap(engine.map.Map):
         destX += offset[0]
         destY += offset[1]
 
-        self.blitRectObject(destImage, (0,0), {
+        self.blitRectObject(destImage, (0, 0), {
             'x': destX - buffer,
             'y': destY - buffer,
             'width': pixelWidth + buffer * 2,
@@ -467,7 +472,7 @@ class ClientMap(engine.map.Map):
         pygame.draw.rect(image, fillColor, rect, 0, roundCorners)
         pygame.draw.rect(image, borderColor, rect, borderThickness, roundCorners)
 
-        destImage.blit(image, (rectObject['x']+offset[0], rectObject['y']+offset[1]))
+        destImage.blit(image, (rectObject['x'] + offset[0], rectObject['y'] + offset[1]))
 
         # rect does not have an end time so just sent back a long time from now
         validUntil = sys.float_info.max
@@ -488,7 +493,7 @@ class ClientMap(engine.map.Map):
         pygame.draw.ellipse(image, fillColor, rect, 0)
         pygame.draw.ellipse(image, borderColor, rect, borderThickness)
 
-        destImage.blit(image, (roundObject['x']+offset[0], roundObject['y']+offset[1]))
+        destImage.blit(image, (roundObject['x'] + offset[0], roundObject['y'] + offset[1]))
 
         # rect does not have an end time so just sent back a long time from now
         validUntil = sys.float_info.max

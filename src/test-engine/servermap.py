@@ -1,13 +1,13 @@
-    ########################################################
-    # Portkey (uses action, and mapdoor)
-    ########################################################
+  ########################################################
+  # Portkey (uses action, and mapdoor)
+  ########################################################
 
-    '''
+  '''
     A portkey is a map door that is a visable sprite and requires the player to request an action before
     they will go through the mapDoor.
     '''
 
-    def initPortkey(self):
+   def initPortkey(self):
         # portkey sprites need to be triggers so things can
         # be done when another sprite interacts with them.
         # copy (by refernece) sprites to triggers
@@ -24,7 +24,7 @@
             self.triggerMapDoor(portkey, sprite)  # assume portkey has the properties required by a mapDoor trigger
         else:
             self.setSpriteActionText(sprite, f"Available Action: Touch {portkey['name']}")
-    
+
     ########################################################
     # LAYER (showAfter/hideAfter) TIMERS
     ########################################################
@@ -83,4 +83,3 @@
                     if "delAfter" in object and object["delAfter"] > currentTime:
                         # remove expired object
                         self.removeObject(object, objectList=layer["objects"])
-    

@@ -374,7 +374,7 @@ class Map:
 
     def setObjectMap(self, object, destMap):
         # remove object from all known layers on this map and add to same layers on destMap
-        
+
         if object in self.triggers:
             self.removeObject(object, objectList=self.triggers)
             destMap.addObject(object, objectList=destMap.triggers)

@@ -37,12 +37,12 @@ class Socket:
         self.messages = messages
         self.msgProcessor = msgProcessor
         self.msgProcessorMethods = [func for func in dir(self.msgProcessor) if callable(
-                getattr(self.msgProcessor, func)) and func.startswith('msg')]
+            getattr(self.msgProcessor, func)) and func.startswith('msg')]
         methodsText = ""
         for methodName in self.msgProcessorMethods:
             methodsText += f"{methodName} "
         log(f"Found msg processing methods: {methodsText}")
-        
+
         self.sent = {}  # Number of messages sent to OS socket
         self.recv = {}  # Number of messages recv from OS socket
         self.sendRecvMessageCalls = 0  # Number of calls to sendRecvMessage

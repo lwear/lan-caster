@@ -215,7 +215,7 @@ class ServerMap(engine.stepmap.StepMap):
                 self.delHoldable(sprite)
             else:
                 self.setSpriteActionText(sprite, f"Available Action: Drop {sprite['holding']['name']}")
-    
+
     ########################################################
     # GENERAL ACTION HANDLING
     ########################################################
@@ -271,7 +271,7 @@ class ServerMap(engine.stepmap.StepMap):
         sprite["speechText"] = speechText
         if speechTextDelAfter > 0:
             sprite["speechTextDelAfter"] = speechTextDelAfter
-            
+
         if old != sprite["speechText"]:
             self.setMapChanged()
 

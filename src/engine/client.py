@@ -191,7 +191,7 @@ class Client:
 
             # compute the offset
             self.mapOffset = self.setMapOffset(map)
-            
+
             # draw the map.
             self.screenValidUntil = map.blitMap(self.screen, self.mapOffset, self.step["sprites"])
 
@@ -200,7 +200,6 @@ class Client:
 
             # tell pygame to actually display changes to user.
             pygame.display.update()
-
 
     def setMapOffset(self, map):
         mapOffsetX = 0
@@ -212,25 +211,24 @@ class Client:
             mapOffsetY = round((self.screen.get_height() - map.pixelHeight) / 2)
 
         if map.pixelWidth > self.screen.get_width() or map.pixelHeight > self.screen.get_height():
-            #find the player.
+            # find the player.
             for sprite in self.step["sprites"]:
                 if "playerNumber" in sprite and self.playerNumber == sprite["playerNumber"]:
                     break
 
             if map.pixelWidth > self.screen.get_width():
-                mapOffsetX = self.screen.get_width()/2 - sprite["anchorX"]
+                mapOffsetX = self.screen.get_width() / 2 - sprite["anchorX"]
                 if mapOffsetX > 0:
                     mapOffsetX = 0
-                if map.pixelWidth+mapOffsetX < self.screen.get_width():
+                if map.pixelWidth + mapOffsetX < self.screen.get_width():
                     mapOffsetX = self.screen.get_width() - map.pixelWidth
 
             if map.pixelHeight > self.screen.get_height():
-                mapOffsetY = self.screen.get_height()/2 - sprite["anchorY"]
+                mapOffsetY = self.screen.get_height() / 2 - sprite["anchorY"]
                 if mapOffsetY > 0:
                     mapOffsetY = 0
-                if map.pixelHeight+mapOffsetY < self.screen.get_height():
+                if map.pixelHeight + mapOffsetY < self.screen.get_height():
                     mapOffsetY = self.screen.get_height() - map.pixelHeight
-
 
         mapOffsetX = round(mapOffsetX)
         mapOffsetY = round(mapOffsetY)
@@ -248,7 +246,6 @@ class Client:
 
         if(self.testMode):
             self.blitTestText()
-            
 
     def blitActionText(self, actionText):
         text = self.ACTIONTEXT.copy()
@@ -263,7 +260,7 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-        map.blitTextObject(self.screen, (0,0), textObject, mapRelative=False)
+        map.blitTextObject(self.screen, (0, 0), textObject, mapRelative=False)
 
     def blitMarqueeText(self, marqueeText):
         text = self.MARQUEETEXT.copy()
@@ -278,7 +275,7 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-        map.blitTextObject(self.screen, (0,0), textObject, mapRelative=False)
+        map.blitTextObject(self.screen, (0, 0), textObject, mapRelative=False)
 
     def blitTestText(self):
         textObject = {
@@ -287,8 +284,8 @@ class Client:
             'text': {
                 'text': "TEST MODE: F1=Toggle_Player_Move_Checking F2=Jump_Map RMB=Jump_Location",
                 'pixelsize': 14,
-                'vlaign':'top',
-                'halign':'center',
+                'vlaign': 'top',
+                'halign': 'center',
                 "color": "#00ff00",
                 "fontfamily": 'Courier New',
                 "bgcolor": "#000000",
@@ -301,7 +298,7 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-        map.blitTextObject(self.screen, (0,0), textObject, mapRelative=False)
+        map.blitTextObject(self.screen, (0, 0), textObject, mapRelative=False)
 
     ########################################################
     # USER INPUT HANDLING
@@ -315,7 +312,7 @@ class Client:
     def processEvent(self, event):
         if event.type == QUIT:
             quit()
-        elif  event.type==VIDEORESIZE:
+        elif event.type == VIDEORESIZE:
             self.screenValidUntil = 0
         elif event.type == pygame.TEXTINPUT:
             if event.text == ' ':
@@ -332,5 +329,5 @@ class Client:
             moveDestY -= self.mapOffset[1]
             msgType = 'playerMove'
             if btn3:
-                msgType ='testPlayerJump'
+                msgType = 'testPlayerJump'
             self.socket.sendMessage({'type': msgType, 'moveDestX': moveDestX, 'moveDestY': moveDestY})

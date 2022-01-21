@@ -44,7 +44,7 @@ class Server(engine.server.Server):
                     self.players[ipport]['marqueeText'] += " Game On! Click to move."
                 else:
                     self.players[ipport]['marqueeText'] += f" Waiting for {len(self.unassignedPlayerSprites)} more players to join."
-                    
+
             if self.mode == "gameOn":
                 self.gameStartSec = time.perf_counter()
                 log("GAME ON: All players have joined.")

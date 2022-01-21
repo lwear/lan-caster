@@ -201,14 +201,14 @@ class Server:
                 mapNames.sort
                 destMapName = mapNames[0]
                 for i in range(len(mapNames)):
-                    if mapNames[i] == sprite["mapName"] and i != len(mapNames)-1:
-                        destMapName = mapNames[i+1]
+                    if mapNames[i] == sprite["mapName"] and i != len(mapNames) - 1:
+                        destMapName = mapNames[i + 1]
                         break
                 map = self.maps[sprite["mapName"]]
                 destMap = self.maps[destMapName]
                 map.setObjectMap(sprite, destMap)
                 if sprite["anchorX"] > map.pixelWidth or sprite["anchorY"] > map.pixelHeight:
-                    destMap.setObjectLocationByAnchor(sprite, map.pixelWidth/2, map.pixelHeight/2)
+                    destMap.setObjectLocationByAnchor(sprite, map.pixelWidth / 2, map.pixelHeight / 2)
                 destMap.delSpriteDest(sprite)
                 log(f"TEST: Player Changed Maps: {self.players[ipport]['sprite']['labelText']} {ipport}")
 
