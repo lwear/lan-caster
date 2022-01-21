@@ -157,10 +157,9 @@ class ServerMap(engine.stepmap.StepMap):
         destMap = engine.server.SERVER.maps[trigger["prop-destMapName"]]
         dest = self.findObject(name=trigger["prop-destReference"], objectList=destMap.reference)
         if dest:
-            self.removeObject(sprite)
+            self.setObjectMap(sprite, destMap)
             destMap.setObjectLocationByAnchor(sprite, dest["anchorX"], dest["anchorY"])
             destMap.delSpriteDest(sprite)
-            destMap.addObject(sprite)
             return True  # stop the processing of other triggers since sprite has moved.
         else:
             log(

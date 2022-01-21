@@ -372,6 +372,29 @@ class Map:
             object["y"] = anchorY - object["height"] / 2
         self.setMapChanged()
 
+    def setObjectMap(self, object, destMap):
+        # remove object from all known layers on this map and add to same layers on destMap
+        
+        if object in self.triggers:
+            self.removeObject(object, objectList=self.triggers)
+            destMap.addObject(object, objectList=destMap.triggers)
+
+        if object in self.sprites:
+            self.removeObject(object, objectList=self.sprites)
+            destMap.addObject(object, objectList=destMap.sprites)
+
+        if object in self.reference:
+            self.removeObject(object, objectList=self.reference)
+            destMap.addObject(object, objectList=destMap.reference)
+
+        if object in self.inBounds:
+            self.removeObject(object, objectList=self.inBounds)
+            destMap.addObject(object, objectList=destMap.inBounds)
+
+        if object in self.outOfBounds:
+            self.removeObject(object, objectList=self.outOfBounds)
+            destMap.addObject(object, objectList=destMap.outOfBounds)
+
     def checkKeys(self, object, props):
         # returns true if all props are in object keys. Tries to give a smart warning message.
         result = True

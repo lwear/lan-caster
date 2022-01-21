@@ -191,8 +191,7 @@ class ServerMap(engine.servermap.ServerMap):
             destMap = self
             if sprite["respawnMapName"] != self.name:
                 destMap = engine.server.SERVER.maps[sprite["respawnMapName"]]
-                self.removeObject(sprite)
-                destMap.addObject(sprite)
+                self.setObjectMap(sprite, destMap)
             destMap.setObjectLocationByAnchor(sprite, sprite["respawnX"], sprite["respawnY"])
             destMap.delSpriteDest(sprite)
         else:

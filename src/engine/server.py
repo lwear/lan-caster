@@ -193,18 +193,18 @@ class Server:
         if ipport in self.players:  # if this is a player who has already joined the game
             if self.testMode:
                 sprite = self.players[ipport]["sprite"]
-                map = self.maps[sprite["mapName"]]
-                map.removeObject(sprite)
                 mapNames = []
                 for mapName in self.maps.keys():
                     mapNames.append(mapName)
                 mapNames.sort
-                destMap = self.maps[mapNames[0]]
+                destMapName = mapNames[0]
                 for i in range(len(mapNames)):
-                    if self.maps[mapNames[i]] == map and i != len(mapNames)-1:
-                        destMap = self.maps[mapNames[i+1]]
+                    if mapNames[i] == sprite["mapName"] and i != len(mapNames)-1:
+                        destMapName = mapNames[i+1]
                         break
-                destMap.addObject(sprite)
+                map = self.maps[sprite["mapName"]]
+                destMap = self.maps[destMapName]
+                map.setObjectMap(sprite, destMap)
                 destMap.delSpriteDest(sprite)
                 log(f"TEST: Player Changed Maps: {self.players[ipport]['sprite']['labelText']} {ipport}")
 
