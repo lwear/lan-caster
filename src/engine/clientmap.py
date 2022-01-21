@@ -192,7 +192,7 @@ class ClientMap(engine.map.Map):
         return self.topImageValidUntil
 
     #####################################################
-    # BLIT LAYERS
+    # BLIT LAYER, GRIDS, and OBJECTLISTS
     #####################################################
 
     def blitLayer(self, destImage, offset, layer):
@@ -255,6 +255,10 @@ class ClientMap(engine.map.Map):
 
             validUntil = min(validUntil, vu)
         return validUntil
+
+    #####################################################
+    # BLIT TILE OBJECT
+    #####################################################
 
     def blitTileObject(self, destImage, offset, tileObject):
         tilesetName, tilesetTileNumber = self.findTile(tileObject["gid"])
@@ -451,7 +455,7 @@ class ClientMap(engine.map.Map):
         return validUntil
 
     #####################################################
-    # DRAW OBJECTS
+    # BLIT/DRAW SHAPE OBJECTS
     #####################################################
 
     def blitRectObject(self, destImage, offset, rectObject, fillColor=(0, 0, 0, 0),

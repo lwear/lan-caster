@@ -44,6 +44,8 @@ class Server:
 
         self.players = {}  # dict of players indexed by their ipport (eg. '192.168.3.4:20013')
         self.playersByNum = {}  # same as above but indexed by playerNumber
+        self.gameStartSec = 0  # time_perfcounter() that the game started (send in step msgs)
+
         self.socket = None  # set up below
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -218,7 +220,7 @@ class Server:
             if self.maps[mapName].changed or self.getPlayerChanged(self.players[ipport]):
                 msg = {
                     'type': 'step',
-                    'gameSec': time.perf_counter(),
+                    'gameSec': time.perf_counter() - self.gameStartSec,
                     'mapName': mapName,
                     'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
                     'sprites': self.maps[mapName].sprites

@@ -44,6 +44,10 @@ class Server(engine.server.Server):
                     self.players[ipport]['marqueeText'] += " Game On! Click to move."
                 else:
                     self.players[ipport]['marqueeText'] += f" Waiting for {len(self.unassignedPlayerSprites)} more players to join."
+                    
+            if self.mode == "gameOn":
+                self.gameStartSec = time.perf_counter()
+                log("GAME ON: All players have joined.")
 
     def stepServerStart(self):
         super().stepServerStart()
@@ -61,10 +65,11 @@ class Server(engine.server.Server):
             # if all players have made it to the end.
             if playersIn == len(self.players):
                 self.mode = "gameOver"
-                self.quitAfter = time.perf_counter() + 10
-                log("Game Over. Quiting in 10 seconds")
+                secsToWin = round(time.perf_counter() - self.gameStartSec)
+                self.quitAfter = time.perf_counter() + 30
+                log("GAME OVER: Quiting in 30 seconds")
                 for ipport in self.players:
-                    self.players[ipport]['marqueeText'] = "Game Won! Good teamwork everyone."
+                    self.players[ipport]['marqueeText'] = f"Game Won! Good teamwork everyone. You took {secsToWin} secs to win."
 
         # check if it is time for server to quit
         if self.quitAfter < time.perf_counter():
