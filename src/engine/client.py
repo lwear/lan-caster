@@ -317,10 +317,11 @@ class Client:
             quit()
         elif  event.type==VIDEORESIZE:
             self.screenValidUntil = 0
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+        elif event.type == pygame.TEXTINPUT:
+            if event.text == ' ':
                 self.socket.sendMessage({'type': 'playerAction'})
-            elif event.key == pygame.K_F1:
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F1:
                 self.socket.sendMessage({'type': 'testTogglePlayerMoveChecking'})
             elif event.key == pygame.K_F2:
                 self.socket.sendMessage({'type': 'testPlayerNextMap'})
