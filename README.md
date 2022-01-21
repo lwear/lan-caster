@@ -271,4 +271,5 @@ SPEACHTEXT
 
 Also maps to be rendered with an offset in clientMap.
 Allow client to scroll map so player is near middle and map can be larger than window.
+allow testjump map to land a map smaller than the one the player left (perhaps jump to middle)
 remake test engine.
