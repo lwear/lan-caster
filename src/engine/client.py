@@ -56,12 +56,13 @@ class Client:
 
         self.playerNumber = -1  # set to a real number from the joinReply msg sent from the server
         self.step = False  # Currently displayed step. Empty until we get first step msg from server. = {}
+        self.mapOffset = (0, 0)
 
         # Note, we must init pygame before we load tileset data.
         pygame.init()
         pygame.mixer.quit()  # Turn all sound off.
         pygame.display.set_caption(f"{game} - {playerDisplayName}")  # Set the title of the window
-        self.screen = pygame.display.set_mode(screenSize)  # open the window
+        self.screen = pygame.display.set_mode(screenSize, pygame.RESIZABLE)  # open the window
         self.screenValidUntil = 0  # invalid and needs to be rendered.
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -188,14 +189,52 @@ class Client:
             # update layer visibility.
             map.setLayerVisablityMask(self.step["layerVisabilityMask"])
 
+            # compute the offset
+            self.mapOffset = self.setMapOffset(map)
+            
             # draw the map.
-            self.screenValidUntil = map.blitMap(self.screen, self.step["sprites"])
+            self.screenValidUntil = map.blitMap(self.screen, self.mapOffset, self.step["sprites"])
 
             # add on the player and gui specific items.
             self.updateInterface()
 
             # tell pygame to actually display changes to user.
             pygame.display.update()
+
+
+    def setMapOffset(self, map):
+        mapOffsetX = 0
+        mapOffsetY = 0
+
+        if map.pixelWidth < self.screen.get_width():
+            mapOffsetX = round((self.screen.get_width() - map.pixelWidth) / 2)
+        if map.pixelHeight < self.screen.get_height():
+            mapOffsetY = round((self.screen.get_height() - map.pixelHeight) / 2)
+
+        if map.pixelWidth > self.screen.get_width() or map.pixelHeight > self.screen.get_height():
+            #find the player.
+            for sprite in self.step["sprites"]:
+                if "playerNumber" in sprite and self.playerNumber == sprite["playerNumber"]:
+                    break
+
+            if map.pixelWidth > self.screen.get_width():
+                mapOffsetX = self.screen.get_width()/2 - sprite["anchorX"]
+                if mapOffsetX > 0:
+                    mapOffsetX = 0
+                if map.pixelWidth+mapOffsetX < self.screen.get_width():
+                    mapOffsetX = self.screen.get_width() - map.pixelWidth
+
+            if map.pixelHeight > self.screen.get_height():
+                mapOffsetY = self.screen.get_height()/2 - sprite["anchorY"]
+                if mapOffsetY > 0:
+                    mapOffsetY = 0
+                if map.pixelHeight+mapOffsetY < self.screen.get_height():
+                    mapOffsetY = self.screen.get_height() - map.pixelHeight
+
+
+        mapOffsetX = round(mapOffsetX)
+        mapOffsetY = round(mapOffsetY)
+        return((mapOffsetX, mapOffsetY))
 
     def updateInterface(self):
         # render any non-map items, such as player specific data or gui elements.
@@ -224,15 +263,13 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-
-        # WARNING, This renders in map coords assumes they are the same as screen coords!
-        map.blitTextObject(self.screen, textObject)
+        map.blitTextObject(self.screen, (0,0), textObject, mapRelative=False)
 
     def blitMarqueeText(self, marqueeText):
         text = self.MARQUEETEXT.copy()
         text["text"] = marqueeText
         textObject = {
-            'x': self.screen.get_height() / 4,
+            'x': self.screen.get_width() / 4,
             'y': self.screen.get_height() / 4,
             'width': self.screen.get_width() / 2,
             'height': self.screen.get_height() / 2,
@@ -241,9 +278,7 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-
-        # WARNING, This renders in map coords assumes they are the same as screen coords!
-        map.blitTextObject(self.screen, textObject)
+        map.blitTextObject(self.screen, (0,0), textObject, mapRelative=False)
 
     def blitTestText(self):
         textObject = {
@@ -266,9 +301,7 @@ class Client:
 
         # find the map that the server wants us to render.
         map = self.maps[self.step["mapName"]]
-
-        # WARNING, This renders in map coords assumes they are the same as screen coords!
-        map.blitTextObject(self.screen, textObject)
+        map.blitTextObject(self.screen, (0,0), textObject, mapRelative=False)
 
     ########################################################
     # USER INPUT HANDLING
@@ -282,6 +315,8 @@ class Client:
     def processEvent(self, event):
         if event.type == QUIT:
             quit()
+        elif  event.type==VIDEORESIZE:
+            self.screenValidUntil = 0
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.socket.sendMessage({'type': 'playerAction'})
@@ -292,6 +327,8 @@ class Client:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             btn1, btn2, btn3 = pygame.mouse.get_pressed(num_buttons=3)
             moveDestX, moveDestY = pygame.mouse.get_pos()
+            moveDestX -= self.mapOffset[0]
+            moveDestY -= self.mapOffset[1]
             msgType = 'playerMove'
             if btn3:
                 msgType ='testPlayerJump'

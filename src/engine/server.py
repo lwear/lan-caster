@@ -205,6 +205,8 @@ class Server:
                 map = self.maps[sprite["mapName"]]
                 destMap = self.maps[destMapName]
                 map.setObjectMap(sprite, destMap)
+                if sprite["anchorX"] > map.pixelWidth or sprite["anchorY"] > map.pixelHeight:
+                    destMap.setObjectLocationByAnchor(sprite, map.pixelWidth/2, map.pixelHeight/2)
                 destMap.delSpriteDest(sprite)
                 log(f"TEST: Player Changed Maps: {self.players[ipport]['sprite']['labelText']} {ipport}")
 

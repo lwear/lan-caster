@@ -35,7 +35,7 @@ class ClientMap(demo.clientmap.ClientMap):
                 radius=i / 255.0 * self.LIGHTRADIUS
                 )
 
-    def blitMap(self, destImage, sprites):
+    def blitMap(self, destImage, offset, sprites):
         # add darkness with light circles to map.
 
         # start with full darkness (opaque black)
@@ -52,9 +52,9 @@ class ClientMap(demo.clientmap.ClientMap):
                 )
 
         # render the map normally
-        validUntil = super().blitMap(destImage, sprites)
+        validUntil = super().blitMap(destImage, offset, sprites)
 
         # add darknessImage on top of map rendered by super()
-        destImage.blit(self.darknessImage, (0, 0))
+        destImage.blit(self.darknessImage, offset)
 
         return validUntil

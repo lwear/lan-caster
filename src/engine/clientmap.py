@@ -102,30 +102,33 @@ class ClientMap(engine.map.Map):
     # BLIT MAP
     #####################################################
 
-    def blitMap(self, destImage, sprites):
+    def blitMap(self, destImage, offset, sprites):
 
         # sort sprites for right-down render order.
         geo.sortRightDown(sprites, self.pixelWidth)
 
+        # Start with grey background.
+        destImage.fill((32, 32, 32, 255))
+
         validUntil = []
         # start with all visible layers below the sprites.
-        validUntil.append(self.blitBottomImage(destImage))
+        validUntil.append(self.blitBottomImage(destImage, offset))
 
         # blit the sprite label text from the server under all sprites.
-        validUntil.append(self.blitObjectListLabelText(destImage, sprites))
+        validUntil.append(self.blitObjectListLabelText(destImage, offset, sprites))
 
         # blit the sprite layer from the server
-        validUntil.append(self.blitObjectList(destImage, sprites))
+        validUntil.append(self.blitObjectList(destImage, offset, sprites))
 
         # add all visible layers above the sprites
-        validUntil.append(self.blitTopImage(destImage))
+        validUntil.append(self.blitTopImage(destImage, offset))
 
         # blit the sprite speech text from the server on top of everything.
-        validUntil.append(self.blitObjectListSpeechText(destImage, sprites))
+        validUntil.append(self.blitObjectListSpeechText(destImage, offset, sprites))
 
         return min(validUntil)
 
-    def blitBottomImage(self, destImage):
+    def blitBottomImage(self, destImage, offset):
         '''
         blit together all the visible layers BELOW the sprite layer and store it in
         self.bottomImage. self.bottomImage can then be used for faster screen updates
@@ -137,8 +140,8 @@ class ClientMap(engine.map.Map):
         '''
         # if there is already a valid image the don't render a new one
         if self.bottomImageValidUntil < time.perf_counter():
-            # Start with grey background.
-            self.bottomImage.fill((128, 128, 128, 255))
+            # Start with transparent background.
+            self.topImage.fill((0, 0, 0, 0))
 
             self.bottomImageValidUntil = sys.float_info.max
             for layerNumber in range(len(self.layers)):
@@ -148,14 +151,14 @@ class ClientMap(engine.map.Map):
                     continue
                 # if the layer is visible then add it to the destImage
                 if self.getLayerVisablitybyIndex(layerNumber):
-                    vu = self.blitLayer(self.bottomImage, self.layers[layerNumber])
+                    vu = self.blitLayer(self.bottomImage, (0, 0), self.layers[layerNumber])
                     if self.bottomImageValidUntil > vu:
                         self.bottomImageValidUntil = vu
 
-        destImage.blit(self.bottomImage, (0, 0))
+        destImage.blit(self.bottomImage, offset)
         return self.bottomImageValidUntil
 
-    def blitTopImage(self, destImage):
+    def blitTopImage(self, destImage, offset):
         '''
         blit together all the visible layers ABOVE the sprite layer and store it in
         self.topImage. self.topImage can then be used for faster screen updates
@@ -181,18 +184,18 @@ class ClientMap(engine.map.Map):
                 if passedSpriteLayer == True:
                     # if the layer is visible then add it to the destImage
                     if self.getLayerVisablitybyIndex(layerNumber):
-                        vu = self.blitLayer(self.topImage, self.layers[layerNumber])
+                        vu = self.blitLayer(self.topImage, (0, 0), self.layers[layerNumber])
                         if self.topImageValidUntil > vu:
                             self.topImageValidUntil = vu
 
-        destImage.blit(self.topImage, (0, 0))
+        destImage.blit(self.topImage, offset)
         return self.topImageValidUntil
 
     #####################################################
     # BLIT LAYERS
     #####################################################
 
-    def blitLayer(self, destImage, layer):
+    def blitLayer(self, destImage, offset, layer):
         '''
         blit layer onto destImage.
         '''
@@ -202,21 +205,21 @@ class ClientMap(engine.map.Map):
             layer['image'].fill((0, 0, 0, 0))
 
             if layer["type"] == "tilelayer":
-                layer['imageValidUntil'] = self.blitTileGrid(layer['image'], layer["data"])
+                layer['imageValidUntil'] = self.blitTileGrid(layer['image'], (0,0), layer["data"])
             elif layer["type"] == "objectgroup":
-                layer['imageValidUntil'] = self.blitObjectList(layer['image'], layer["objects"])
+                layer['imageValidUntil'] = self.blitObjectList(layer['image'], (0,0), layer["objects"])
 
-        destImage.blit(layer['image'], (0, 0))
+        destImage.blit(layer['image'], offset)
         return layer['imageValidUntil']
 
-    def blitTileGrid(self, destImage, grid):
+    def blitTileGrid(self, destImage, offset, grid):
         validUntil = sys.float_info.max
         for i in range(len(grid)):
             if grid[i] != 0:
                 tileX = i % self.width
                 tileY = int(i / self.width)
-                destPixelX = tileX * self.tilewidth
-                destPixelY = tileY * self.tileheight
+                destPixelX = tileX * self.tilewidth + offset[0]
+                destPixelY = tileY * self.tileheight + offset[1]
 
                 tilesetName, tilesetTileNumber = self.findTile(grid[i])
                 ts = self.tilesets[tilesetName]
@@ -235,30 +238,30 @@ class ClientMap(engine.map.Map):
 
         return validUntil
 
-    def blitObjectList(self, destImage, objectList):
+    def blitObjectList(self, destImage, offset, objectList):
         validUntil = sys.float_info.max
         vu = validUntil
         for object in objectList:
             if "gid" in object:
-                vu = self.blitTileObject(destImage, object)
+                vu = self.blitTileObject(destImage, offset, object)
             elif "text" in object:
-                vu = self.blitTextObject(destImage, object)
+                vu = self.blitTextObject(destImage, offset, object)
             elif "ellipse" in object:
-                vu = self.blitRoundObject(destImage, object)
+                vu = self.blitRoundObject(destImage, offset, object)
             elif "point" in object:
-                vu = self.blitRoundObject(destImage, object)
+                vu = self.blitRoundObject(destImage, offset, object)
             else:  # this is a rect
-                vu = self.blitRectObject(destImage, object)
+                vu = self.blitRectObject(destImage, offset, object)
 
             validUntil = min(validUntil, vu)
         return validUntil
 
-    def blitTileObject(self, destImage, tileObject):
+    def blitTileObject(self, destImage, offset, tileObject):
         tilesetName, tilesetTileNumber = self.findTile(tileObject["gid"])
         tileset = self.tilesets[tilesetName]
 
         # bit the tile
-        validUntil = tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'], tileObject['y'], tileObject)
+        validUntil = tileset.blitTile(tilesetTileNumber, destImage, tileObject['x'] + offset[0], tileObject['y'] + offset[1], tileObject)
 
         return validUntil
 
@@ -266,15 +269,15 @@ class ClientMap(engine.map.Map):
     # BLIT TEXT
     #####################################################
 
-    def blitObjectListSpeechText(self, destImage, objectList):
+    def blitObjectListSpeechText(self, destImage, offset, objectList):
         validUntil = sys.float_info.max
         vu = validUntil
         for object in objectList:
-            vu = self.blitSpeechText(destImage, object)
+            vu = self.blitSpeechText(destImage, offset, object)
             validUntil = min(validUntil, vu)
         return validUntil
 
-    def blitSpeechText(self, destImage, object):
+    def blitSpeechText(self, destImage, offset, object):
         validUntil = sys.float_info.max
         # If speechText is present then render it above the tile.
         if "speechText" in object:
@@ -288,18 +291,18 @@ class ClientMap(engine.map.Map):
                 'text': text
                 }
 
-            validUntil = self.blitTextObject(destImage, textObject)
+            validUntil = self.blitTextObject(destImage, offset, textObject)
         return validUntil
 
-    def blitObjectListLabelText(self, destImage, objectList):
+    def blitObjectListLabelText(self, destImage, offset, objectList):
         validUntil = sys.float_info.max
         vu = validUntil
         for object in objectList:
-            vu = self.blitLabelText(destImage, object)
+            vu = self.blitLabelText(destImage, offset, object)
             validUntil = min(validUntil, vu)
         return validUntil
 
-    def blitLabelText(self, destImage, object):
+    def blitLabelText(self, destImage, offset, object):
         validUntil = sys.float_info.max
         # If labelText is present then render it under the tile. Normally used to display player names.
         if "labelText" in object:
@@ -313,10 +316,10 @@ class ClientMap(engine.map.Map):
                 'text': text
                 }
 
-            validUntil = self.blitTextObject(destImage, textObject)
+            validUntil = self.blitTextObject(destImage, offset, textObject)
         return validUntil
 
-    def blitTextObject(self, destImage, textObject):
+    def blitTextObject(self, destImage, offset, textObject, mapRelative=True):
         maxWidth = textObject['width']
 
         # add text defaults if they are missing
@@ -410,16 +413,27 @@ class ClientMap(engine.map.Map):
             exit()
 
         buffer = textObject["text"]["bgborderThickness"] + textObject["text"]["bgroundCorners"]
+
+        if mapRelative:
+            destWidth = self.pixelWidth
+            destHeight = self.pixelHeight
+        else:
+            destWidth = destImage.get_width()
+            destHeight = destImage.get_height()
+
         if destX - buffer < 0:
             destX = buffer
-        if destX + pixelWidth + buffer * 2 > self.pixelWidth:
-            destX = self.pixelWidth - pixelWidth - buffer
         if destY - buffer < 0:
             destY = buffer
-        if destY + pixelHeight + buffer * 2 > self.pixelHeight:
-            destY = self.pixelHeight - pixelHeight - buffer
+        if destX + pixelWidth + buffer * 2 > destWidth:
+            destX = destWidth - pixelWidth - buffer
+        if destY + pixelHeight + buffer * 2 > destHeight:
+            destY = destHeight - pixelHeight - buffer
 
-        self.blitRectObject(destImage, {
+        destX += offset[0]
+        destY += offset[1]
+
+        self.blitRectObject(destImage, (0,0), {
             'x': destX - buffer,
             'y': destY - buffer,
             'width': pixelWidth + buffer * 2,
@@ -440,7 +454,7 @@ class ClientMap(engine.map.Map):
     # DRAW OBJECTS
     #####################################################
 
-    def blitRectObject(self, destImage, rectObject, fillColor=(0, 0, 0, 0),
+    def blitRectObject(self, destImage, offset, rectObject, fillColor=(0, 0, 0, 0),
                        borderColor=(0, 0, 0, 255), borderThickness=1, roundCorners=0):
         image = pygame.Surface((rectObject['width'], rectObject['height']), pygame.SRCALPHA, 32)
         image = image.convert_alpha()
@@ -449,13 +463,13 @@ class ClientMap(engine.map.Map):
         pygame.draw.rect(image, fillColor, rect, 0, roundCorners)
         pygame.draw.rect(image, borderColor, rect, borderThickness, roundCorners)
 
-        destImage.blit(image, (rectObject['x'], rectObject['y']))
+        destImage.blit(image, (rectObject['x']+offset[0], rectObject['y']+offset[1]))
 
         # rect does not have an end time so just sent back a long time from now
         validUntil = sys.float_info.max
         return validUntil
 
-    def blitRoundObject(self, destImage, roundObject, fillColor=(0, 0, 0, 0),
+    def blitRoundObject(self, destImage, offset, roundObject, fillColor=(0, 0, 0, 0),
                         borderColor=(0, 0, 0, 255), borderThickness=1):
         width = roundObject['width']
         height = roundObject['height']
@@ -470,7 +484,7 @@ class ClientMap(engine.map.Map):
         pygame.draw.ellipse(image, fillColor, rect, 0)
         pygame.draw.ellipse(image, borderColor, rect, borderThickness)
 
-        destImage.blit(image, (roundObject['x'], roundObject['y']))
+        destImage.blit(image, (roundObject['x']+offset[0], roundObject['y']+offset[1]))
 
         # rect does not have an end time so just sent back a long time from now
         validUntil = sys.float_info.max
