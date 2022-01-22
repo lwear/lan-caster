@@ -215,25 +215,11 @@ class Server:
     def sendStepMsgs(self):
         # If the player has changed or map the player is on has changed then send that player a step message.
         for ipport in self.players:
-            # find name of map player is on
-            mapName = self.players[ipport]["sprite"]["mapName"]
-            if self.maps[mapName].changed or self.getPlayerChanged(self.players[ipport]):
-                msg = {
-                    'type': 'step',
-                    'gameSec': time.perf_counter() - self.gameStartSec,
-                    'mapName': mapName,
-                    'layerVisabilityMask': self.maps[mapName].getLayerVisablityMask(),
-                    'sprites': self.maps[mapName].sprites
-                    }
-
-                if self.players[ipport]["actionText"]:
-                    msg["actionText"] = self.players[ipport]["actionText"]
-
-                if self.players[ipport]["marqueeText"]:
-                    msg["marqueeText"] = self.players[ipport]["marqueeText"]
-
+            player = self.players[ipport]
+            map = self.maps[player["sprite"]["mapName"]]
+            if map.changed or self.getPlayerChanged(player):
                 self.socket.sendMessage(
-                    msg,
+                    self.getStepMsg(player),
                     destinationIP=self.players[ipport]["ip"],
                     destinationPort=self.players[ipport]["port"]
                     )
@@ -243,6 +229,25 @@ class Server:
         # reset the change detection on all maps
         for mapName in self.maps:
             self.maps[mapName].setMapChanged(False)
+
+    def getStepMsg(self, player):
+        map = self.maps[player["sprite"]["mapName"]]
+        msg = {
+            'type': 'step',
+            'gameSec': time.perf_counter() - self.gameStartSec,
+            'mapName': map.name,
+            'layerVisabilityMask': map.getLayerVisablityMask(),
+            'sprites': map.sprites
+            }
+
+        if player["actionText"]:
+            msg["actionText"] = player["actionText"]
+
+        if player["marqueeText"]:
+            msg["marqueeText"] = player["marqueeText"]
+
+        return msg
+
 
     ########################################################
     # GAME LOGIC
