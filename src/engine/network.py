@@ -41,7 +41,7 @@ class Socket:
         methodsText = ""
         for methodName in self.msgProcessorMethods:
             methodsText += f"{methodName} "
-        log(f"Found msg processing methods: {methodsText}")
+        log(f"Found msg processing methods that can be called by engine.network.recvReplyMsgs(): {methodsText}")
 
         self.sent = {}  # Number of messages sent to OS socket
         self.recv = {}  # Number of messages recv from OS socket

@@ -1,6 +1,6 @@
 import argparse
 import os
-import time
+import engine.time as time
 
 from engine.log import log
 from engine.log import setLogLevel
@@ -41,10 +41,10 @@ def startClient():
                         default=0, help='Duration to pause in seconds before starting client (for testing).')
     args = parser.parse_args()
 
+    setLogLevel(args.debug, args.verbose)
+
     log(f"Pausing for {args.pause} seconds before starting client.")
     time.sleep(args.pause)
-
-    setLogLevel(args.debug, args.verbose)
 
     module = engine.loaders.loadModule("client", game=args.game)
     module.Client(args.game, args.playerDisplayName, (640, 640), args.fps,

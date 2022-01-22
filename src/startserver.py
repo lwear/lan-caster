@@ -1,5 +1,6 @@
 import argparse
 import os
+import engine.time as time
 
 from engine.log import log
 from engine.log import setLogLevel
@@ -29,11 +30,16 @@ def startServer():
                         default=False, help='Print DEBUG level log messages.')
     parser.add_argument('-verbose', dest='verbose', action='store_true',
                         default=False, help='Print VERBOSE level log messages. Note, -debug includes -verbose.')
+    parser.add_argument('-pause', metavar='secs', dest='pause', type=int,
+                        default=0, help='Duration to pause in seconds before starting server (for testing).')
     parser.add_argument('-test', dest='test', action='store_true',
                         default=False, help='Start server in test mode.')
     args = parser.parse_args()
 
     setLogLevel(args.debug, args.verbose)
+
+    log(f"Pausing for {args.pause} seconds before starting server.")
+    time.sleep(args.pause)
 
     module = engine.loaders.loadModule("server", game=args.game)
     module.Server(args.game, args.fps, args.serverIP, args.serverPort, args.test).run()
