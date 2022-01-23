@@ -33,13 +33,14 @@ class Client:
     # INIT METHODS
     #####################################################
 
-    def __init__(self, game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort):
+    def __init__(self, args):
         global CLIENT
         CLIENT = self
         signal.signal(signal.SIGINT, quit)
 
-        self.fps = fps
-        self.serverIpport = engine.network.formatIpPort(serverIP, serverPort)
+        self.game = args.game
+        self.fps = args.fps
+        self.serverIpport = engine.network.formatIpPort(args.serverIP, args.serverPort)
         self.testMode = False  # True is server is in testMode. Server provides this in joinReply message.
 
         # actionText defaults that differ from DEFAULTTEXT
@@ -61,18 +62,18 @@ class Client:
         # Note, we must init pygame before we load tileset data.
         pygame.init()
         pygame.mixer.quit()  # Turn all sound off.
-        pygame.display.set_caption(f"{game} - {playerDisplayName}")  # Set the title of the window
-        self.screen = pygame.display.set_mode(screenSize, pygame.RESIZABLE)  # open the window
+        pygame.display.set_caption(f"{self.game} - {args.playerDisplayName}")  # Set the title of the window
+        self.screen = pygame.display.set_mode((args.width, args.height), pygame.RESIZABLE)  # open the window
         self.screenValidUntil = 0  # invalid and needs to be rendered.
 
         self.tilesets = engine.loaders.loadTilesets(
-            game=game,
+            game=self.game,
             loadImages=True  # Client needs images so it can render screen.
             )
 
         self.maps = engine.loaders.loadMaps(
             tilesets=self.tilesets,
-            game=game,
+            game=self.game,
             maptype="ClientMap"
             )
 
@@ -81,18 +82,18 @@ class Client:
         # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
         try:
             self.socket = engine.network.Socket(
-                messages=engine.loaders.loadModule("messages", game=game).Messages(),
+                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
                 msgProcessor=self,
-                sourceIP=myIP,
-                sourcePort=myPort,
-                destinationIP=serverIP,
-                destinationPort=serverPort
+                sourceIP=args.myIP,
+                sourcePort=args.myPort,
+                destinationIP=args.serverIP,
+                destinationPort=args.serverPort
                 )
 
             reply = self.socket.sendRecvMessage({
                 'type': 'joinRequest',
-                'game': game,
-                'playerDisplayName': playerDisplayName
+                'game': self.game,
+                'playerDisplayName': args.playerDisplayName
                 },
                 retries=300, delay=1, delayMultiplier=1)
 
@@ -110,7 +111,7 @@ class Client:
                 log("Server running in TEST MODE.")
 
         except engine.network.SocketException as e:
-            log("Is server running at" + serverIP + ":" + str(serverPort) + "?")
+            log("Is server running at" + args.serverIP + ":" + str(args.serverPort) + "?")
             log(str(e), "FAILURE")
             quit()
 

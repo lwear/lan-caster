@@ -50,7 +50,34 @@ class Messages:
             'testTogglePlayerMoveChecking': {},
             'testPlayerNextMap': {},
             'testPlayerJump': {'moveDestX': 'int', 'moveDestY': 'int'},
-            'Error': {'result': 'str'}
+            'Error': {'result': 'str'},
+            # the messages types below are used only for connection setup, not game play.
+            'addServer': {
+                'serverName': ['str', 8, 64], 
+                'serverPrivateIP': ['str', 7, 15], 
+                'serverPrivatePort': 'int'
+                },
+            'serverAdded': {},
+            'delServer': {
+                'serverName': ['str', 8, 64]
+                },
+            'serverDeleted': {},
+            'getConnetInfo': {
+                'serverName': ['str', 8, 64], 
+                'clientPrivateIP': ['str', 7, 15], 
+                'clientPrivatePort': 'int'
+                },
+            'connectInfo': {
+                'serverName': ['str', 8, 64], 
+                'clientPrivateIP': ['str', 7, 15], 
+                'clientPrivatePort': 'int',
+                'serverPrivateIP': ['str', 7, 15], 
+                'serverPrivatePort': 'int',
+                'clientPublicIP': ['str', 7, 15], 
+                'clientPublicPort': 'int',
+                'serverPublicIP': ['str', 7, 15], 
+                'serverPublicPort': 'int'
+                },
             }
 
     def __str__(self):

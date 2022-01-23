@@ -28,16 +28,17 @@ class Server:
         5) Receive and process test messages from players. (on with -test cmd line flag)
     """
 
-    def __init__(self, game, fps, serverIP, serverPort, testMode):
+    def __init__(self, args):
         global SERVER
         SERVER = self
         signal.signal(signal.SIGINT, quit)
         random.seed()
 
-        self.game = game
-        self.fps = fps
+        self.args = args
+        self.game = args.game
+        self.fps = args.fps
 
-        self.testMode = testMode
+        self.testMode = args.testMode
         self.playerMoveCheck = True
         if(self.testMode):
             log("Server running in TEST MODE.")
@@ -70,13 +71,35 @@ class Server:
 
         # set up networking
         try:
+            if args.serverName:
+                serverIP = '0.0.0.0'
+            else:
+                serverIP = args.serverIP
+
             self.socket = engine.network.Socket(
-                messages=engine.loaders.loadModule("messages", game=game).Messages(),
+                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
                 msgProcessor=self,
                 sourceIP=serverIP,
-                sourcePort=serverPort
+                sourcePort=args.serverPort
                 )
+            log("Network socket created.")
 
+            if args.serverName:
+                log(f"Adding server to connector as {args.serverName}.")
+                reply = self.socket.sendRecvMessage({
+                    'type': 'addServer',
+                    'serverName': args.serverName, 
+                    'serverPrivateIP': engine.network.getDefaultIP(), 
+                    'serverPrivatePort': args.serverPort
+                    },
+                    destinationIP=args.connectorHostName, 
+                    destinationPort=args.connectorPort, 
+                    retries=10, delay=5, delayMultiplier=1)
+                if reply["type"] == "serverAdded":
+                    log(f"Server added to connector as {args.serverName}.")
+                else:
+                    log(msg["result"], "FAILURE")
+                    quit()
         except Exception as e:
             log(str(e), "FAILURE")
             quit()

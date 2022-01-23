@@ -23,6 +23,22 @@ def startClient():
                         default='demo', help="Game Folder")
     parser.add_argument('-name', metavar='Name', dest='playerDisplayName', type=str, nargs='?',
                         default='anonymous', help="Player's Name")
+    parser.add_argument('-fps', metavar='fps', dest='fps', type=int,
+                        default=30, help='Target frames per second.')
+    parser.add_argument('-width', metavar='width', dest='width', type=int,
+                        default=640, help='Window width.')
+    parser.add_argument('-height', metavar='height', dest='height', type=int,
+                        default=640, help='Window height.')
+
+
+    parser.add_argument('-sname', metavar='Server_Name', dest='serverName', type=str,
+                        default=False, help='Name to use when registering this server with connector.')
+    parser.add_argument('-cname', metavar='Connector_Host_Name', dest='connectorHostName', type=str,
+                        default='lan-caster.net', help='Hostname of connector.')
+    parser.add_argument('-cport', metavar='Connector_Port', dest='connectorPort', type=str,
+                        default=20000, help='Port of connector.')
+
+
     parser.add_argument('-ip', metavar='My IP', dest='myIP', type=engine.network.argParseCheckIPFormat, nargs='?',
                         default='127.0.0.1', help='My IP Address')
     parser.add_argument('-p', metavar='My Port', dest='myPort', type=int, nargs='?',
@@ -31,8 +47,7 @@ def startClient():
                         default='127.0.0.1', help='Server IP Address')
     parser.add_argument('-sp', metavar='Server Port', dest='serverPort', type=int, nargs='?',
                         default=20000, help='Server port number')
-    parser.add_argument('-fps', metavar='fps', dest='fps', type=int,
-                        default=30, help='Target frames per second.')
+
     parser.add_argument('-debug', dest='debug', action='store_true',
                         default=False, help='Print DEBUG level log messages.')
     parser.add_argument('-verbose', dest='verbose', action='store_true',
@@ -47,8 +62,7 @@ def startClient():
     time.sleep(args.pause)
 
     module = engine.loaders.loadModule("client", game=args.game)
-    module.Client(args.game, args.playerDisplayName, (640, 640), args.fps,
-                  args.myIP, args.myPort, args.serverIP, args.serverPort).run()
+    module.Client(args).run()
 
 
 if __name__ == '__main__':

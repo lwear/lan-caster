@@ -13,8 +13,8 @@ class Client(engine.client.Client):
     have won.
     '''
 
-    def __init__(self, game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort):
-        super().__init__(game, playerDisplayName, screenSize, fps, myIP, myPort, serverIP, serverPort)
+    def __init__(self, args):
+        super().__init__(args)
 
         self.MARQUEETEXT.update({
             'pixelsize': 36,
