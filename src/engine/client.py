@@ -38,11 +38,68 @@ class Client:
         CLIENT = self
         signal.signal(signal.SIGINT, quit)
 
+        self.args = args
         self.game = args.game
         self.fps = args.fps
-        self.serverIpport = engine.network.formatIpPort(args.serverIP, args.serverPort)
         self.testMode = False  # True is server is in testMode. Server provides this in joinReply message.
 
+        # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
+        try:
+            if args.serverName:
+                args.serverIP = '0.0.0.0'  # ignore serverIP if we are going to request server address from connector.
+
+            self.socket = engine.network.Socket(
+                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
+                msgProcessor=self,
+                sourceIP=args.myIP,
+                sourcePort=args.myPort,
+                destinationIP=args.serverIP,
+                destinationPort=args.serverPort
+                )
+
+            if args.serverName:
+                #talk to connector for connetinfo msg
+
+                # punch hole in local nat
+                self.socket.sendMessage(
+                    {'type': 'udpPunch'},
+                    destinationIP=msg["serverPublicIP"],
+                    destinationPort=msg["serverPublicPort"]
+                    )
+                #find working serverip and server port.
+                #update args.serverIP
+                #update args.serverPort
+                pass
+            
+            reply = self.socket.sendRecvMessage({
+                'type': 'joinRequest',
+                'game': self.game,
+                'playerDisplayName': args.playerDisplayName
+                },
+                retries=300, delay=1, delayMultiplier=1)
+
+            if reply["type"] != "joinReply":
+                log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
+                quit()
+
+            self.playerNumber = reply["playerNumber"]
+
+            # set the time so client engine.time.perf_counter() will return secs in sync (very close) to server.
+            time.set(reply['serverSec'])
+
+            self.testMode = reply["testMode"]
+            if(self.testMode):
+                log("Server running in TEST MODE.")
+
+        except engine.network.SocketException as e:
+            log("Is server running at" + args.serverIP + ":" + str(args.serverPort) + "?")
+            log(str(e), "FAILURE")
+            quit()
+
+        log("Join server was successful.")
+
+        self.serverIpport = engine.network.formatIpPort(args.serverIP, args.serverPort)
+        
         # actionText defaults that differ from DEFAULTTEXT
         self.ACTIONTEXT = {
             "halign": "center",
@@ -79,43 +136,7 @@ class Client:
 
         log("Loading tilesets and maps was successful.")
 
-        # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
-        try:
-            self.socket = engine.network.Socket(
-                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
-                msgProcessor=self,
-                sourceIP=args.myIP,
-                sourcePort=args.myPort,
-                destinationIP=args.serverIP,
-                destinationPort=args.serverPort
-                )
 
-            reply = self.socket.sendRecvMessage({
-                'type': 'joinRequest',
-                'game': self.game,
-                'playerDisplayName': args.playerDisplayName
-                },
-                retries=300, delay=1, delayMultiplier=1)
-
-            if reply["type"] != "joinReply":
-                log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
-                quit()
-
-            self.playerNumber = reply["playerNumber"]
-
-            # set the time so client engine.time.perf_counter() will return secs in sync (very close) to server.
-            time.set(reply['serverSec'])
-
-            self.testMode = reply["testMode"]
-            if(self.testMode):
-                log("Server running in TEST MODE.")
-
-        except engine.network.SocketException as e:
-            log("Is server running at" + args.serverIP + ":" + str(args.serverPort) + "?")
-            log(str(e), "FAILURE")
-            quit()
-
-        log("Join server was successful.")
 
     def __str__(self):
         return engine.log.objectToStr(self)
@@ -162,6 +183,9 @@ class Client:
     ########################################################
     # NETWORK MESSAGE PROCESSING
     ########################################################
+
+    def msgUdpPunch:
+        pass
 
     def msgStep(self, ip, port, ipport, msg):
         if ipport != self.serverIpport:

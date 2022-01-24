@@ -18,7 +18,7 @@ class Connector:
 
     def __init__(self, connectorIP, connectorPort):
         self.MAX_SERVERS = 100
-        self.SERVER_TIMEOUT = 300
+        self.SERVER_TIMEOUT = 120
 
         self.serverlist = {}
 
@@ -55,9 +55,9 @@ class Connector:
             time.sleep(1)
 
     def checkTimeouts(self):
-        currentTime = time.perf_counter
+        currentTime = time.perf_counter()
         for serverName in self.serverlist:
-            if self.serverlist[msg["serverName"]]["timeout"] < currentTime:
+            if self.serverlist[serverName]["timeout"] < currentTime:
                 del self.serverlist[msg["serverName"]]
 
 
@@ -67,20 +67,27 @@ class Connector:
 
     def msgAddServer(self, ip, port, ipport, msg):
         if msg["serverName"] not in self.serverlist:
-            if self.MAX_SERVERS < len(self.serverlist):
+            if self.MAX_SERVERS > len(self.serverlist):
                 self.serverlist[msg["serverName"]] = {
-                    'timeout': time.perf_counter + self.SERVER_TIMEOUT,
+                    'timeout': time.perf_counter() + self.SERVER_TIMEOUT,
                     'serverPrivateIP': msg["serverPrivateIP"], 
                     'serverPrivatePort': msg["serverPrivatePort"],
                     'serverPublicIP': ip, 
                     'serverPublicPort': port,
                     }
+                log(self.serverlist[msg["serverName"]])
                 return {'type': 'serverAdded'}
             else:
                 return {'type': 'Error', 'result': f"Max servers already registered."}
 
         else:
             return {'type': 'Error', 'result': f"A server with that name is already registered. Choose a different name."}
+
+    def msgUdpPunch(self, ip, port, ipport, msg):
+        if msg["serverName"] in self.serverlist:
+            server = self.serverlist[msg["serverName"]]
+            if server["serverPublicIP"] == ip and server["serverPublicPort"] == port:
+                server["timeout"] = time.perf_counter() + self.SERVER_TIMEOUT
 
     def msgDelServer(self, ip, port, ipport, msg):
         if msg["serverName"] in self.serverlist:
@@ -96,6 +103,7 @@ class Connector:
     def msgGetConnetInfo(self, ip, port, ipport, msg):
         if msg["serverName"] in self.serverlist:
             server = self.serverlist[msg["serverName"]]
+            server["timeout"] = time.perf_counter() + self.SERVER_TIMEOUT
             reply = {
                 'type': 'connectInfo',
                 'serverName': server["serverName"], 

@@ -2,6 +2,7 @@ import signal
 import engine.time as time
 import random
 import os
+import socket
 
 from engine.log import log
 import engine.log
@@ -72,27 +73,28 @@ class Server:
         # set up networking
         try:
             if args.serverName:
-                serverIP = '0.0.0.0'
-            else:
-                serverIP = args.serverIP
+                args.serverIP = '0.0.0.0'  # ignore serverIP arg if we are going to register with connector.
 
             self.socket = engine.network.Socket(
                 messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
                 msgProcessor=self,
-                sourceIP=serverIP,
+                sourceIP=args.serverIP,
                 sourcePort=args.serverPort
                 )
             log("Network socket created.")
 
             if args.serverName:
-                log(f"Adding server to connector as {args.serverName}.")
+                log(f"Adding server to connector as '{args.serverName}'.")
+                connectorIP=socket.gethostbyname(args.connectorHostName)
+                log(f"Connector Host: {args.connectorHostName} ({connectorIP})")
+
                 reply = self.socket.sendRecvMessage({
                     'type': 'addServer',
                     'serverName': args.serverName, 
                     'serverPrivateIP': engine.network.getDefaultIP(), 
                     'serverPrivatePort': args.serverPort
                     },
-                    destinationIP=args.connectorHostName, 
+                    destinationIP=connectorIP, 
                     destinationPort=args.connectorPort, 
                     retries=10, delay=5, delayMultiplier=1)
                 if reply["type"] == "serverAdded":
@@ -151,6 +153,21 @@ class Server:
     ########################################################
     # Network Message Processing
     ########################################################
+
+    def msgConnectInfo(self, ip, port, ipport, msg):
+        # punch open UDP on local NAT by sending udpPunch msg.
+
+        self.socket.sendMessage(
+            {'type': 'udpPunch'},
+            destinationIP=msg["clientPublicIP"],
+            destinationPort=msg["clientPublicPort"]
+            )
+
+        # do not respond to connector
+        return None
+
+    def msgUdpPunch(self):
+        pass
 
     def msgJoinRequest(self, ip, port, ipport, msg):
         # process joinRequest msg from client.

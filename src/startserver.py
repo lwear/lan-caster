@@ -27,7 +27,7 @@ def startServer():
                         default=False, help='Name to use when registering this server with connector.')
     parser.add_argument('-cname', metavar='Connector_Host_Name', dest='connectorHostName', type=str,
                         default='lan-caster.net', help='Hostname of connector.')
-    parser.add_argument('-cport', metavar='Connector_Port', dest='connectorPort', type=str,
+    parser.add_argument('-cport', metavar='Connector_Port', dest='connectorPort', type=int,
                         default=20000, help='Port of connector.')
 
     parser.add_argument('-ip', metavar='Server_IP', dest='serverIP', type=engine.network.argParseCheckIPFormat,
