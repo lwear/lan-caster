@@ -52,88 +52,6 @@ class Client:
         self.fps = args.fps
         self.pause = args.pause
 
-        self.testMode = False  # True is server is in testMode. Server provides this in joinReply message.
-
-        # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
-        try:
-            log(f"Client Default IP: {engine.network.getDefaultIP()}")
-
-            if self.connectName:
-                self.serverIP = '0.0.0.0'  # ignore serverIP if we are going to request server address from connector.
-
-            self.socket = engine.network.Socket(
-                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
-                msgProcessor=self,
-                sourceIP=self.clientIP,
-                sourcePort=self.clientPort,
-                sourcePortSearch=True,
-                destinationIP=self.serverIP,
-                destinationPort=self.serverPort
-                )
-            self.clientPort = self.socket.sourcePort  # may have changed to a different available port.
-
-            if self.connectName:
-                # talk to connector for connetinfo msg
-                log(f"Asking connector for '{self.connectName}' connection details.")
-
-                reply = self.socket.sendRecvMessage({
-                    'type': 'getConnetInfo',
-                    'serverName': self.connectName,
-                    'clientPrivateIP': engine.network.getDefaultIP(),
-                    'clientPrivatePort': self.socket.sourcePort
-                    },
-                    destinationIP=self.connectorHostName,
-                    destinationPort=self.connectorPort,
-                    retries=10, delay=5, delayMultiplier=1)
-
-                # if server is on different LAN from client
-                if reply["serverPublicIP"] != reply["clientPublicIP"]:
-                    # route over Internet
-                    self.serverIP = reply["serverPublicIP"]
-                    self.serverPort = reply["serverPublicPort"]
-                elif reply["serverPrivateIP"] != reply["clientPrivateIP"]:
-                    # route over Local Area Network (LAN)
-                    self.serverIP = reply["serverPrivateIP"]
-                    self.serverPort = reply["serverPrivatePort"]
-                else:
-                    # route to localhost (same computer)
-                    self.serverIP = '127.0.0.1'
-                    self.serverPort = reply["serverPrivatePort"]
-                self.socket.setDestinationAddress(self.serverIP, self.serverPort)
-
-            log(f"Sending joinRequest to server at {self.serverIP}:{self.serverPort}")
-
-            reply = self.socket.sendRecvMessage({
-                'type': 'joinRequest',
-                'game': self.game,
-                'playerDisplayName': self.playerDisplayName
-                },
-                retries=10, delay=5, delayMultiplier=1)
-
-            if reply["type"] != "joinReply":
-                log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
-                quit()
-
-            self.playerNumber = reply["playerNumber"]
-
-            # set the time so client engine.time.perf_counter() will return secs in sync (very close) to server.
-            time.set(reply['serverSec'])
-
-            self.testMode = reply["testMode"]
-            if(self.testMode):
-                log("Server running in TEST MODE.")
-
-        except engine.network.SocketException as e:
-            log(str(e), "FAILURE")
-            if self.connectName:
-                log("Is connector running?")
-            log("Is server running?")
-            quit()
-
-        log("Join server was successful.")
-
-        self.serverIpport = engine.network.formatIpPort(self.serverIP, self.serverPort)
-
         # actionText defaults that differ from DEFAULTTEXT
         self.ACTIONTEXT = {
             "halign": "center",
@@ -145,6 +63,79 @@ class Client:
             "halign": "center",
             "valign": "center"
             }
+
+        self.testMode = False  # True is server is in testMode. Server provides this in joinReply message.
+
+        # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
+
+        log(f"Client Default IP: {engine.network.getDefaultIP()}")
+
+        if self.connectName:
+            self.clientIP = '0.0.0.0'  # ignore clinetIP if we are going to request server address from connector.
+        try:
+            self.socket = engine.network.Socket(
+                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
+                msgProcessor=self,
+                sourceIP=self.clientIP,
+                sourcePort=self.clientPort,
+                sourcePortSearch=True
+                )
+        except engine.network.SocketException as e:
+            log(e)
+            quit()
+
+        self.clientPort =    self.socket.sourcePort  # may have changed to a different available port.
+        joinReply = False
+        if self.connectName:
+            # talk to connector for connetinfo msg
+            log(f"Asking connector for '{self.connectName}' connection details.")
+            connectorReply = False
+            try:
+                connectorReply = self.socket.sendRecvMessage({
+                    'type': 'getConnetInfo',
+                    'serverName': self.connectName,
+                    'clientPrivateIP': engine.network.getDefaultIP(),
+                    'clientPrivatePort': self.socket.sourcePort
+                    },
+                    destinationIP=self.connectorHostName,
+                    destinationPort=self.connectorPort,
+                    retries=3, delay=3, delayMultiplier=1)
+            except engine.network.SocketException as e:
+                log(e)
+                quit()
+
+            if connectorReply["serverPublicIP"] == connectorReply["clientPublicIP"] and connectorReply["serverPrivateIP"] == connectorReply["clientPrivateIP"]:
+                # try route to localhost first (same computer)
+                self.serverIP = '127.0.0.1'
+                self.serverPort = connectorReply["serverPrivatePort"]
+                joinReply = self.joinServer()
+            if not joinReply and connectorReply["serverPublicIP"] == connectorReply["clientPublicIP"]:
+                # try route over Local Area Network (LAN) second
+                self.serverIP = connectorReply["serverPrivateIP"]
+                self.serverPort = connectorReply["serverPrivatePort"]
+                joinReply = self.joinServer()
+            if not joinReply:
+                self.serverIP = connectorReply["serverPublicIP"]
+                self.serverPort = connectorReply["serverPublicPort"]
+                    
+        if not joinReply:
+            joinReply = self.joinServer()
+            if not joinReply:
+                log("Could not connect to server. Is server running?")
+                quit()
+
+        self.playerNumber = joinReply["playerNumber"]
+
+        # set the time so client engine.time.perf_counter() will return secs in sync (very close) to server.
+        time.set(joinReply['serverSec'])
+
+        self.testMode = joinReply["testMode"]
+        if(self.testMode):
+            log("Server running in TEST MODE.")
+
+        log("Join server was successful.")
+
+        self.serverIpport = engine.network.formatIpPort(self.serverIP, self.serverPort)
 
         self.playerNumber = -1  # set to a real number from the joinReply msg sent from the server
         self.step = False  # Currently displayed step. Empty until we get first step msg from server. = {}
@@ -170,6 +161,24 @@ class Client:
             )
 
         log("Loading tilesets and maps was successful.")
+
+    def joinServer(self):
+        try:
+            log(f"Sending joinRequest to server at {self.serverIP}:{self.serverPort}")
+            self.socket.setDestinationAddress(self.serverIP, self.serverPort)
+            joinReply = self.socket.sendRecvMessage({
+                'type': 'joinRequest',
+                'game': self.game,
+                'playerDisplayName': self.playerDisplayName
+                },
+                retries=5, delay=1, delayMultiplier=1)
+            if joinReply["type"] != "joinReply":
+                log(f"Expected joinReply message but got {joinReply['type']}, quiting!", "FAILURE")
+                quit()
+            return joinReply
+        except engine.network.SocketException as e:
+            log(e)
+            return False
 
     def __str__(self):
         return engine.log.objectToStr(self)

@@ -34,8 +34,6 @@ class Server:
         signal.signal(signal.SIGINT, quit)
         random.seed()
 
-        self.CONNECTOR_KEEP_ALIVE = 10  # send a keepalive to connector every 10 secs until all players have joined.
-
         self.game = args.game
         self.registerName = args.registerName
         self.connectorHostName = args.connectorHostName
@@ -47,6 +45,7 @@ class Server:
         self.testMode = args.testMode
 
         self.playerMoveCheck = True
+        self.CONNECTOR_KEEP_ALIVE = 10  # send a keepalive to connector every 10 secs until all players have joined.
 
         if(self.testMode):
             log("Server running in TEST MODE.")
@@ -295,16 +294,21 @@ class Server:
     ########################################################
 
     def msgConnectInfo(self, ip, port, ipport, msg):
-        # if server is using connector and server is on different LAN from client
-        # then send a packet to the client. It does not matter if this packet
-        # reaches the client, only that it open the server's LAN NAT so packets
-        # are allowed from the client to the server.
-        if self.registerName and msg["serverPublicIP"] != msg["clientPublicIP"]:
-            self.socket.sendMessage(
-                {'type': 'udpPunchThrough'},
-                destinationIP=msg["clientPublicIP"],
-                destinationPort=msg["clientPublicPort"]
-                )
+        '''
+        if server is using connector then send a udpPunchThrough to the
+        client public ip/port. Do this even if it looks like client and
+        and server are on the same LAN or same host. It does not matter
+        if this packet reaches the client, only that it open the server's
+        LAN NAT so packets are allowed from the client to the server.
+        The client can then find the best path (wan/lan/localhost) to
+        reach the server.
+        '''
+        log(f'Sending udpPunchThrough to {msg["clientPublicIP"]}:{msg["clientPublicPort"]}')
+        self.socket.sendMessage(
+            {'type': 'udpPunchThrough'},
+            destinationIP=msg["clientPublicIP"],
+            destinationPort=msg["clientPublicPort"]
+            )
         # do not respond to connector
         return None
 

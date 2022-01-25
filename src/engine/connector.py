@@ -58,7 +58,7 @@ class Connector:
         currentTime = time.perf_counter()
         for serverName in list(self.serverlist.keys()):
             if self.serverlist[serverName]["timeout"] < currentTime:
-                log(f"Deleting server based on timeout:")
+                log(f"Deleting server named '{serverName}' based on timeout:")
                 log(self.serverlist[serverName])
                 del self.serverlist[serverName]
 
@@ -76,7 +76,7 @@ class Connector:
                     'serverPublicIP': ip,
                     'serverPublicPort': port,
                     }
-                log(f"Added server:")
+                log(f"Added server named '{msg['serverName']}':")
                 log(self.serverlist[msg["serverName"]])
                 return {'type': 'serverAdded'}
             else:
@@ -85,7 +85,7 @@ class Connector:
             server = self.serverlist[msg["serverName"]]
             if server["serverPublicIP"] == ip and server["serverPublicPort"] == port:
                 server["timeout"] = time.perf_counter() + self.SERVER_TIMEOUT
-                log(f"Updated timeout for server:")
+                log(f"Updated timeout for server named '{msg['serverName']}':")
                 log(self.serverlist[msg["serverName"]])
                 return {'type': 'serverAdded'}
             else:
@@ -95,7 +95,7 @@ class Connector:
         if msg["serverName"] in self.serverlist:
             server = self.serverlist[msg["serverName"]]
             if server["serverPublicIP"] == ip and server["serverPublicPort"] == port:
-                log(f"Deleting server based on delServer msg:")
+                log(f"Deleting server named '{msg['serverName']}' based on delServer msg:")
                 log(self.serverlist[msg["serverName"]])
                 del self.serverlist[msg["serverName"]]
                 return {'type': 'serverDeleted'}
