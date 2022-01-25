@@ -33,11 +33,21 @@ class Messages:
 
     def __init__(self):
         self.messageDefinitions = {
-            # msg type             other required msg fields
-            'joinRequest': {'game': ['str', 1, 16], 'playerDisplayName': ['str', 1, 16]},
-            'joinReply': {'playerNumber': 'int', 'serverSec': 'float', 'testMode': 'bool'},
+            # msg type and optional/required msg fields (optional end with _o)
+            'joinRequest': {
+                'game': ['str', 1, 16],
+                'playerDisplayName': ['str', 1, 16]
+                },
+            'joinReply': {
+                'playerNumber': 'int',
+                'serverSec': 'float',
+                'testMode': 'bool'
+                },
             'quitting': {},
-            'playerMove': {'moveDestX': 'int', 'moveDestY': 'int'},
+            'playerMove': {
+                'moveDestX': 'int',
+                'moveDestY': 'int'
+                },
             'playerAction': {},
             'step': {
                 'gameSec': 'float',
@@ -49,12 +59,19 @@ class Messages:
                 },
             'testTogglePlayerMoveChecking': {},
             'testPlayerNextMap': {},
-            'testPlayerJump': {'moveDestX': 'int', 'moveDestY': 'int'},
-            'Error': {'result': 'str'},
-            # the messages types below are used only for connection setup, not game play.
+            'testPlayerJump': {
+                'moveDestX': 'int',
+                'moveDestY': 'int'
+                },
+            'Error': {
+                'result': 'str'
+                },
+
+            # The message types below are not for game play
+            # They are used only for connection setup through the connector.
             'addServer': {
-                'serverName': ['str', 8, 64], 
-                'serverPrivateIP': ['str', 7, 15], 
+                'serverName': ['str', 8, 64],
+                'serverPrivateIP': ['str', 7, 15],
                 'serverPrivatePort': 'int'
                 },
             'serverAdded': {},
@@ -63,19 +80,19 @@ class Messages:
                 },
             'serverDeleted': {},
             'getConnetInfo': {
-                'serverName': ['str', 8, 64], 
-                'clientPrivateIP': ['str', 7, 15], 
+                'serverName': ['str', 8, 64],
+                'clientPrivateIP': ['str', 7, 15],
                 'clientPrivatePort': 'int'
                 },
             'connectInfo': {
-                'serverName': ['str', 8, 64], 
-                'clientPrivateIP': ['str', 7, 15], 
+                'serverName': ['str', 8, 64],
+                'clientPrivateIP': ['str', 7, 15],
                 'clientPrivatePort': 'int',
-                'serverPrivateIP': ['str', 7, 15], 
+                'serverPrivateIP': ['str', 7, 15],
                 'serverPrivatePort': 'int',
-                'clientPublicIP': ['str', 7, 15], 
+                'clientPublicIP': ['str', 7, 15],
                 'clientPublicPort': 'int',
-                'serverPublicIP': ['str', 7, 15], 
+                'serverPublicIP': ['str', 7, 15],
                 'serverPublicPort': 'int'
                 },
             'udpPunchThrough': {}

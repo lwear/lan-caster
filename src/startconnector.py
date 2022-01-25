@@ -24,7 +24,7 @@ def startConnector():
                         default='0.0.0.0', help='Connector IP address')
     parser.add_argument('-cp', metavar='port', dest='connectorPort', type=int,
                         default=20000, help='Connector port number')
-    
+
     parser.add_argument('-verbose', dest='verbose', action='store_true',
                         default=False, help='Print VERBOSE level log messages')
     parser.add_argument('-debug', dest='debug', action='store_true',

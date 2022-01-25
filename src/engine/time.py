@@ -12,5 +12,6 @@ def perf_counter():
     global DELTA
     return time.perf_counter() + DELTA
 
+
 def sleep(sec):
     time.sleep(sec)

@@ -13,6 +13,7 @@ def quit(signal=None, frame=None):
     log("Quiting", "INFO")
     exit()
 
+
 class Connector:
 
     def __init__(self, connectorIP, connectorPort):
@@ -21,7 +22,7 @@ class Connector:
 
         self.serverlist = {}
 
-        messages=engine.messages.Messages()
+        messages = engine.messages.Messages()
 
         # set up networking
         try:
@@ -61,7 +62,6 @@ class Connector:
                 log(self.serverlist[serverName])
                 del self.serverlist[serverName]
 
-
     ########################################################
     # Network Message Processing
     ########################################################
@@ -71,9 +71,9 @@ class Connector:
             if self.MAX_SERVERS > len(self.serverlist):
                 self.serverlist[msg["serverName"]] = {
                     'timeout': time.perf_counter() + self.SERVER_TIMEOUT,
-                    'serverPrivateIP': msg["serverPrivateIP"], 
+                    'serverPrivateIP': msg["serverPrivateIP"],
                     'serverPrivatePort': msg["serverPrivatePort"],
-                    'serverPublicIP': ip, 
+                    'serverPublicIP': ip,
                     'serverPublicPort': port,
                     }
                 log(f"Added server:")
@@ -90,9 +90,6 @@ class Connector:
                 return {'type': 'serverAdded'}
             else:
                 return {'type': 'Error', 'result': f"A server with that name is already registered. Choose a different name."}
-
-    def msgUdpPunchThrough(self, ip, port, ipport, msg):
-        pass
 
     def msgDelServer(self, ip, port, ipport, msg):
         if msg["serverName"] in self.serverlist:
@@ -112,14 +109,14 @@ class Connector:
             server = self.serverlist[msg["serverName"]]
             reply = {
                 'type': 'connectInfo',
-                'serverName': msg["serverName"], 
-                'clientPrivateIP': msg['clientPrivateIP'], 
+                'serverName': msg["serverName"],
+                'clientPrivateIP': msg['clientPrivateIP'],
                 'clientPrivatePort': msg['clientPrivatePort'],
-                'serverPrivateIP': server["serverPrivateIP"], 
+                'serverPrivateIP': server["serverPrivateIP"],
                 'serverPrivatePort': server["serverPrivatePort"],
-                'clientPublicIP': ip, 
+                'clientPublicIP': ip,
                 'clientPublicPort': port,
-                'serverPublicIP': server["serverPublicIP"], 
+                'serverPublicIP': server["serverPublicIP"],
                 'serverPublicPort': server["serverPublicPort"]
                 }
 

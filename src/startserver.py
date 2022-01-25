@@ -22,11 +22,11 @@ def startServer():
                         default='demo', help="Directory to load game from")
 
     parser.add_argument('-register', metavar='name', dest='registerName', type=str,
-                        default=False, help='Register with connector as name (False == do not register)')
+                        default=False, help='Experimental: Register with connector as name (False == do not register)')
     parser.add_argument('-ch', metavar='hostname', dest='connectorHostName', type=str,
-                        default='lan-caster.net', help='Connector hostname or IP address')
+                        default='lan-caster.net', help='Experimental: Connector hostname or IP address')
     parser.add_argument('-cp', metavar='port', dest='connectorPort', type=int,
-                        default=20000, help='Connector port number')
+                        default=20000, help='Experimental: Connector port number')
 
     parser.add_argument('-sip', metavar='ipaddr', dest='serverIP', type=engine.network.argParseCheckIPFormat,
                         default='0.0.0.0', help='Server IP address')
@@ -44,7 +44,6 @@ def startServer():
                         default=False, help='Print VERBOSE level log messages')
     parser.add_argument('-debug', dest='debug', action='store_true',
                         default=False, help='Print DEBUG level log messages (includes -verbose)')
-    
 
     args = parser.parse_args()
 

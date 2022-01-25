@@ -74,8 +74,8 @@ class Server:
                 log(f"Adding server to connector as '{self.registerName}'.")
                 reply = self.socket.sendRecvMessage(
                     self.getAddServerMsg(),
-                    destinationIP=self.connectorHostName, 
-                    destinationPort=self.connectorPort, 
+                    destinationIP=self.connectorHostName,
+                    destinationPort=self.connectorPort,
                     retries=10, delay=5, delayMultiplier=1)
                 if reply["type"] == "serverAdded":
                     log(f"Server added to connector as {self.registerName}.")
@@ -88,7 +88,6 @@ class Server:
                 log("Is connector running?")
             log(str(e), "FAILURE")
             quit()
-
 
         self.tilesets = engine.loaders.loadTilesets(
             game=self.game,
@@ -161,30 +160,6 @@ class Server:
     # Network Message Processing
     ########################################################
 
-    def msgConnectInfo(self, ip, port, ipport, msg):
-        # punch open UDP on local NAT by sending udpPunchThrough msg.
-        # then client will be able to send packets to server.
-
-        # if server is using connector and server is on different LAN from client
-        if self.registerName and msg["serverPublicIP"] != msg["clientPublicIP"]:
-            self.socket.sendMessage(
-                {'type': 'udpPunchThrough'},
-                destinationIP=msg["clientPublicIP"],
-                destinationPort=msg["clientPublicPort"]
-                )
-
-        # do not respond to connector
-        return None
-
-    def msgUdpPunchThrough(self, ip, port, ipport, msg):
-        pass
-
-    def msgServerAdded(self, ip, port, ipport, msg):
-        pass
-
-    def serverDeleted(self, ip, port, ipport, msg):
-        pass
-
     def msgJoinRequest(self, ip, port, ipport, msg):
         # process joinRequest msg from client.
 
@@ -193,7 +168,7 @@ class Server:
             result = "OK"
             log("Player at " + ipport + " sent joinRequest again.")
         elif msg["game"] != self.game:
-            result = f"Client and Server are not running the same game: client->{msg["game"]}, server->{self.game}"
+            result = f"Client and Server are not running the same game: client->{msg['game']}, server->{self.game}"
             log("Player at " + ipport + " tried to join wrong game.")
         else:
             if len(self.unassignedPlayerSprites) == 0:
@@ -209,10 +184,10 @@ class Server:
             if self.registerName and len(self.unassignedPlayerSprites) == 0:
                 self.socket.sendMessage(
                     {
-                        'type': 'delServer', 
+                        'type': 'delServer',
                         'serverName': self.registerName
-                    },
-                    destinationIP=self.connectorHostName, 
+                        },
+                    destinationIP=self.connectorHostName,
                     destinationPort=self.connectorPort
                     )
 
@@ -315,26 +290,50 @@ class Server:
 
         return msg
 
+    ########################################################
+    # Network Message Processing for Connector
+    ########################################################
+
+    def msgConnectInfo(self, ip, port, ipport, msg):
+        # if server is using connector and server is on different LAN from client
+        # then send a packet to the client. It does not matter if this packet
+        # reaches the client, only that it open the server's LAN NAT so packets
+        # are allowed from the client to the server.
+        if self.registerName and msg["serverPublicIP"] != msg["clientPublicIP"]:
+            self.socket.sendMessage(
+                {'type': 'udpPunchThrough'},
+                destinationIP=msg["clientPublicIP"],
+                destinationPort=msg["clientPublicPort"]
+                )
+        # do not respond to connector
+        return None
+
+    def msgServerAdded(self, ip, port, ipport, msg):
+        pass
+
+    def msgServerDeleted(self, ip, port, ipport, msg):
+        pass
+
     def sendConnectorKeepAlive(self):
-        # if we are still waiting for players to join then 
+        # if we are still waiting for players to join then
         # we need to keep udp punch through open for traffic from connector
         # we need to make sure connector does not time out our registration.
         if self.registerName and len(self.unassignedPlayerSprites) != 0:
             if self.sendAddServerAfter < time.perf_counter():
                 self.socket.sendMessage(
-                            self.getAddServerMsg(),
-                            destinationIP=self.connectorHostName, 
-                            destinationPort=self.connectorPort
-                            )
+                    self.getAddServerMsg(),
+                    destinationIP=self.connectorHostName,
+                    destinationPort=self.connectorPort
+                    )
                 self.sendAddServerAfter = time.perf_counter() + self.CONNECTOR_KEEP_ALIVE
 
     def getAddServerMsg(self):
         return {
-                'type': 'addServer',
-                'serverName': self.registerName, 
-                'serverPrivateIP': engine.network.getDefaultIP(), 
-                'serverPrivatePort': self.serverPort
-                }
+            'type': 'addServer',
+            'serverName': self.registerName,
+            'serverPrivateIP': engine.network.getDefaultIP(),
+            'serverPrivatePort': self.serverPort
+            }
 
     ########################################################
     # GAME LOGIC

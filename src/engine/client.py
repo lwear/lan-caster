@@ -73,31 +73,34 @@ class Client:
             self.clientPort = self.socket.sourcePort  # may have changed to a different available port.
 
             if self.connectName:
-                #talk to connector for connetinfo msg
+                # talk to connector for connetinfo msg
                 log(f"Asking connector for '{self.connectName}' connection details.")
 
                 reply = self.socket.sendRecvMessage({
                     'type': 'getConnetInfo',
-                    'serverName': self.connectName, 
-                    'clientPrivateIP': engine.network.getDefaultIP(), 
+                    'serverName': self.connectName,
+                    'clientPrivateIP': engine.network.getDefaultIP(),
                     'clientPrivatePort': self.socket.sourcePort
                     },
-                    destinationIP=self.connectorHostName, 
+                    destinationIP=self.connectorHostName,
                     destinationPort=self.connectorPort,
                     retries=10, delay=5, delayMultiplier=1)
 
                 # if server is on different LAN from client
                 if reply["serverPublicIP"] != reply["clientPublicIP"]:
+                    # route over Internet
                     self.serverIP = reply["serverPublicIP"]
                     self.serverPort = reply["serverPublicPort"]
                 elif reply["serverPrivateIP"] != reply["clientPrivateIP"]:
+                    # route over Local Area Network (LAN)
                     self.serverIP = reply["serverPrivateIP"]
                     self.serverPort = reply["serverPrivatePort"]
                 else:
+                    # route to localhost (same computer)
                     self.serverIP = '127.0.0.1'
                     self.serverPort = reply["serverPrivatePort"]
                 self.socket.setDestinationAddress(self.serverIP, self.serverPort)
-            
+
             log(f"Sending joinRequest to server at {self.serverIP}:{self.serverPort}")
 
             reply = self.socket.sendRecvMessage({
@@ -130,7 +133,7 @@ class Client:
         log("Join server was successful.")
 
         self.serverIpport = engine.network.formatIpPort(self.serverIP, self.serverPort)
-        
+
         # actionText defaults that differ from DEFAULTTEXT
         self.ACTIONTEXT = {
             "halign": "center",
@@ -151,7 +154,8 @@ class Client:
         pygame.init()
         pygame.mixer.quit()  # Turn all sound off.
         pygame.display.set_caption(f"{self.game} - {self.playerDisplayName}")  # Set the title of the window
-        self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight), pygame.RESIZABLE)  # open the window
+        self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight),
+                                              pygame.RESIZABLE)  # open the window
         self.screenValidUntil = 0  # invalid and needs to be rendered.
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -166,8 +170,6 @@ class Client:
             )
 
         log("Loading tilesets and maps was successful.")
-
-
 
     def __str__(self):
         return engine.log.objectToStr(self)
@@ -215,9 +217,6 @@ class Client:
     # NETWORK MESSAGE PROCESSING
     ########################################################
 
-    def msgUdpPunchThrough(self, ip, port, ipport, msg):
-        pass
-
     def msgStep(self, ip, port, ipport, msg):
         if ipport != self.serverIpport:
             log(f"Msg received but not from server! Msg from ({ipport}).", "WARNING")
@@ -231,6 +230,10 @@ class Client:
             return
         log("Received quitting msg from server.")
         quit()
+
+    # Network Message Processing for Connector
+    def msgUdpPunchThrough(self, ip, port, ipport, msg):
+        pass
 
     ########################################################
     # SCREEN DRAWING

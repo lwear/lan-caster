@@ -24,13 +24,12 @@ def startClient():
     parser.add_argument('-player', metavar='name', dest='playerDisplayName', type=str,
                         default='anonymous', help="Player's name to display in game")
 
-
     parser.add_argument('-connect', metavar='name', dest='connectName', type=str,
-                        default=False, help='Connect to server using connector. "name" must match server\'s "-register name" (if False then use -sip and -sp to connect to server)')
+                        default=False, help='Experimental: Connect to server using connector. "name" must match server\'s "-register name" (if False then use -sip and -sp to connect to server)')
     parser.add_argument('-ch', metavar='hostname', dest='connectorHostName', type=str,
-                        default='lan-caster.net', help='Connector hostname or IP address')
+                        default='lan-caster.net', help='Experimental: Connector hostname or IP address')
     parser.add_argument('-cp', metavar='port', dest='connectorPort', type=int,
-                        default=20000, help='Connector port number')
+                        default=20000, help='Experimental: Connector port number')
 
     parser.add_argument('-sip', metavar='ipaddr', dest='serverIP', type=engine.network.argParseCheckIPFormat,
                         default='127.0.0.1', help='Server IP address')
@@ -45,17 +44,16 @@ def startClient():
     parser.add_argument('-width', metavar='width', dest='windowWidth', type=int,
                         default=640, help='Window width')
     parser.add_argument('-height', metavar='height', dest='windowHeight', type=int,
-                        default=640, help='Window height') 
+                        default=640, help='Window height')
     parser.add_argument('-fps', metavar='fps', dest='fps', type=int,
-                    default=30, help='Target frames per second')
+                        default=30, help='Target frames per second')
     parser.add_argument('-pause', metavar='secs', dest='pause', type=int,
-                    default=0, help='Duration to pause in seconds before starting client (for testing)')
+                        default=0, help='Duration to pause in seconds before starting client (for testing)')
 
     parser.add_argument('-verbose', dest='verbose', action='store_true',
                         default=False, help='Print VERBOSE level log messages')
     parser.add_argument('-debug', dest='debug', action='store_true',
                         default=False, help='Print DEBUG level log messages (includes -verbose)')
-
 
     args = parser.parse_args()
 

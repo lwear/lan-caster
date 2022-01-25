@@ -19,7 +19,8 @@ class Socket:
     Socket is based on UDP/IP sockets.
     """
 
-    def __init__(self, messages, msgProcessor, sourceIP, sourcePort, sourcePortSearch=False, destinationIP='127.0.0.1', destinationPort=20000):
+    def __init__(self, messages, msgProcessor, sourceIP, sourcePort,
+                 sourcePortSearch=False, destinationIP='127.0.0.1', destinationPort=20000):
         """
         Create and bind UDP socket and bind it to listen on sourceIP and sourcePort.
 
@@ -130,7 +131,7 @@ class Socket:
 
         Raises SocketException exception.
         """
-        
+
         destinationIP = resolve(destinationIP)
         if not destinationIP or not isValidPort(destinationPort):
             raise SocketException("Bad IP or Port Provided.")
@@ -387,6 +388,7 @@ class Socket:
                 except Exception as e:
                     log(str(e), "ERROR")
 
+
 class SocketException(Exception):
     """Raised by the Socket class."""
     pass
@@ -394,6 +396,7 @@ class SocketException(Exception):
 ########################################################
 # Network Utility Functions
 ########################################################
+
 
 def resolve(hostname):
     if not isinstance(hostname, str):
@@ -417,9 +420,11 @@ def isValidIP(ip):
     return True
 
 # Check IP address format as needed by argparse module.
+
+
 def argParseCheckIPFormat(ip):
     """ Returns ip if ip is a valid IP address, otherwise raises argparse.ArgumentTypeError exception. """
-    
+
     if not isValidIP(ip):
         raise argparse.ArgumentTypeError(ip)
     return ip
@@ -440,6 +445,7 @@ def isValidPort(p):
 def formatIpPort(ip, port):
     """ Formats ip and port into a single string. eg. 127.168.32.11:20012 """
     return str(ip) + ":" + str(port)
+
 
 def getDefaultIP():
     # return the default ip of the host.
