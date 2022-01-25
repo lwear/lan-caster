@@ -38,45 +38,74 @@ class Client:
         CLIENT = self
         signal.signal(signal.SIGINT, quit)
 
-        self.args = args
         self.game = args.game
+        self.playerDisplayName = args.playerDisplayName
+        self.connectName = args.connectName
+        self.connectorHostName = args.connectorHostName
+        self.connectorPort = args.connectorPort
+        self.serverIP = args.serverIP
+        self.serverPort = args.serverPort
+        self.clientIP = args.clientIP
+        self.clientPort = args.clientPort
+        self.windowWidth = args.windowWidth
+        self.windowHeight = args.windowHeight
         self.fps = args.fps
+        self.pause = args.pause
+
         self.testMode = False  # True is server is in testMode. Server provides this in joinReply message.
 
         # Set up network, send joinRequest msg to server, and wait for joinReply to be sent back from server.
         try:
-            if args.serverName:
-                args.serverIP = '0.0.0.0'  # ignore serverIP if we are going to request server address from connector.
+            log(f"Client Default IP: {engine.network.getDefaultIP()}")
+
+            if self.connectName:
+                self.serverIP = '0.0.0.0'  # ignore serverIP if we are going to request server address from connector.
 
             self.socket = engine.network.Socket(
                 messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
                 msgProcessor=self,
-                sourceIP=args.myIP,
-                sourcePort=args.myPort,
-                destinationIP=args.serverIP,
-                destinationPort=args.serverPort
+                sourceIP=self.clientIP,
+                sourcePort=self.clientPort,
+                sourcePortSearch=True,
+                destinationIP=self.serverIP,
+                destinationPort=self.serverPort
                 )
+            self.clientPort = self.socket.sourcePort  # may have changed to a different available port.
 
-            if args.serverName:
+            if self.connectName:
                 #talk to connector for connetinfo msg
+                log(f"Asking connector for '{self.connectName}' connection details.")
 
-                # punch hole in local nat
-                self.socket.sendMessage(
-                    {'type': 'udpPunch'},
-                    destinationIP=msg["serverPublicIP"],
-                    destinationPort=msg["serverPublicPort"]
-                    )
-                #find working serverip and server port.
-                #update args.serverIP
-                #update args.serverPort
-                pass
+                reply = self.socket.sendRecvMessage({
+                    'type': 'getConnetInfo',
+                    'serverName': self.connectName, 
+                    'clientPrivateIP': engine.network.getDefaultIP(), 
+                    'clientPrivatePort': self.socket.sourcePort
+                    },
+                    destinationIP=self.connectorHostName, 
+                    destinationPort=self.connectorPort,
+                    retries=10, delay=5, delayMultiplier=1)
+
+                # if server is on different LAN from client
+                if reply["serverPublicIP"] != reply["clientPublicIP"]:
+                    self.serverIP = reply["serverPublicIP"]
+                    self.serverPort = reply["serverPublicPort"]
+                elif reply["serverPrivateIP"] != reply["clientPrivateIP"]:
+                    self.serverIP = reply["serverPrivateIP"]
+                    self.serverPort = reply["serverPrivatePort"]
+                else:
+                    self.serverIP = '127.0.0.1'
+                    self.serverPort = reply["serverPrivatePort"]
+                self.socket.setDestinationAddress(self.serverIP, self.serverPort)
             
+            log(f"Sending joinRequest to server at {self.serverIP}:{self.serverPort}")
+
             reply = self.socket.sendRecvMessage({
                 'type': 'joinRequest',
                 'game': self.game,
-                'playerDisplayName': args.playerDisplayName
+                'playerDisplayName': self.playerDisplayName
                 },
-                retries=300, delay=1, delayMultiplier=1)
+                retries=10, delay=5, delayMultiplier=1)
 
             if reply["type"] != "joinReply":
                 log(f"Expected joinReply message but got {reply['type']}, quiting!", "FAILURE")
@@ -92,13 +121,15 @@ class Client:
                 log("Server running in TEST MODE.")
 
         except engine.network.SocketException as e:
-            log("Is server running at" + args.serverIP + ":" + str(args.serverPort) + "?")
             log(str(e), "FAILURE")
+            if self.connectName:
+                log("Is connector running?")
+            log("Is server running?")
             quit()
 
         log("Join server was successful.")
 
-        self.serverIpport = engine.network.formatIpPort(args.serverIP, args.serverPort)
+        self.serverIpport = engine.network.formatIpPort(self.serverIP, self.serverPort)
         
         # actionText defaults that differ from DEFAULTTEXT
         self.ACTIONTEXT = {
@@ -119,8 +150,8 @@ class Client:
         # Note, we must init pygame before we load tileset data.
         pygame.init()
         pygame.mixer.quit()  # Turn all sound off.
-        pygame.display.set_caption(f"{self.game} - {args.playerDisplayName}")  # Set the title of the window
-        self.screen = pygame.display.set_mode((args.width, args.height), pygame.RESIZABLE)  # open the window
+        pygame.display.set_caption(f"{self.game} - {self.playerDisplayName}")  # Set the title of the window
+        self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight), pygame.RESIZABLE)  # open the window
         self.screenValidUntil = 0  # invalid and needs to be rendered.
 
         self.tilesets = engine.loaders.loadTilesets(
@@ -184,7 +215,7 @@ class Client:
     # NETWORK MESSAGE PROCESSING
     ########################################################
 
-    def msgUdpPunch:
+    def msgUdpPunchThrough(self, ip, port, ipport, msg):
         pass
 
     def msgStep(self, ip, port, ipport, msg):

@@ -2,7 +2,6 @@ import signal
 import engine.time as time
 import random
 import os
-import socket
 
 from engine.log import log
 import engine.log
@@ -35,12 +34,20 @@ class Server:
         signal.signal(signal.SIGINT, quit)
         random.seed()
 
-        self.args = args
-        self.game = args.game
-        self.fps = args.fps
+        self.CONNECTOR_KEEP_ALIVE = 10  # send a keepalive to connector every 10 secs until all players have joined.
 
+        self.game = args.game
+        self.registerName = args.registerName
+        self.connectorHostName = args.connectorHostName
+        self.connectorPort = args.connectorPort
+        self.serverIP = args.serverIP
+        self.serverPort = args.serverPort
+        self.fps = args.fps
+        self.pause = args.pause
         self.testMode = args.testMode
+
         self.playerMoveCheck = True
+
         if(self.testMode):
             log("Server running in TEST MODE.")
 
@@ -48,7 +55,40 @@ class Server:
         self.playersByNum = {}  # same as above but indexed by playerNumber
         self.gameStartSec = 0  # time_perfcounter() that the game started (send in step msgs)
 
-        self.socket = None  # set up below
+        # set up networking
+        try:
+            log(f"Server Default IP: {engine.network.getDefaultIP()}")
+
+            if self.registerName:
+                self.serverIP = '0.0.0.0'  # ignore serverIP arg if we are going to register with connector.
+
+            self.socket = engine.network.Socket(
+                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
+                msgProcessor=self,
+                sourceIP=self.serverIP,
+                sourcePort=self.serverPort
+                )
+            log("Network socket created.")
+
+            if self.registerName:
+                log(f"Adding server to connector as '{self.registerName}'.")
+                reply = self.socket.sendRecvMessage(
+                    self.getAddServerMsg(),
+                    destinationIP=self.connectorHostName, 
+                    destinationPort=self.connectorPort, 
+                    retries=10, delay=5, delayMultiplier=1)
+                if reply["type"] == "serverAdded":
+                    log(f"Server added to connector as {self.registerName}.")
+                    self.sendAddServerAfter = time.perf_counter() + self.CONNECTOR_KEEP_ALIVE
+                else:
+                    log(msg["result"], "FAILURE")
+                    quit()
+        except Exception as e:
+            if self.registerName:
+                log("Is connector running?")
+            log(str(e), "FAILURE")
+            quit()
+
 
         self.tilesets = engine.loaders.loadTilesets(
             game=self.game,
@@ -69,42 +109,6 @@ class Server:
                     self.unassignedPlayerSprites.append((player, self.maps[m].name))
         # ensure players are assigned random player sprites even if they join in the same order.
         random.shuffle(self.unassignedPlayerSprites)
-
-        # set up networking
-        try:
-            if args.serverName:
-                args.serverIP = '0.0.0.0'  # ignore serverIP arg if we are going to register with connector.
-
-            self.socket = engine.network.Socket(
-                messages=engine.loaders.loadModule("messages", game=self.game).Messages(),
-                msgProcessor=self,
-                sourceIP=args.serverIP,
-                sourcePort=args.serverPort
-                )
-            log("Network socket created.")
-
-            if args.serverName:
-                log(f"Adding server to connector as '{args.serverName}'.")
-                connectorIP=socket.gethostbyname(args.connectorHostName)
-                log(f"Connector Host: {args.connectorHostName} ({connectorIP})")
-
-                reply = self.socket.sendRecvMessage({
-                    'type': 'addServer',
-                    'serverName': args.serverName, 
-                    'serverPrivateIP': engine.network.getDefaultIP(), 
-                    'serverPrivatePort': args.serverPort
-                    },
-                    destinationIP=connectorIP, 
-                    destinationPort=args.connectorPort, 
-                    retries=10, delay=5, delayMultiplier=1)
-                if reply["type"] == "serverAdded":
-                    log(f"Server added to connector as {args.serverName}.")
-                else:
-                    log(msg["result"], "FAILURE")
-                    quit()
-        except Exception as e:
-            log(str(e), "FAILURE")
-            quit()
 
     def __str__(self):
         return engine.log.objectToStr(self)
@@ -132,6 +136,9 @@ class Server:
             # Send updates to players for maps that have changed during the step
             self.sendStepMsgs()
 
+            # send keep alive messages to connector
+            self.sendConnectorKeepAlive()
+
             # busy wait (for accuracy) until next step should start.
             ptime = time.perf_counter()
             if ptime < nextStepAt:
@@ -155,18 +162,27 @@ class Server:
     ########################################################
 
     def msgConnectInfo(self, ip, port, ipport, msg):
-        # punch open UDP on local NAT by sending udpPunch msg.
+        # punch open UDP on local NAT by sending udpPunchThrough msg.
+        # then client will be able to send packets to server.
 
-        self.socket.sendMessage(
-            {'type': 'udpPunch'},
-            destinationIP=msg["clientPublicIP"],
-            destinationPort=msg["clientPublicPort"]
-            )
+        # if server is using connector and server is on different LAN from client
+        if self.registerName and msg["serverPublicIP"] != msg["clientPublicIP"]:
+            self.socket.sendMessage(
+                {'type': 'udpPunchThrough'},
+                destinationIP=msg["clientPublicIP"],
+                destinationPort=msg["clientPublicPort"]
+                )
 
         # do not respond to connector
         return None
 
-    def msgUdpPunch(self):
+    def msgUdpPunchThrough(self, ip, port, ipport, msg):
+        pass
+
+    def msgServerAdded(self, ip, port, ipport, msg):
+        pass
+
+    def serverDeleted(self, ip, port, ipport, msg):
         pass
 
     def msgJoinRequest(self, ip, port, ipport, msg):
@@ -177,7 +193,7 @@ class Server:
             result = "OK"
             log("Player at " + ipport + " sent joinRequest again.")
         elif msg["game"] != self.game:
-            result = "Client and Server are not running the same game."
+            result = f"Client and Server are not running the same game: client->{msg["game"]}, server->{self.game}"
             log("Player at " + ipport + " tried to join wrong game.")
         else:
             if len(self.unassignedPlayerSprites) == 0:
@@ -189,6 +205,17 @@ class Server:
                 result = "OK"
 
         if result == "OK":
+            # if using connector and all players have joined we can delServer from connector
+            if self.registerName and len(self.unassignedPlayerSprites) == 0:
+                self.socket.sendMessage(
+                    {
+                        'type': 'delServer', 
+                        'serverName': self.registerName
+                    },
+                    destinationIP=self.connectorHostName, 
+                    destinationPort=self.connectorPort
+                    )
+
             # send the new client back their player number
             return {
                 'type': "joinReply",
@@ -288,6 +315,26 @@ class Server:
 
         return msg
 
+    def sendConnectorKeepAlive(self):
+        # if we are still waiting for players to join then 
+        # we need to keep udp punch through open for traffic from connector
+        # we need to make sure connector does not time out our registration.
+        if self.registerName and len(self.unassignedPlayerSprites) != 0:
+            if self.sendAddServerAfter < time.perf_counter():
+                self.socket.sendMessage(
+                            self.getAddServerMsg(),
+                            destinationIP=self.connectorHostName, 
+                            destinationPort=self.connectorPort
+                            )
+                self.sendAddServerAfter = time.perf_counter() + self.CONNECTOR_KEEP_ALIVE
+
+    def getAddServerMsg(self):
+        return {
+                'type': 'addServer',
+                'serverName': self.registerName, 
+                'serverPrivateIP': engine.network.getDefaultIP(), 
+                'serverPrivatePort': self.serverPort
+                }
 
     ########################################################
     # GAME LOGIC

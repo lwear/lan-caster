@@ -13,12 +13,11 @@ def quit(signal=None, frame=None):
     log("Quiting", "INFO")
     exit()
 
-
 class Connector:
 
     def __init__(self, connectorIP, connectorPort):
         self.MAX_SERVERS = 100
-        self.SERVER_TIMEOUT = 120
+        self.SERVER_TIMEOUT = 30
 
         self.serverlist = {}
 
@@ -56,9 +55,11 @@ class Connector:
 
     def checkTimeouts(self):
         currentTime = time.perf_counter()
-        for serverName in self.serverlist:
+        for serverName in list(self.serverlist.keys()):
             if self.serverlist[serverName]["timeout"] < currentTime:
-                del self.serverlist[msg["serverName"]]
+                log(f"Deleting server based on timeout:")
+                log(self.serverlist[serverName])
+                del self.serverlist[serverName]
 
 
     ########################################################
@@ -75,26 +76,32 @@ class Connector:
                     'serverPublicIP': ip, 
                     'serverPublicPort': port,
                     }
+                log(f"Added server:")
                 log(self.serverlist[msg["serverName"]])
                 return {'type': 'serverAdded'}
             else:
                 return {'type': 'Error', 'result': f"Max servers already registered."}
-
         else:
-            return {'type': 'Error', 'result': f"A server with that name is already registered. Choose a different name."}
-
-    def msgUdpPunch(self, ip, port, ipport, msg):
-        if msg["serverName"] in self.serverlist:
             server = self.serverlist[msg["serverName"]]
             if server["serverPublicIP"] == ip and server["serverPublicPort"] == port:
                 server["timeout"] = time.perf_counter() + self.SERVER_TIMEOUT
+                log(f"Updated timeout for server:")
+                log(self.serverlist[msg["serverName"]])
+                return {'type': 'serverAdded'}
+            else:
+                return {'type': 'Error', 'result': f"A server with that name is already registered. Choose a different name."}
+
+    def msgUdpPunchThrough(self, ip, port, ipport, msg):
+        pass
 
     def msgDelServer(self, ip, port, ipport, msg):
         if msg["serverName"] in self.serverlist:
             server = self.serverlist[msg["serverName"]]
             if server["serverPublicIP"] == ip and server["serverPublicPort"] == port:
+                log(f"Deleting server based on delServer msg:")
+                log(self.serverlist[msg["serverName"]])
                 del self.serverlist[msg["serverName"]]
-                return {'type': 'serverDeleted', 'result': f"Server is not registered."}
+                return {'type': 'serverDeleted'}
             else:
                 return {'type': 'Error', 'result': f"Permission Denied."}
         else:
@@ -103,12 +110,11 @@ class Connector:
     def msgGetConnetInfo(self, ip, port, ipport, msg):
         if msg["serverName"] in self.serverlist:
             server = self.serverlist[msg["serverName"]]
-            server["timeout"] = time.perf_counter() + self.SERVER_TIMEOUT
             reply = {
                 'type': 'connectInfo',
-                'serverName': server["serverName"], 
-                'clientPrivateIP': msg, 
-                'clientPrivatePort': msg,
+                'serverName': msg["serverName"], 
+                'clientPrivateIP': msg['clientPrivateIP'], 
+                'clientPrivatePort': msg['clientPrivatePort'],
                 'serverPrivateIP': server["serverPrivateIP"], 
                 'serverPrivatePort': server["serverPrivatePort"],
                 'clientPublicIP': ip, 

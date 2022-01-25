@@ -19,47 +19,51 @@ import engine.loaders
 
 def startClient():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-game', metavar='Game', dest='game', type=str, nargs='?',
-                        default='demo', help="Game Folder")
-    parser.add_argument('-name', metavar='Name', dest='playerDisplayName', type=str, nargs='?',
-                        default='anonymous', help="Player's Name")
+    parser.add_argument('-game', metavar='dir', dest='game', type=str,
+                        default='demo', help="Directory to load game from")
+    parser.add_argument('-player', metavar='name', dest='playerDisplayName', type=str,
+                        default='anonymous', help="Player's name to display in game")
+
+
+    parser.add_argument('-connect', metavar='name', dest='connectName', type=str,
+                        default=False, help='Connect to server using connector. "name" must match server\'s "-register name" (if False then use -sip and -sp to connect to server)')
+    parser.add_argument('-ch', metavar='hostname', dest='connectorHostName', type=str,
+                        default='lan-caster.net', help='Connector hostname or IP address')
+    parser.add_argument('-cp', metavar='port', dest='connectorPort', type=int,
+                        default=20000, help='Connector port number')
+
+    parser.add_argument('-sip', metavar='ipaddr', dest='serverIP', type=engine.network.argParseCheckIPFormat,
+                        default='127.0.0.1', help='Server IP address')
+    parser.add_argument('-sp', metavar='port', dest='serverPort', type=int,
+                        default=20001, help='Server port number')
+
+    parser.add_argument('-ip', metavar='ipaddr', dest='clientIP', type=str,
+                        default='0.0.0.0', help='Client IP address')
+    parser.add_argument('-p', metavar='port', dest='clientPort', type=int,
+                        default=20002, help='Client port number (client will search for an open port starting with this number.)')
+
+    parser.add_argument('-width', metavar='width', dest='windowWidth', type=int,
+                        default=640, help='Window width')
+    parser.add_argument('-height', metavar='height', dest='windowHeight', type=int,
+                        default=640, help='Window height') 
     parser.add_argument('-fps', metavar='fps', dest='fps', type=int,
-                        default=30, help='Target frames per second.')
-    parser.add_argument('-width', metavar='width', dest='width', type=int,
-                        default=640, help='Window width.')
-    parser.add_argument('-height', metavar='height', dest='height', type=int,
-                        default=640, help='Window height.')
-
-
-    parser.add_argument('-sname', metavar='Server_Name', dest='serverName', type=str,
-                        default=False, help='Name to use when registering this server with connector.')
-    parser.add_argument('-cname', metavar='Connector_Host_Name', dest='connectorHostName', type=str,
-                        default='lan-caster.net', help='Hostname of connector.')
-    parser.add_argument('-cport', metavar='Connector_Port', dest='connectorPort', type=str,
-                        default=20000, help='Port of connector.')
-
-
-    parser.add_argument('-ip', metavar='My IP', dest='myIP', type=engine.network.argParseCheckIPFormat, nargs='?',
-                        default='127.0.0.1', help='My IP Address')
-    parser.add_argument('-p', metavar='My Port', dest='myPort', type=int, nargs='?',
-                        default=20010, help='My port number')
-    parser.add_argument('-sip', metavar='Server IP', dest='serverIP', type=engine.network.argParseCheckIPFormat, nargs='?',
-                        default='127.0.0.1', help='Server IP Address')
-    parser.add_argument('-sp', metavar='Server Port', dest='serverPort', type=int, nargs='?',
-                        default=20000, help='Server port number')
-
-    parser.add_argument('-debug', dest='debug', action='store_true',
-                        default=False, help='Print DEBUG level log messages.')
-    parser.add_argument('-verbose', dest='verbose', action='store_true',
-                        default=False, help='Print VERBOSE level log messages. Note, -debug includes -verbose.')
+                    default=30, help='Target frames per second')
     parser.add_argument('-pause', metavar='secs', dest='pause', type=int,
-                        default=0, help='Duration to pause in seconds before starting client (for testing).')
+                    default=0, help='Duration to pause in seconds before starting client (for testing)')
+
+    parser.add_argument('-verbose', dest='verbose', action='store_true',
+                        default=False, help='Print VERBOSE level log messages')
+    parser.add_argument('-debug', dest='debug', action='store_true',
+                        default=False, help='Print DEBUG level log messages (includes -verbose)')
+
+
     args = parser.parse_args()
 
     setLogLevel(args.debug, args.verbose)
 
-    log(f"Pausing for {args.pause} seconds before starting client.")
-    time.sleep(args.pause)
+    if(args.pause):
+        log(f"Pausing for {args.pause} seconds before starting client.")
+        time.sleep(args.pause)
 
     module = engine.loaders.loadModule("client", game=args.game)
     module.Client(args).run()

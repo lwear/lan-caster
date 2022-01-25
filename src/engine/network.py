@@ -19,7 +19,7 @@ class Socket:
     Socket is based on UDP/IP sockets.
     """
 
-    def __init__(self, messages, msgProcessor, sourceIP, sourcePort, destinationIP='127.0.0.1', destinationPort=20000):
+    def __init__(self, messages, msgProcessor, sourceIP, sourcePort, sourcePortSearch=False, destinationIP='127.0.0.1', destinationPort=20000):
         """
         Create and bind UDP socket and bind it to listen on sourceIP and sourcePort.
 
@@ -54,19 +54,29 @@ class Socket:
         self.sendrecvDelay = 0.1
 
         self.sourceIP = sourceIP
-        self.sourcePort = sourcePort
         log("Creating socket with sourceIP=" + sourceIP + ", sourcePort=" + str(sourcePort), "VERBOSE")
         self.s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         try:
-            self.s.bind((sourceIP, sourcePort))
-            log("Source Socket Binding Successful. Listening on " + formatIpPort(sourceIP, sourcePort))
+            if sourcePortSearch:
+                portRange = 100  # try the source port provided and 100 ports above it until an available port is found.
+            else:
+                portRange = 1  # only try the sourcePort provided
+
+            for i in range(portRange):
+                try:
+                    self.s.bind((sourceIP, sourcePort + i))
+                    self.sourcePort = sourcePort + i
+                    break
+                except Exception as e:
+                    pass
+            log("Source Socket Binding Successful. Listening on " + formatIpPort(self.sourceIP, self.sourcePort))
         except Exception as e:
             self.s.close()
             self.s = None
-            log("Source Socket Binding Failed. The source port may already be in use. Try another port.", "FAILURE")
+            log("Source Socket Binding Failed. The source port(s) may already be in use.", "FAILURE")
             raise
         self.s.settimeout(0)
-        self.destinationIP = destinationIP
+        self.destinationIP = resolve(destinationIP)
         self.destinationPort = destinationPort
         self.bufferSize = 4096
         random.seed()
@@ -74,41 +84,6 @@ class Socket:
 
     def __str__(self):
         return engine.log.objectToStr(self)
-
-    def recvReplyMsgs(self):
-        # process all messages in socket recv buffer
-        # for each msg send it to callbackFunc(ipport, msg, callbackData)
-        # if the callback function return a msg then send the msg back
-        msgQ = []
-        more = True
-        while more:
-            try:
-                msgQ.append(self.recvMessage())
-            except SocketException as e:
-                # BUG this assumes this exception is only thrown if buffer is
-                # empty but it is also thrown if an invalid msg is received.
-                more = False
-            except Exception as e:
-                log(str(type(e)) + " " + str(e), "ERROR")
-                more = False
-
-        for msg, ip, port in msgQ:
-            methodName = "msg" + msg["type"][:1].capitalize() + msg["type"][1:]
-            if methodName not in self.msgProcessorMethods:
-                log(f'Cannot process msg of type {msg["type"]}. No {methodName} method is found in msgProcessor.', "WARNING")
-                continue
-
-            callbackFunc = getattr(self.msgProcessor, methodName, None)
-
-            ipport = formatIpPort(ip, port)
-            reply = callbackFunc(ip, port, ipport, msg)
-            if reply:
-                if 'msgID' in msg:
-                    reply['msgID'] = msg['msgID']
-                try:
-                    self.sendMessage(reply, ip, port)
-                except Exception as e:
-                    log(str(e), "ERROR")
 
     def settimeout(self, t):
         self.s.settimeout(t)
@@ -155,8 +130,9 @@ class Socket:
 
         Raises SocketException exception.
         """
-
-        if not isValidIP(destinationIP) or not isValidPort(destinationPort):
+        
+        destinationIP = resolve(destinationIP)
+        if not destinationIP or not isValidPort(destinationPort):
             raise SocketException("Bad IP or Port Provided.")
 
         self.destinationIP = destinationIP
@@ -188,6 +164,7 @@ class Socket:
 
         if destinationIP is None:
             destinationIP = self.destinationIP
+        destinationIP = resolve(destinationIP)
 
         if destinationPort is None:
             destinationPort = self.destinationPort
@@ -196,7 +173,7 @@ class Socket:
             if not self.messages.isValidMsg(msg):
                 raise SocketException("Could not send because msg is not valid format.")
             if not isValidIP(destinationIP):
-                raise SocketException("Could not send because destinationIP is not valid format.")
+                raise SocketException("Could not send because destinationIP is not valid.")
             if not isValidPort(destinationPort):
                 raise SocketException("Could not send because destinationPort is not valid format.")
 
@@ -315,6 +292,7 @@ class Socket:
 
         if destinationIP is None:
             destinationIP = self.destinationIP
+        destinationIP = resolve(destinationIP)
 
         if destinationPort is None:
             destinationPort = self.destinationPort
@@ -374,6 +352,40 @@ class Socket:
         self.sendRecvMessageTime += time.perf_counter() - startTime
         return replyMsg
 
+    def recvReplyMsgs(self):
+        # process all messages in socket recv buffer
+        # for each msg send it to callbackFunc(ipport, msg, callbackData)
+        # if the callback function return a msg then send the msg back
+        msgQ = []
+        more = True
+        while more:
+            try:
+                msgQ.append(self.recvMessage())
+            except SocketException as e:
+                # BUG this assumes this exception is only thrown if buffer is
+                # empty but it is also thrown if an invalid msg is received.
+                more = False
+            except Exception as e:
+                log(str(type(e)) + " " + str(e), "ERROR")
+                more = False
+
+        for msg, ip, port in msgQ:
+            methodName = "msg" + msg["type"][:1].capitalize() + msg["type"][1:]
+            if methodName not in self.msgProcessorMethods:
+                log(f'Cannot process msg of type {msg["type"]}. No {methodName} method is found in msgProcessor.', "WARNING")
+                continue
+
+            callbackFunc = getattr(self.msgProcessor, methodName, None)
+
+            ipport = formatIpPort(ip, port)
+            reply = callbackFunc(ip, port, ipport, msg)
+            if reply:
+                if 'msgID' in msg:
+                    reply['msgID'] = msg['msgID']
+                try:
+                    self.sendMessage(reply, ip, port)
+                except Exception as e:
+                    log(str(e), "ERROR")
 
 class SocketException(Exception):
     """Raised by the Socket class."""
@@ -383,23 +395,31 @@ class SocketException(Exception):
 # Network Utility Functions
 ########################################################
 
+def resolve(hostname):
+    if not isinstance(hostname, str):
+        log("Hostname/IP is type " + str(type(ip)) + " but must be type str: {hostname}", "ERROR")
+    if isValidIP(hostname):
+        return (hostname)
+    ip = socket.gethostbyname(hostname)
+    if isValidIP(ip):
+        return (ip)
+    else:
+        log(f"Hostname cannot be resolved or IP bad format: {hostname} ({ip}).", "ERROR")
+        return False
+
 
 def isValidIP(ip):
     """ Returns True if ip is valid IP address, otherwise returns false. """
     if not isinstance(ip, str):
-        log("IP is type " + str(type(ip)) + " but must be type str.", "ERROR")
         return False
     if not re.match(r'^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$', ip):
-        log("IP address has bad format, expected something like 'int.int.int.int' but got " + ip, "ERROR")
         return False
     return True
 
 # Check IP address format as needed by argparse module.
-
-
 def argParseCheckIPFormat(ip):
     """ Returns ip if ip is a valid IP address, otherwise raises argparse.ArgumentTypeError exception. """
-
+    
     if not isValidIP(ip):
         raise argparse.ArgumentTypeError(ip)
     return ip

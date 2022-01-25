@@ -78,9 +78,7 @@ class Messages:
                 'serverPublicIP': ['str', 7, 15], 
                 'serverPublicPort': 'int'
                 },
-            'udpPunch': {
-                'serverName': ['str', 8, 64]
-                }
+            'udpPunchThrough': {}
             }
 
     def __str__(self):
