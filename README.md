@@ -124,6 +124,13 @@ LAN-Caster code.
 
 videos coming soon...
 
+### Install Connector Systemd Service on Linux
+```
+cd lan-caster/systemd
+sudo cp connector.service /lib/systemd/system/
+sudo systemctl enable $f
+```
+
 ### Files to add comments to:
 
 README.md
