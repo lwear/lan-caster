@@ -125,8 +125,9 @@ LAN-Caster code.
 videos coming soon...
 
 ### Install Connector Systemd Service on Linux
+Assuming lan-caster has been installed under a linux user name 'lan-caster' with home dir '/home/lan-caster'
 ```
-cd lan-caster/systemd
+cd /home/lan-caster/lan-caster/systemd
 sudo cp connector.service /lib/systemd/system/
 sudo systemctl enable $f
 ```
